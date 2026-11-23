@@ -4,12 +4,10 @@
  * a TR page never lights a link that points to the EN URL.
  */
 
+import { withTrailingSlash } from './i18n.ts';
+
 const SLASH = '/';
 const ROOT = SLASH;
-
-function withTrailingSlash(path: string): string {
-  return path.endsWith(SLASH) ? path : `${path}${SLASH}`;
-}
 
 /** The link points at this very page (`aria-current="page"`). */
 export function isCurrentPage(currentPath: string, href: string): boolean {

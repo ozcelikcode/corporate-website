@@ -75,14 +75,12 @@
  * graphic (3:1 suffices); the strap text keeps its own colour.
  */
 @utility lower-third {
-  --lower-third-band: color-mix(in oklab, var(--color-ink) 6%, transparent);
-
   display: inline-flex;
   align-items: center;
   gap: --spacing(3);
   padding-block: --spacing(1);
   padding-inline-end: --spacing(3);
-  background-color: var(--lower-third-band);
+  background-color: var(--ink-band);
 
   &::before {
     content: "";
@@ -182,9 +180,11 @@
     font-size: 0.875em;
   }
 
+  /* Set apart by indent and tone, not a rule: borders stay within the spec §8 budget. */
   & blockquote {
-    padding-inline-start: 1em;
-    border-inline-start: var(--border-hairline) solid var(--color-line-strong);
+    margin-inline-start: 1em;
+    padding: 0.75em 1em;
+    background-color: var(--ink-band);
     color: var(--color-ink-muted);
   }
 

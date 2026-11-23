@@ -8,7 +8,6 @@ import {
   liveRuns,
   NOISE_TONE,
   noiseGlyph,
-  parseOrigin,
   type Random,
   rampNeighbour,
   revealThresholds,
@@ -18,7 +17,6 @@ import {
   toneFromClass,
   WAVE_CADENCE_MS,
   WAVE_GAIN,
-  WAVE_ORIGIN,
   WAVE_REACH,
   WAVE_SPACING,
   WAVE_SPEED,
@@ -214,14 +212,6 @@ test('liveRuns draws a live front as dots across blank sky, nothing behind it', 
 test('liveRuns flickers a glyph to a ramp neighbour when the draw falls under the ratio', () => {
   const runs = liveRuns([{ tone: 3, text: '#' }], 1, 0, 1, LEFT_MIDDLE, 0, always(LOW));
   assert.equal(cellsOf(runs), '*');
-});
-
-test('parseOrigin reads "x y" fractions and defaults to the wave origin', () => {
-  assert.deepEqual(parseOrigin('0.25 0.75'), { x: 0.25, y: 0.75 });
-  assert.deepEqual(parseOrigin(undefined), WAVE_ORIGIN);
-  for (const bad of ['', '0.5', '0.5 1.5', 'a b', '0.1 0.2 0.3']) {
-    assert.throws(() => parseOrigin(bad), /wave origin/);
-  }
 });
 
 test('a new ring leaves the origin every WAVE_CADENCE_MS, at spacing / speed', () => {

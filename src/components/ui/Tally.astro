@@ -8,7 +8,6 @@ import { cva } from 'class-variance-authority';
 interface Props {
   text: string;
   tone?: 'accent' | 'muted' | 'critical';
-  dot?: boolean;
 }
 
 const TONE = {
@@ -19,9 +18,9 @@ const TONE = {
 
 const lamp = cva('size-2 shrink-0', { variants: { tone: TONE } });
 
-const { text, tone = 'accent', dot = true } = Astro.props;
+const { text, tone = 'accent' } = Astro.props;
 ---
 <span class="inline-flex items-center gap-2 label-mono text-ink">
-  {dot && <span class={lamp({ tone })} aria-hidden="true" />}
+  <span class={lamp({ tone })} aria-hidden="true" />
   {text}
 </span>

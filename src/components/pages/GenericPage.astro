@@ -6,7 +6,7 @@
 import { getImage } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { availableLocales, getPage, getSettings } from '../../lib/content.ts';
-import { type Locale, pagePath } from '../../lib/i18n.ts';
+import { HOME_SLUG, type Locale, pagePath } from '../../lib/i18n.ts';
 import { absoluteUrl, organizationJsonLd } from '../../lib/seo.ts';
 import SectionRenderer from '../sections/SectionRenderer.astro';
 
@@ -14,8 +14,6 @@ interface Props {
   locale: Locale;
   slug: string;
 }
-
-const HOME_SLUG = 'home';
 
 const { locale, slug } = Astro.props;
 const site = Astro.site;

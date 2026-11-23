@@ -7,6 +7,7 @@
  * The hover group is named (`group/button`) so an ancestor `.group` card never nudges the arrow.
  */
 import { cva } from 'class-variance-authority';
+import { EXTERNAL_PREFIX } from '../../lib/link-schemes.ts';
 import Glyph from './Glyph.astro';
 
 type GlyphName = '→' | '↗';
@@ -19,9 +20,6 @@ interface Props {
   size?: 'md' | 'sm';
   glyph?: GlyphName | null;
 }
-
-/** Hrefs with this prefix leave the site and default to the ↗ glyph. */
-const EXTERNAL_PREFIX = 'https://';
 
 const INTENT = {
   primary: 'border-accent bg-accent-wash',

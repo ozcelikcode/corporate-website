@@ -26,7 +26,7 @@ export const NOISE_TONE: Tone = 1;
 /** Share of a cell's reveal time set by its row: the picture locks roughly top-down. */
 export const REVEAL_ROW_BIAS = 0.35;
 
-/** Where the rings start: the top-centre region (the seed's mast top). Per figure via data. */
+/** Where the rings start, as picture fractions: the top-centre region (the seed's mast top). */
 export const WAVE_ORIGIN: Origin = { x: 0.5, y: 1 / 3 };
 const MS_PER_S = 1000;
 
@@ -56,7 +56,6 @@ export const TUNE_IN_WINDOW_MS = 300;
 const MAX_TONE = TONE_COUNT - 1;
 /** Cell centre offset, in cells. */
 const CENTRE = 0.5;
-const ORIGIN_PATTERN = /^(\d*\.?\d+) (\d*\.?\d+)$/;
 const BLANK = ' ';
 /** Static fills the whole raster: every ramp glyph but the blank. */
 const NOISE_GLYPHS = ASCII_RAMP.slice(1);
@@ -156,16 +155,6 @@ export function acquisitionRuns(
     else pushCell(runs, NOISE_TONE, noiseGlyph(random));
   }
   return runs;
-}
-
-/** "x y" fractions from a figure's data attribute; no attribute means `WAVE_ORIGIN`. */
-export function parseOrigin(value: string | undefined): Origin {
-  if (value === undefined) return WAVE_ORIGIN;
-  const match = ORIGIN_PATTERN.exec(value);
-  const x = Number(match?.[1]);
-  const y = Number(match?.[2]);
-  if (!match || x > 1 || y > 1) throw new Error(`Bad ASCII wave origin "${value}"`);
-  return { x, y };
 }
 
 /** Distance of a cell's centre from the origin, in picture widths (a row is 1 / aspect columns). */

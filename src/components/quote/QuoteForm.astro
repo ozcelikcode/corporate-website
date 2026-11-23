@@ -8,6 +8,7 @@
  * Turnstile and submit sit on the canvas, where the widget's 300 CSS px minimum fits at 360.
  */
 import { type Locale, t, type UiDictionary, type UiKey } from '../../lib/i18n.ts';
+import { MAILTO } from '../../lib/link-schemes.ts';
 import {
   EMAIL_INPUT_PATTERN,
   GENERAL_SOLUTION,
@@ -39,7 +40,6 @@ interface Props {
 
 const ACTION = '/api/quote';
 const ENCTYPE = 'multipart/form-data';
-const MAILTO = 'mailto:';
 const TURNSTILE_ACTION = 'quote';
 const TURNSTILE_THEME = 'dark';
 const TURNSTILE_SIZE = 'flexible';

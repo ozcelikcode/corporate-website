@@ -162,15 +162,7 @@ collections:
         widget: string
         i18n: true
         required: [en]
-      - name: appOpen
-        widget: string
-        i18n: true
-        required: [en]
       - name: appBrochure
-        widget: string
-        i18n: true
-        required: [en]
-      - name: appLinks
         widget: string
         i18n: true
         required: [en]

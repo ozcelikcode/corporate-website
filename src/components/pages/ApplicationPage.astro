@@ -3,15 +3,16 @@
  * One application: a header band (category label, the page's h1, status tally, summary, links
  * and brochure on the left; the duotone cover in the title-safe frame on the right), then its
  * own sections with no `pageTitle` (this header already holds the h1). The h1 is a plain display
- * heading: lower thirds are for section headings and card titles. The cover uses the same
- * duotone as the app-grid tiles (greyscale + contrast, multiplied by an accent layer).
+ * heading: lower thirds are for section headings and card titles. The cover is the same
+ * `DuotoneCover` as the app-grid tiles, and the page shares it as its social image (og:image).
  */
-import { Picture } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { availableLocales, getUiDictionary, listApplications } from '../../lib/content.ts';
 import { applicationPath, type Locale, t, type UiKey } from '../../lib/i18n.ts';
+import { CONTAINER } from '../sections/band-class.ts';
 import SectionRenderer from '../sections/SectionRenderer.astro';
 import Button from '../ui/Button.astro';
+import DuotoneCover from '../ui/DuotoneCover.astro';
 import GridFrame from '../ui/GridFrame.astro';
 import Heading from '../ui/Heading.astro';
 import Label from '../ui/Label.astro';
@@ -24,11 +25,9 @@ interface Props {
   slug: string;
 }
 
-const COVER_FORMATS = ['avif', 'webp'] as const;
 /** The cover fills about half the container from lg and the full width below. */
 const COVER_WIDTHS = [640, 960, 1280];
 const COVER_SIZES = '(min-width: 64rem) 45vw, 100vw';
-const CONTAINER = 'mx-auto max-w-page px-4 md:px-8';
 const HEADER_BAND = 'pt-12 pb-16 md:pt-16 md:pb-24';
 
 const { locale, slug } = Astro.props;
@@ -50,6 +49,7 @@ const hasActions = data.brochure !== undefined || (data.links?.length ?? 0) > 0;
   neutralPath={applicationPath(slug)}
   title={data.name}
   description={data.tagline}
+  ogImage={data.cover}
   availableLocales={locales}
 >
   <div class={HEADER_BAND}>
@@ -79,18 +79,13 @@ const hasActions = data.brochure !== undefined || (data.links?.length ?? 0) > 0;
         </div>
         <div class="min-w-0 lg:col-span-6 lg:self-center">
           <TitleSafe>
-            <div class="relative isolate bg-canvas">
-              <Picture
-                src={data.cover}
-                alt={data.coverAlt}
-                formats={[...COVER_FORMATS]}
-                widths={COVER_WIDTHS}
-                sizes={COVER_SIZES}
-                loading="eager"
-                class="block h-auto w-full grayscale contrast-150"
-              />
-              <span class="absolute inset-0 bg-accent mix-blend-multiply" aria-hidden="true" />
-            </div>
+            <DuotoneCover
+              src={data.cover}
+              alt={data.coverAlt}
+              widths={COVER_WIDTHS}
+              sizes={COVER_SIZES}
+              loading="eager"
+            />
           </TitleSafe>
         </div>
       </GridFrame>

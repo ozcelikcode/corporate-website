@@ -2,11 +2,13 @@
 /**
  * The page's closing rule (full-bleed hairline, the SMPTE bars strip laid on it at the content
  * edge), then four spaced columns (brand and legal address, indexed footer nav, contacts,
- * socials) and a rights line. No boxed cells: the columns are set apart by spacing only.
+ * socials; the Follow column only when there are socials) and a rights line. No boxed cells:
+ * the columns are set apart by spacing only.
  * Contacts keep their own `mailto:` / `tel:` / `https:` hrefs; outbound links get ↗.
  */
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
+import { EXTERNAL_PREFIX } from '../../lib/link-schemes.ts';
 import BarsStrip from '../ui/BarsStrip.astro';
 import Glyph from '../ui/Glyph.astro';
 import GridFrame from '../ui/GridFrame.astro';
@@ -26,8 +28,6 @@ interface Props {
   labels: { nav: string; contact: string; social: string; rights: string };
 }
 
-/** Hrefs with this prefix leave the site and carry the ↗ glyph. */
-const EXTERNAL_PREFIX = 'https://';
 /** `[NN]` indexes count from 1. */
 const FIRST_INDEX = 1;
 /** Stamped at build time; the site rebuilds on every content change. */
@@ -94,21 +94,25 @@ const socialIndex = contactIndex + 1;
         </address>
       </div>
 
-      <div class="flex flex-col gap-2">
-        <div class={FIRST_ROW}><Label text={labels.social} index={socialIndex} /></div>
-        <ul class="flex flex-col">
-          {
-            socials.map(({ label, href }) => (
-              <li class={ROW}>
-                <a class={LINK} href={href}>
-                  {label}
-                  <Glyph name="↗" class={GLYPH_GAP} />
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
+      {
+        socials.length > 0 && (
+          <div class="flex flex-col gap-2">
+            <div class={FIRST_ROW}>
+              <Label text={labels.social} index={socialIndex} />
+            </div>
+            <ul class="flex flex-col">
+              {socials.map(({ label, href }) => (
+                <li class={ROW}>
+                  <a class={LINK} href={href}>
+                    {label}
+                    <Glyph name="↗" class={GLYPH_GAP} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      }
     </GridFrame>
 
     <p class="mt-16 label-mono text-ink-muted">

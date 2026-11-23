@@ -11,6 +11,7 @@ export function isLocale(value: unknown): value is Locale {
   return LOCALES.some((locale) => locale === value);
 }
 
+/** `path` ending in a slash, as every site URL does. */
 export function withTrailingSlash(path: string): string {
   return path.endsWith(TRAILING_SLASH) ? path : `${path}${TRAILING_SLASH}`;
 }
@@ -59,9 +60,7 @@ export const UI_KEYS = [
   'motionHold',
   'motionHoldHint',
   'noSignal',
-  'appOpen',
   'appBrochure',
-  'appLinks',
   'footerContact',
   'footerSocial',
   'footerRights',

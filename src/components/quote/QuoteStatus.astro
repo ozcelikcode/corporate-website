@@ -7,6 +7,7 @@
  * offer the direct email address (a no-JS POST lands on `error-verify`).
  */
 import { type Locale, t, type UiDictionary, type UiKey } from '../../lib/i18n.ts';
+import { MAILTO } from '../../lib/link-schemes.ts';
 import { QUOTE_STATES, type QuoteState } from '../../lib/quote-schema.ts';
 import { CONTAINER } from '../sections/band-class.ts';
 import GridFrame from '../ui/GridFrame.astro';
@@ -43,7 +44,6 @@ const PANELS = {
   },
 } as const satisfies Record<QuoteState, PanelCopy>;
 
-const MAILTO = 'mailto:';
 /**
  * Hidden unless targeted; the scroll margin keeps a targeted panel clear of the sticky header
  * (h-16) with room to spare. The panel sits in the page container, aligned with the form.

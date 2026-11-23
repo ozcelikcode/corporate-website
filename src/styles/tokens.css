@@ -90,10 +90,11 @@
 
     --border-hairline: 1px;
     --border-focus: 0.125rem;
+    /* Translucent ink band: reads on canvas and surface alike (lower thirds, prose quotes). */
+    --ink-band: color-mix(in oklab, var(--color-ink) 6%, transparent);
 
     --z-header: 10;
     --z-popover: 20;
-    --z-dialog: 30;
 
     --duration-fast: 120ms;
     --duration-base: 240ms;
