@@ -3,14 +3,19 @@ import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { accentContrast, HEX_PATTERN, MIN_ACCENT_CONTRAST } from './lib/color.ts';
 import { UI_KEYS } from './lib/i18n.ts';
-import { actionSchema, LABEL_MAX, sectionsSchema } from './lib/sections-schema.ts';
+import {
+  actionSchema,
+  applicationSectionsSchema,
+  LABEL_MAX,
+  sectionsSchema,
+} from './lib/sections-schema.ts';
 
 const DESCRIPTION_MAX = 160;
 const TAGLINE_MAX = 120;
 const CONTRAST_DECIMALS = 2;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const CONTACT_HREF_PATTERN = /^(mailto:|tel:|https:\/\/)/;
-const LINK_HREF_PATTERN = /^(\/(?![\/\\])|https:\/\/|mailto:)/;
+const LINK_HREF_PATTERN = /^(\/(?![/\\])|https:\/\/|mailto:)/;
 
 // Ids come from the file path (`<locale>/<slug>`), never from a `slug` field: slugs repeat across locales.
 const fromYaml = (base: string) =>
@@ -104,7 +109,7 @@ const applications = defineCollection({
       order: z.number().int().min(0),
       links: z.array(actionSchema).optional(),
       brochure: z.url({ protocol: /^https$/ }).optional(),
-      sections: sectionsSchema(context),
+      sections: applicationSectionsSchema(context),
     }),
 });
 

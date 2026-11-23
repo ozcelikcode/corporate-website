@@ -1,0 +1,7 @@
+---
+import ApplicationPage from '../../components/pages/ApplicationPage.astro';
+import { applicationStaticPaths } from '../../lib/routes.ts';
+
+export const getStaticPaths = () => applicationStaticPaths('en');
+---
+<ApplicationPage locale="en" slug={Astro.params.slug} />

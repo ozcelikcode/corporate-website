@@ -1,0 +1,38 @@
+---
+/**
+ * The per-locale 404: the `not-found` entry (EN when untranslated, then the layout's fallback
+ * rule applies), `noindex`, and the NO SIGNAL test pattern between the title band and the
+ * sections. The build emits it as `404.html` and `tr/404.html`.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPage, getUiDictionary } from '../../lib/content.ts';
+import { type Locale, t } from '../../lib/i18n.ts';
+import SectionRenderer from '../sections/SectionRenderer.astro';
+import NoSignal from '../ui/NoSignal.astro';
+
+interface Props {
+  locale: Locale;
+}
+
+const NOT_FOUND_SLUG = 'not-found';
+const NOT_FOUND_PATH = '/404/';
+
+const { locale } = Astro.props;
+const [page, dict] = await Promise.all([getPage(locale, NOT_FOUND_SLUG), getUiDictionary()]);
+---
+<BaseLayout
+  locale={locale}
+  contentLocale={page.locale}
+  neutralPath={NOT_FOUND_PATH}
+  title={page.data.title}
+  description={page.data.description}
+  ogImage={page.data.ogImage}
+  availableLocales={[]}
+  noindex
+>
+  <SectionRenderer sections={page.data.sections} locale={locale} pageTitle={page.data.title}>
+    <div class="mx-auto max-w-3xl px-4 pb-16 md:px-8 md:pb-24">
+      <NoSignal text={t(dict, locale, 'noSignal')} />
+    </div>
+  </SectionRenderer>
+</BaseLayout>

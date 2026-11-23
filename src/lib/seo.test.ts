@@ -6,6 +6,7 @@ import {
   hreflangLinks,
   type OrganizationInput,
   organizationJsonLd,
+  robotsTxt,
   TITLE_SEPARATOR,
 } from './seo.ts';
 
@@ -68,4 +69,18 @@ test('organizationJsonLd omits absent optional fields', () => {
   assert.equal('email' in parsed, false);
   assert.equal('telephone' in parsed, false);
   assert.equal('address' in parsed, false);
+});
+
+test('robotsTxt allows crawling in production and points to the sitemap index', () => {
+  assert.equal(
+    robotsTxt({ isProduction: true, siteUrl: 'https://example.com' }),
+    'User-agent: *\nDisallow: /admin/\n\nSitemap: https://example.com/sitemap-index.xml\n',
+  );
+});
+
+test('robotsTxt blocks everything outside production', () => {
+  assert.equal(
+    robotsTxt({ isProduction: false, siteUrl: 'http://localhost:4321' }),
+    'User-agent: *\nDisallow: /\n',
+  );
 });
