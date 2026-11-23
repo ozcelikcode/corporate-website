@@ -12,12 +12,17 @@ export const TONE_COUNT = 6;
 /** Glyph cell width ÷ height. Rows are scaled by it so the image keeps its aspect. */
 export const CHAR_ASPECT = 0.5;
 export const ASCII_COLUMNS = 96;
+/** The second, coarser grid AsciiImage swaps in on narrow containers. */
+export const ASCII_COLUMNS_COMPACT = 48;
 
 /** Byte range of one luma sample. */
 const LUMA_LEVELS = 256;
 const MAX_GLYPH = ASCII_RAMP.length - 1;
 const MAX_TONE = TONE_COUNT - 1;
-/** Transparent pixels turn black (dark canvas); flattening also drops the alpha channel. */
+/**
+ * Translucent pixels are composited onto black (dark canvas). sharp 0.35's `b-w` already drops
+ * alpha, so this is about correct blending, not the channel count.
+ */
 const FLATTEN_BACKGROUND = { r: 0, g: 0, b: 0 } as const;
 const LUMA_CHANNELS = 1;
 
@@ -67,6 +72,8 @@ async function readAscii(filePath: string, cols: number): Promise<AsciiGrid> {
     .autoOrient()
     .resize(cols, rows, { fit: 'fill' })
     .flatten({ background: FLATTEN_BACKGROUND })
+    // Stretch luminance so low-contrast photos still use the whole ramp.
+    .normalise()
     .toColourspace('b-w')
     .raw()
     .toBuffer({ resolveWithObject: true });
