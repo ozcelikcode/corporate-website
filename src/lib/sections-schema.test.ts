@@ -67,6 +67,12 @@ test('app-grid apps defaults to an empty list', () => {
   assert.deepEqual(section?.type === 'app-grid' ? section.apps : undefined, []);
 });
 
+test('hero without an actions key parses to an empty list', () => {
+  const { actions: _omitted, ...withoutActions } = fixtures.hero;
+  const [section] = schema.parse([withoutActions]);
+  assert.deepEqual(section?.type === 'hero' ? section.actions : undefined, []);
+});
+
 test('feature-list rejects 0 and 9 items', () => {
   const item = { title: 'T', body: 'B' };
   const list = fixtures['feature-list'];

@@ -7,3 +7,4 @@ worker/generated/
 .dev.vars
 .env*
 .DS_Store
+.superpowers/
