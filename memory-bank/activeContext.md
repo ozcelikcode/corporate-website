@@ -2,13 +2,13 @@
 
 ## Current state (2026-11-23)
 - Design spec: `docs/superpowers/specs/2026-11-23-corporate-site-design.md`. Owner APPROVED it on 2026-11-23.
-- Implemented on `feat/site-v1`: Tasks 1–9, 11 and 7a (toolchain, tokens/fonts, content + i18n, UI atoms, layout shell + SEO head, ASCII pipeline + AsciiImage, Sveltia admin config, design refinement, section blocks + SectionRenderer, routes/SEO/404/robots/sitemap, quote page). Gate green per task, including fix rounds. Merged tree: 13 pages, 114 tests, one h1 per page, no broken links.
+- Implemented on `feat/site-v1`: Tasks 1–11 and 7a (toolchain, tokens/fonts, content + i18n, UI atoms, layout shell + SEO head, ASCII pipeline + AsciiImage, Sveltia admin config, design refinement, section blocks + SectionRenderer, routes/SEO/404/robots/sitemap, quote page). Gate green per task, including fix rounds. Merged tree: 13 pages, 114 tests, one h1 per page, no broken links.
 - Repo decision (2026-11-23): GitHub repo is public, so CODEOWNERS-enforced branch protection on `main` is free.
 - Memory bank and project instructions (`CLAUDE.md`, team-delegation skill) are set up.
 
 ## Current focus
 - G6 done: Task 8 (routes, SEO, 404s, robots, sitemap, build outputs) and Task 9 (quote page, shared quote schema).
-- Focus: Task 10 (G7: Worker `/api/quote`, Turnstile, mail, `_headers`). It EXTENDS `src/integrations/build-outputs.ts`; it must not create a second integration.
+- G7 done: Task 10 (Worker `/api/quote`, Turnstile, mail, `_headers`, extended `build-outputs.ts`), awaiting review. Next: Task 12 (runbook, acceptance).
 - Plan: `docs/superpowers/plans/2026-11-23-corporate-site.md` (12 tasks, dispatch groups G1–G8, subagent-driven execution).
 
 ## Design direction (owner feedback, 2026-11-23; implemented in Task 7a)

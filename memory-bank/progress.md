@@ -17,9 +17,8 @@
 - 2026-11-23: Tasks 8 (routes, TR wrappers, 404s, robots, sitemap, JSON-LD, build outputs) and 9 (quote page, shared quote schema) done and merged.
 
 ## Next
-- G7: Task 10 (Worker `/api/quote`, extend `build-outputs.ts`, `_headers`).
+- G8: Task 12 (runbook and acceptance). Owner: set Worker secrets and `<auth-worker>` in `_headers` before launch.
 - Owner: Sveltia step 6 manual check (runbook).
-- Build the Worker (`/api/quote`), Turnstile verification, mail builder.
 - Add `.github/CODEOWNERS`.
 - Resolve the "Left to the builder" verifications from the spec (section 14).
 - Verify: Lighthouse, headers scan, quote flow (JS, no JS, bad token), axe on every template.
@@ -53,3 +52,4 @@
 - 2026-11-23: Task 8 implemented: `lib/routes.ts`, EN/TR route wrappers, GenericPage/ApplicationPage/NotFoundPage, robots, sitemap filter and i18n map, `build-outputs` (relocate TR 404, prune unreferenced images), application hero ban. Fix round 1: TR not-found copy, no canonical on noindex pages. Gate green (101 tests).
 - 2026-11-23: Task 9 implemented: quote schema (12 tests), QuoteForm/QuoteStatus/QuotePage, `/quote/` and `/tr/quote/`. Fix round 1: general pre-checked, `band-class.ts`, `quoteTimelinePlaceholder` key, TR quote copy and page, aria-labelledby, email pattern, MAX_SOLUTIONS build guard. Gate green (108 tests).
 - 2026-11-23: Merged tree (Tasks 8 + 9): 13 pages, 114 tests, one h1 per page, no broken links.
+- 2026-11-23: Task 10 implemented: Worker (`quote`, `turnstile`, `mail`, `headers`, `index`), `public/_headers` (spec §11), `build-outputs` extended (allow-list JSON, noindex). 146 tests; dry-run bundle 792 KiB; local smoke test OK.

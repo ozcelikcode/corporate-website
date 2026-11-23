@@ -63,6 +63,13 @@ Dev dependencies:
 ## Open verifications (builder)
 Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fields`, empty-list serialisation and owner step 6; `astro/zod` bundling in the Worker (else add `zod ^4.6.7`); Workers Builds Node/pnpm support; `send_email` on free plan; no inline `<script>` in `dist/` (CSP).
 
+## Spec §14 results (Task 10)
+- `astro/zod` bundles in the Worker (`wrangler deploy --dry-run`): no `zod` pin needed. `cloudflare:email` and the JSON import (`with { type: 'json' }`) bundle too. Bundle `index.js` 792 KiB (limit 3 MiB).
+- `send_email` binding `QUOTE_MAILER` (no `destination_address`); `Buffer` is not used in the Worker (no `nodejs_compat`), base64 goes through `btoa`.
+- `astro:build:done` still passes `pages`; the allow-list comes from `pages[].pathname`.
+- Cloudflare `_headers`: two `/*` blocks do not merge (the later one replaced the first in `wrangler dev`), so the preview noindex line is inserted into the existing `/*` block.
+- Local smoke test: `.dev.vars` (gitignored) with Turnstile's always-pass secret; `wrangler dev` on 8787 serves the CSP from `_headers`. Real email delivery and live siteverify are not verified locally.
+
 ## Test conventions
 - `node --test` with `node:assert/strict`; `*.test.ts` next to its unit; relative imports end in `.ts`; tested modules never import `astro:*` at runtime.
 - Test files are excluded from both tsconfigs; Biome still lints them.

@@ -176,3 +176,10 @@ Don't:
 - `components/sections/band-class.ts` exports `CONTAINER`, `BAND`, `FIRST_BAND`, `DIVIDER`, shared by SectionRenderer, QuotePage and QuoteStatus. `Checkbox` has `checked?`; `Input` has `pattern?`.
 - QuotePage loads the Turnstile script (`is:inline`, async defer) through the `head` slot. It is the only client JS outside `/admin/`.
 - UI_KEYS is now 50 (`quote*` keys, `footerRights` in TR).
+
+## Quote Worker (Task 10, `worker/`)
+- `index.ts`: `/api/quote` (exact path) -> `handleQuote`; everything else -> `env.ASSETS.fetch`. `wrangler.jsonc` `run_worker_first: ["/api/*"]`. Allow-list = `worker/generated/solutions.json` (written by `build-outputs` on `astro:build:done`, gitignored).
+- `quote.ts` flow: non-POST 405 (`Allow: POST`) -> Origin must equal request origin -> content type urlencoded/multipart -> bad `MAX_BODY_BYTES` = `error-send` -> `Content-Length` over cap -> body read as a stream, capped at `MAX_BODY_BYTES` even when chunked -> `formData()` -> `quoteSchema` + allow-list (`error-invalid`) -> empty/over-limit/missing token `error-verify` (no siteverify, covers no-JS) -> missing secret/`QUOTE_TO`/`QUOTE_FROM` `error-send` -> `verifyTurnstile` (hostname, action `quote`, 5 s timeout) `error-verify` -> `send` rejects `error-send` -> `sent`. Every POST answer is a 303 to `<origin>[/tr]/quote/#<state>` with `WORKER_HEADERS`.
+- Logging: only `console.error({ code, step })`, `code` in guard|invalid|verify|send|config. Guard failures before the form is parsed redirect to the EN page (locale unknown).
+- `mail.ts`: CRLF, base64 body (76 cols), RFC 2047 subject split into short encoded words, throws on CR/LF in any header value. `Reply-To` is the visitor.
+- `public/_headers` is spec §11 verbatim (`<auth-worker>` placeholder stays until the owner fills it). Worker responses set their own headers (`headers.ts`).

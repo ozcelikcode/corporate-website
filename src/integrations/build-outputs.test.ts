@@ -4,7 +4,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { pathToFileURL } from 'node:url';
-import { pruneUnreferencedImages, relocateLocale404 } from './build-outputs.ts';
+import {
+  appendNoindex,
+  pruneUnreferencedImages,
+  relocateLocale404,
+  solutionSlugs,
+} from './build-outputs.ts';
 
 async function withDist(run: (root: string, dist: URL) => Promise<void>): Promise<void> {
   const root = await mkdtemp(join(tmpdir(), 'build-outputs-'));
@@ -54,4 +59,29 @@ test('pruneUnreferencedImages deletes only rasters no page or stylesheet mention
       'site.css',
     ]);
   });
+});
+
+test('solutionSlugs returns sorted unique application slugs across locales, then general', () => {
+  assert.deepEqual(
+    solutionSlugs([
+      '/applications/b/',
+      'tr/applications/b/',
+      'applications/a/',
+      '/about/',
+      '/applications/',
+    ]),
+    ['a', 'b', 'general'],
+  );
+});
+
+test('solutionSlugs rejects an application using the reserved general slug', () => {
+  assert.throws(() => solutionSlugs(['applications/general/']), /general/);
+});
+
+test('appendNoindex adds one X-Robots-Tag inside the /* block and is idempotent', () => {
+  const headers = '/*\n  X-Frame-Options: DENY\n';
+  const once = appendNoindex(headers);
+  assert.equal(once.match(/X-Robots-Tag: noindex/g)?.length, 1);
+  assert.ok(once.startsWith('/*\n  X-Robots-Tag: noindex\n  X-Frame-Options: DENY\n'));
+  assert.equal(appendNoindex(once), once);
 });

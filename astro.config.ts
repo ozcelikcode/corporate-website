@@ -62,11 +62,13 @@ const GROTESK_WEIGHT = '400 900';
 const MARTIAN_DIR = './src/assets/fonts/martian-mono';
 const MARTIAN_WEIGHT = '100 800';
 
+const buildMode = resolveBuildMode(process.env);
+
 export default defineConfig({
   output: 'static',
   trailingSlash: 'always',
   build: { format: 'directory' },
-  site: resolveBuildMode(process.env).siteUrl,
+  site: buildMode.siteUrl,
   fonts: [
     {
       provider: fontProviders.local(),
@@ -137,7 +139,7 @@ export default defineConfig({
     },
   },
   integrations: [
-    buildOutputs(),
+    buildOutputs({ isProduction: buildMode.isProduction }),
     sitemap({
       filter: inSitemap,
       i18n: { defaultLocale: 'en', locales: { en: 'en', tr: 'tr' } },
