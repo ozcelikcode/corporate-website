@@ -156,3 +156,23 @@ Don't:
 - Language toggle links to the TR twin, or `/tr/` if none.
 - `hreflang` lists only existing translations plus `x-default` (EN).
 - Per-locale 404 via `404-page` handling.
+
+## Routes, SEO and build outputs (Task 8, `src/lib/routes.ts`)
+- Routes: `/[...slug]` = EN pages; `/tr/[...slug]` = TR translated pages only; `applications/[slug]` and `tr/applications/[slug]`; `404` and `tr/404`; `robots.txt.ts` (`robotsTxt` in `seo.ts`). `src/pages/index.astro` is gone (home comes from `[...slug]`).
+- `RESERVED_PAGE_SLUGS` (`quote`, `not-found`) are excluded from the generic route; `src/pages/quote.astro` owns `/quote/`.
+- Sitemap (`astro.config.ts`): i18n map; filters `/404/`, `/tr/404/`, `/admin/`, and `/tr/quote/` unless the TR quote entry exists.
+- `src/integrations/build-outputs.ts` (`buildOutputs`, `astro:build:done`): `relocateLocale404` moves Astro's `tr/404/index.html` to `dist/tr/404.html`; `pruneUnreferencedImages` deletes raster files in `dist/_astro` that no built html/css/xml/txt/json/js mentions (optimized derivatives are always referenced, unoptimized originals never are). Task 10 EXTENDS this integration; it must not create a new one. Keep both steps and their tests.
+- Applications: `applicationSectionsSchema` rejects any hero. ApplicationPage renders its own plain display h1 (category Label, Tally, lede, brochure/links as Buttons, duotone cover in TitleSafe without scanlines), then its sections under one `border-t` divider. `ui.appLinks` is unused (harmless).
+- GenericPage: Organization JSON-LD on `home` only. NotFoundPage: noindex, `NoSignal`, `max-w-3xl`.
+- `SectionRenderer` has a default `<slot />` between the title band and the sections (404 NoSignal).
+- noindex pages (404s, EN fallbacks) emit no canonical and no og:url (BaseLayout omits canonical when `noindex`).
+
+## Quote (Task 9, `src/lib/quote-schema.ts`, `QuoteForm`, `QuoteStatus`, `QuotePage`)
+- Limits: `QUOTE_LIMITS` name 100, email 254, company 120, role 80, country 80, message 2000, token 2048 (Worker only). `MAX_SOLUTIONS` 16: QuotePage throws at build when applications + `general` exceed it. `TIMELINES` asap|quarter|half-year|exploring. `GENERAL_SOLUTION` `general`, pre-checked. `QUOTE_STATES` sent|error-invalid|error-verify|error-send. `TURNSTILE_FIELD` `cf-turnstile-response`. `EMAIL_INPUT_PATTERN` mirrors `z.email()` (dot in domain; tested).
+- Single-line fields are trimmed and reject CR/LF. Message: CRLF becomes LF before the 2000 check. `z.object` strips unknown keys. `formDataToInput` uses `getAll` for solutions, drops the token, and is `__proto__`-safe. Worker: `formDataToInput` then `quoteSchema.safeParse`; a missing, empty or over-2048 token is a verify failure (the schema never sees the token).
+- Form posts `multipart/form-data` (a urlencoded Turkish max-length body exceeds 16 KB; multipart is about 9 KB). Timeline select has a `value=""` placeholder labelled by `quoteTimelinePlaceholder`.
+- Status: four `<section id={state} tabindex="-1" aria-labelledby>` panels shown only as `:target` (`not-target:hidden scroll-mt-24`); tally critical on errors, accent on sent; email fallback on error-verify and error-send.
+- Layout: gutter `[NN]` label plus noscript text; three surface panels (cols 4-12) hold the controls; consent, Turnstile and submit sit on the canvas (Turnstile needs 300 px).
+- `components/sections/band-class.ts` exports `CONTAINER`, `BAND`, `FIRST_BAND`, `DIVIDER`, shared by SectionRenderer, QuotePage and QuoteStatus. `Checkbox` has `checked?`; `Input` has `pattern?`.
+- QuotePage loads the Turnstile script (`is:inline`, async defer) through the `head` slot. It is the only client JS outside `/admin/`.
+- UI_KEYS is now 50 (`quote*` keys, `footerRights` in TR).

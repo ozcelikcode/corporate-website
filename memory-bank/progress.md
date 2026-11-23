@@ -14,13 +14,13 @@
 - 2026-11-23: Task 7a design refinement done: border budget, spaced GridFrame, TitleSafe, LowerThird, BarsStrip, NoSignal, TallyStrip PGM/PVW, rundown `duration`.
 - 2026-11-23: Task 7 done: 7 section blocks, SectionRenderer (dividers, exhaustive switch, single h1), `renderMarkdown`, `padIndex`.
 - Tasks 1–7, 11 and 7a done (2026-11-23).
+- 2026-11-23: Tasks 8 (routes, TR wrappers, 404s, robots, sitemap, JSON-LD, build outputs) and 9 (quote page, shared quote schema) done and merged.
 
 ## Next
-- G6: Task 8 (routes and SEO) ∥ Task 9 (quote page).
+- G7: Task 10 (Worker `/api/quote`, extend `build-outputs.ts`, `_headers`).
 - Owner: Sveltia step 6 manual check (runbook).
 - Build the Worker (`/api/quote`), Turnstile verification, mail builder.
 - Add `.github/CODEOWNERS`.
-- Pages and TR wrappers.
 - Resolve the "Left to the builder" verifications from the spec (section 14).
 - Verify: Lighthouse, headers scan, quote flow (JS, no JS, bad token), axe on every template.
 
@@ -50,3 +50,6 @@
 - 2026-11-23: Task 7a fix round 1: TitleSafe inner inset (marks in the margin), TitleSafe limited to hero + ApplicationPage cover, footer first rows aligned, LowerThird `gap-2`, spec app-grid uses →.
 - 2026-11-23: Task 7 implemented: blocks + SectionRenderer, scaffold renders EN home/about/contact; ASCII tones made a monotonic duotone ramp; GridFrame hairline variant and `grid-hairline`/`cell` removed; gate green (83 tests); border audit, focus walk, FAQ keyboard toggle and 360/768/1440 checked in the browser.
 - 2026-11-23: Task 7 fix round 1: content h1 demoted and heading ids prefixed per section in `renderMarkdown`, rundown `<time datetime>`, `LEDE_CLASS` + `max-w-measure` token, hero position refine in the schema, spec §8 GridFrame line, hero 6/6 split; gate green (95 tests).
+- 2026-11-23: Task 8 implemented: `lib/routes.ts`, EN/TR route wrappers, GenericPage/ApplicationPage/NotFoundPage, robots, sitemap filter and i18n map, `build-outputs` (relocate TR 404, prune unreferenced images), application hero ban. Fix round 1: TR not-found copy, no canonical on noindex pages. Gate green (101 tests).
+- 2026-11-23: Task 9 implemented: quote schema (12 tests), QuoteForm/QuoteStatus/QuotePage, `/quote/` and `/tr/quote/`. Fix round 1: general pre-checked, `band-class.ts`, `quoteTimelinePlaceholder` key, TR quote copy and page, aria-labelledby, email pattern, MAX_SOLUTIONS build guard. Gate green (108 tests).
+- 2026-11-23: Merged tree (Tasks 8 + 9): 13 pages, 114 tests, one h1 per page, no broken links.

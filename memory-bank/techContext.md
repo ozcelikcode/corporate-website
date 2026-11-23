@@ -76,3 +76,7 @@ Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fie
 - pnpm 12 blocks install scripts: `pnpm-workspace.yaml` has `allowBuilds` for esbuild and workerd, and `minimumReleaseAgeExclude` for `@cloudflare/workers-types@5.20261123.1`.
 - Biome 2.6: `linter.rules.preset: "recommended"`; Markdown formatter/linter disabled (docs are not reformatted); `.superpowers` and `.code-review-graph` excluded.
 - Root `.gitignore` ignores `.superpowers/` (SDD briefs, reports and review diffs stay local).
+
+## Routing and i18n fallback (Task 8)
+- Spec section 14 i18n fallback is resolved by manual routing (no Astro i18n config): TR routes exist only for translated entries; EN fallbacks are `noindex` with no canonical.
+- Sitemap uses the `@astrojs/sitemap` i18n option; `robotsTxt` lives in `lib/seo.ts`.
