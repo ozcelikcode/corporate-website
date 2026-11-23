@@ -33,3 +33,24 @@ test('index.html loads the pinned Sveltia bundle with an SRI hash', () => {
   assert.match(html, /@sveltia\/cms@0\.271\.2\/dist\/sveltia-cms\.js/);
   assert.match(html, /integrity="sha384-[A-Za-z0-9+/]{64}"/);
 });
+
+test('config.yml ui collection declares exactly UI_KEYS (no dead strings)', () => {
+  const ui = config.slice(
+    config.indexOf('  - name: ui\n'),
+    config.indexOf('  - name: navigation\n'),
+  );
+  const names = [...ui.matchAll(/^ {6}- name: (\w+)$/gm)].map((match) => match[1]);
+  assert.deepEqual(names.sort(), [...UI_KEYS].sort());
+});
+
+test('config.yml omits empty optional fields and creates new entries in EN only', () => {
+  assert.match(config, /^output:\n {2}omit_empty_optional_fields: true$/m);
+  assert.match(config, /^i18n:\n(?: {2}.*\n)* {2}initial_locales: default$/m);
+});
+
+test('config.yml limits the hero image to rasters the ASCII renderer reads', () => {
+  assert.match(
+    config,
+    /- name: image\n {16}label: Image\n {16}widget: image\n {16}accept: "image\/png,image\/jpeg,image\/webp"$/m,
+  );
+});

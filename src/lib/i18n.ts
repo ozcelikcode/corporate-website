@@ -2,7 +2,8 @@ export const LOCALES = ['en', 'tr'] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = 'en';
 
-const HOME_SLUG = 'home';
+/** The page slug served at the locale root. */
+export const HOME_SLUG = 'home';
 const APPLICATIONS_ROOT = '/applications/';
 const TRAILING_SLASH = '/';
 
@@ -10,7 +11,7 @@ export function isLocale(value: unknown): value is Locale {
   return LOCALES.some((locale) => locale === value);
 }
 
-function withTrailingSlash(path: string): string {
+export function withTrailingSlash(path: string): string {
   return path.endsWith(TRAILING_SLASH) ? path : `${path}${TRAILING_SLASH}`;
 }
 

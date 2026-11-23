@@ -1,4 +1,4 @@
-# Sveltia CMS config. Mirrors the Zod schemas in src/content.config.ts and
+# Sveltia CMS config. Mirrors the Zod schemas in src/lib/content-schemas.ts and
 # src/lib/sections-schema.ts (all strict objects): field names, limits and href
 # patterns must stay in sync with them. Verified against sveltiacms.app docs.
 
@@ -14,10 +14,20 @@ publish_mode: editorial_workflow
 media_folder: src/assets/uploads
 public_folder: ../../assets/uploads
 
+# Blank optional fields are left out of the YAML instead of being saved as "" or []
+# (https://sveltiacms.app/en/docs/data-output#controlling-data-output). The schemas also
+# read a blank optional value as absent, for files saved before this or edited by hand.
+output:
+  omit_empty_optional_fields: true
+
 i18n:
   structure: multiple_folders
   locales: [en, tr]
   default_locale: en
+  # A new entry starts in EN only; an editor turns TR on from the editor's menu when it is
+  # translated, so no half-empty TR file is written
+  # (https://sveltiacms.app/en/docs/i18n/options#disabling-non-default-locale-content).
+  initial_locales: default
 
 singletons:
   - name: settings
@@ -380,7 +390,11 @@ collections:
                         '^(\/(?![\/\\])|https:\/\/)',
                         "Use a site path like /quote/ or an https:// URL",
                       ]
-              - { name: image, label: Image, widget: image }
+              # The build renders it as ASCII with sharp: rasters only (see lib/ascii-source.ts).
+              - name: image
+                label: Image
+                widget: image
+                accept: "image/png,image/jpeg,image/webp"
               - { name: imageAlt, label: Image alt text, widget: string }
           - name: statement
             label: Statement

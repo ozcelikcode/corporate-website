@@ -30,3 +30,13 @@ test('resolveUploadPath rejects names that only share a prefix', () => {
   );
   assert.throws(() => resolveUploadPath(image('/_astro/test.D30-05J7.png')), /not an image under/);
 });
+
+test('resolveUploadPath names a hero image that is not a PNG, JPEG or WebP raster', () => {
+  for (const name of ['mast.D30-05J7.svg', 'mast.D30-05J7.gif', 'mast.D30-05J7.avif']) {
+    assert.throws(
+      () => resolveUploadPath(image(`/_astro/${name}`)),
+      new RegExp(`${name.replaceAll('.', '\\.')} .*PNG, JPEG or WebP`),
+      name,
+    );
+  }
+});

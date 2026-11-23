@@ -1,5 +1,6 @@
 import type { SchemaContext } from 'astro:content';
 import { z } from 'astro/zod';
+import { optionalField } from './blank.ts';
 
 export const SECTION_TYPES = [
   'hero',
@@ -55,7 +56,7 @@ export const sectionsSchema = ({ image }: SchemaContext) =>
               z.strictObject({
                 title: z.string(),
                 body: z.string(),
-                duration: z.string().regex(DURATION_PATTERN).optional(),
+                duration: optionalField(z.string().regex(DURATION_PATTERN)),
               }),
             )
             .min(1)
@@ -65,7 +66,7 @@ export const sectionsSchema = ({ image }: SchemaContext) =>
         z.strictObject({
           type: z.literal('cta'),
           heading: z.string(),
-          text: z.string().optional(),
+          text: optionalField(z.string()),
           action: actionSchema,
         }),
         z.strictObject({

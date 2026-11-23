@@ -104,8 +104,29 @@ test('feature-list item duration is optional HH:MM:SS display timecode', () => {
     parse({ ...list, items: [{ title: 'T', body: 'B', duration }] }).success;
   assert.equal(parse(list).success, true);
   for (const ok of ['00:00:30', '01:59:59', '99:00:00']) assert.equal(withDuration(ok), true, ok);
-  for (const bad of ['0:30', '00:30', '00:60:00', '00:00:60', '00:00:30:00', 'x', ''])
+  for (const bad of ['0:30', '00:30', '00:60:00', '00:00:60', '00:00:30:00', 'x'])
     assert.equal(withDuration(bad), false, bad);
+});
+
+test('a blank duration (cleared in the CMS) parses as no duration', () => {
+  for (const blank of ['', '  ', null]) {
+    const result = parse({
+      ...fixtures['feature-list'],
+      items: [{ title: 'T', body: 'B', duration: blank }],
+    });
+    assert.equal(result.success, true, String(blank));
+    const [section] = result.success ? result.data : [];
+    assert.equal(section?.type === 'feature-list' ? section.items[0]?.duration : 'x', undefined);
+  }
+});
+
+test('a blank cta text (cleared in the CMS) parses as no text', () => {
+  for (const blank of ['', ' ', null]) {
+    const result = parse({ ...fixtures.cta, text: blank });
+    assert.equal(result.success, true, String(blank));
+    const [section] = result.success ? result.data : [];
+    assert.equal(section?.type === 'cta' ? section.text : 'x', undefined);
+  }
 });
 
 test('DURATION_PATTERN is anchored', () => {

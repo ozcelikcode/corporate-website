@@ -10,6 +10,7 @@ import {
   resolveLocalized,
 } from './entries.ts';
 import { DEFAULT_LOCALE, type Locale, UI_KEYS, type UiDictionary } from './i18n.ts';
+import { assertPageSlug } from './page-slugs.ts';
 
 export type SiteSettings = CollectionEntry<'settings'>['data'];
 export type PageData = CollectionEntry<'pages'>['data'];
@@ -37,10 +38,10 @@ export async function getUiDictionary(): Promise<UiDictionary> {
   if (!en) throw new Error(`Missing ui/${DEFAULT_LOCALE}/${UI_SLUG}.yaml`);
   const parsed = englishUiSchema.safeParse(en);
   if (!parsed.success) {
+    // The collection drops blank strings, so an emptied EN key shows up as missing.
     const missing = UI_KEYS.filter((key) => en[key] === undefined);
-    const empty = UI_KEYS.filter((key) => en[key] === '');
     throw new Error(
-      `ui/${DEFAULT_LOCALE}/${UI_SLUG}.yaml is invalid; missing keys: ${missing.join(', ') || 'none'}; empty keys: ${empty.join(', ') || 'none'}`,
+      `ui/${DEFAULT_LOCALE}/${UI_SLUG}.yaml must set every key; missing or blank: ${missing.join(', ')}`,
     );
   }
   return { en: parsed.data, tr: strings('tr') ?? {} };
@@ -58,9 +59,13 @@ export async function getPage(locale: Locale, slug: string): Promise<Resolved<Pa
   return resolved;
 }
 
-/** Pages that exist in `locale` itself; a translation without an EN twin fails the build. */
+/**
+ * Pages that exist in `locale` itself. A translation without an EN twin, or a slug that would
+ * shadow `/admin/`, `/api/` or a locale root, fails the build.
+ */
 export async function listTranslatedPages(locale: Locale): Promise<Resolved<PageData>[]> {
   const entries = await getCollection('pages');
+  for (const entry of entries) assertPageSlug(entry.id);
   assertEnglishTwins(entries);
   const resolved = entries.map((entry) => ({ data: entry.data, ...parseEntryId(entry.id) }));
   return resolved.filter((page) => page.locale === locale);

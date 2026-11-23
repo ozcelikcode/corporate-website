@@ -13,6 +13,7 @@ import { extname, join, parse } from 'node:path';
 import type { ImageMetadata } from 'astro';
 
 const UPLOADS_DIR = join(process.cwd(), 'src', 'assets', 'uploads');
+/** Rasters the ASCII renderer reads; the CMS hero image field accepts the same types. */
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp']);
 /** What may sit between stem and extension: nothing (dev) or one `.<hash>` (build). */
 const HASH_SUFFIX = /^(\.[\w-]+)?$/;
@@ -35,6 +36,11 @@ function isEmittedFrom(target: string, file: string): boolean {
 
 export function resolveUploadPath(image: ImageMetadata): string {
   const target = urlFileName(image.src);
+  if (!IMAGE_EXTENSIONS.has(extname(target).toLowerCase())) {
+    throw new Error(
+      `ASCII source ${target} must be a PNG, JPEG or WebP raster (SVG, GIF and AVIF are not supported); upload one of those as the hero image`,
+    );
+  }
   const matches = readdirSync(UPLOADS_DIR, { recursive: true, encoding: 'utf8' }).filter((file) =>
     isEmittedFrom(target, file),
   );
