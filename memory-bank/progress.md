@@ -16,6 +16,8 @@
 - Tasks 1–7, 11 and 7a done (2026-11-23).
 - 2026-11-23: Tasks 8 (routes, TR wrappers, 404s, robots, sitemap, JSON-LD, build outputs) and 9 (quote page, shared quote schema) done and merged.
 
+- 2026-11-23: Task 7b ASCII motion done (live broadcast signal, transmitter-mast seed, client JS constraint amended).
+
 ## Next
 - G8: Task 12 (runbook and acceptance). Owner: set Worker secrets and `<auth-worker>` in `_headers` before launch.
 - Owner: Sveltia step 6 manual check (runbook).
@@ -53,3 +55,4 @@
 - 2026-11-23: Task 9 implemented: quote schema (12 tests), QuoteForm/QuoteStatus/QuotePage, `/quote/` and `/tr/quote/`. Fix round 1: general pre-checked, `band-class.ts`, `quoteTimelinePlaceholder` key, TR quote copy and page, aria-labelledby, email pattern, MAX_SOLUTIONS build guard. Gate green (108 tests).
 - 2026-11-23: Merged tree (Tasks 8 + 9): 13 pages, 114 tests, one h1 per page, no broken links.
 - 2026-11-23: Task 10 implemented: Worker (`quote`, `turnstile`, `mail`, `headers`, `index`), `public/_headers` (spec §11), `build-outputs` extended (allow-list JSON, noindex). 146 tests; dry-run bundle 792 KiB; local smoke test OK.
+- 2026-11-23: Task 7b implemented: `ascii-glyphs.ts` (sharp-free constants), `ascii-motion.ts` (20 tests: noise, reveal schedule, ring distance, wave trail/boost, live frame, origin), row spans in `asciiMarkup`, AsciiImage CSS motion (hum bar, sync slip, breath) and module (tune-in, rings, grain), `assetsInlineLimit` so the module ships as `/_astro/*.js`. Seed hero redrawn as a transmitter mast (owner direction). JS 1.7 KB gzipped; figure 18.1 KB; CLS 0 (full-width rows fixed a measured 0.04); checked at 1440 and 360 under the real CSP (`wrangler dev`). 172 tests.

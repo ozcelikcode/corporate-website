@@ -33,7 +33,7 @@ A static, brand-agnostic corporate showcase site. It presents the brand's identi
 
 ## Success criteria
 - Lighthouse about 100 across the board.
-- Near-zero client JS (Turnstile on `/quote` only).
+- Near-zero client JS: Turnstile on `/quote`, and one ≤ 2 KB self-hosted ASCII motion module on pages with the ASCII hero (owner request, Task 7b).
 - WCAG 2.2 AA; mobile-first.
 - Zero hosting cost; near-zero maintenance.
 - Typed content fully separate from code; no hardcoded copy.

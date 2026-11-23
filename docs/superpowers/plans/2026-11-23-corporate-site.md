@@ -19,7 +19,7 @@
 - TypeScript: `astro/tsconfigs/strictest` + `erasableSyntaxOnly`, `verbatimModuleSyntax`, `allowImportingTsExtensions`. Relative imports end in `.ts`. No enums, namespaces or parameter properties (Node type stripping must run every tested file).
 - Tests: `node --test` only (`pnpm test`); `*.test.ts` sits next to its unit; tested modules never import `astro:*` at runtime (`import type` is fine). Test files are excluded from both tsconfigs; Biome still lints them. The root tsconfig gets `"types": ["node"]` only if the `@types/node` fallback is used; the worker tsconfig keeps `@cloudflare/workers-types`.
 - Brand-agnostic: never name a tenant. Seed uses brand `Brand`, legal name `Brand Ltd.`, domain `example.com`, email `hello@example.com`.
-- Client JS: none, except the Turnstile script on `/quote/` and `/tr/quote/` and the pinned Sveltia bundle on `/admin/`. `<script type="application/ld+json">` data blocks are allowed. No inline executable `<script>` anywhere in `dist/`.
+- Client JS: none, except the Turnstile script on `/quote/` and `/tr/quote/`, the pinned Sveltia bundle on `/admin/`, and (amended in Task 7b, owner request "ASCII effects must be animated") the ASCII motion module: one self-hosted, Astro-bundled `<script type="module" src="/_astro/….js">` on exactly the pages that render `AsciiImage` (≤ 2 KB gzipped, no dependencies, inert under reduced motion). `astro.config.ts` sets `vite.build.assetsInlineLimit` so script chunks are never inlined (CSP `script-src 'self'`). `<script type="application/ld+json">` data blocks are allowed. No inline executable `<script>` anywhere in `dist/`.
 - Every user-facing string comes from content (`settings`, `ui`, `navigation`, `pages`, `applications`). The only exceptions are the temporary scaffold page `src/pages/index.astro` (Tasks 1–7), deleted in Task 8, and the Worker's quote email subject and body labels (operator-facing, sent to the operator's own inbox), which are named constants at the top of `worker/mail.ts`.
 - Design: spec §8 rules, tokens from Task 2 only. Every UI task passes the **VA checklist** and the **guard greps** below.
 - Security headers: spec §11 verbatim in `public/_headers`. Secrets only via `wrangler secret put`: `TURNSTILE_SECRET_KEY`, `QUOTE_TO`, `QUOTE_FROM`. Free tier only.
@@ -67,25 +67,33 @@ Commit and memory-bank steps: a Haiku 5.5 agent. Task numbers follow the manager
 grep -rEn '#[0-9a-fA-F]{3,8}\b' src/components src/layouts         # raw hex
 grep -rEn '[0-9]px\b' src/components src/layouts                   # raw px
 grep -rEn '\b(rounded|shadow|blur|backdrop|purple|violet|emoji)' src/components src/layouts src/styles | grep -vE -- '--[a-z-]+-\*:\s*initial'   # the `tokens.css` reset lines are allowed
-grep -rEn 'gradient' src/components src/layouts src/styles         # allowed: only the `scanlines` utility and AsciiImage shimmer mask
+grep -rEn 'gradient' src/components src/layouts src/styles         # allowed: only the `scanlines` utility and the AsciiImage hum bar (Task 7b; replaced the shimmer mask)
 grep -rEn 'console\.log|:\s*any\b|as any\b|<any>' src worker
 grep -rEn 'bars-' src/components src/layouts src/pages | grep -vE 'ui/(BarsStrip|NoSignal)\.astro|ui/bar-tones\.ts'   # SMPTE bar tokens only in the bars components
 grep -rEn 'crosshair' src                                          # retired in Task 7a
 ```
 
+**Dist script guard** (after `pnpm build`; Task 7b):
+```bash
+grep -rhoE '<script[^>]*>' dist --include='*.html' --exclude-dir=admin | grep -v 'application/ld+json' | grep -v 'challenges.cloudflare.com/turnstile' | grep -vE '^<script type="module" src="/_astro/[^"]+\.js">$'   # prints nothing
+grep -rhoE '<script(\s[^>]*)?>[^<]' dist --include='*.html' --exclude-dir=admin | grep -v 'application/ld+json'   # prints nothing: no inline executable script
+diff <(grep -rlE '<script type="module" src="/_astro/' dist --include='*.html' | sort) <(grep -rl 'data-ascii' dist --include='*.html' | sort)   # prints nothing: the module ships exactly where AsciiImage renders
+for f in $(grep -rlE 'data-ascii' dist --include='*.html'); do test "$(grep -oE '<script type="module" src="/_astro/' "$f" | wc -l)" -eq 1 || echo "MODULES $f"; done   # prints nothing: one module per such page
+```
+
 **VA checklist** (spec §8; run in `pnpm dev` at 360, 768 and 1440 CSS px):
-- VA1 0 radius, no shadows, no blur/glass, no gradients except hero scanlines and the ASCII shimmer mask.
+- VA1 0 radius, no shadows, no blur/glass, no gradients except hero scanlines and the ASCII hum bar.
 - VA2 Border budget (spec §8): 1px hairlines only on the header bottom / footer top edges, section dividers, form controls and the `TitleSafe` media frame; never doubled. Content grids, cards, feature lists, FAQ and the CTA use spacing and `surface` vs `canvas` tone, no boxed cells; no "+" crosshairs. Broadcast details used sparingly: TallyStrip PGM/PVW, title-safe marks on media only, lower thirds on section headings and card titles only, one bars strip (footer).
 - VA3 Labels are uppercase tracked Martian Mono with an index, e.g. `[02] APPLICATIONS`; at most one two-tone headline per page.
 - VA4 Accent comes only through `accent` / `accent-dim` / `accent-wash` / `tone-*` tokens, only on large text, graphics, tallies and the lower-third key, never on body text; `critical` only for errors. The `bars-*` tokens (SMPTE standard) appear only in `BarsStrip` and `NoSignal`.
 - VA5 Typographic glyphs (→ ↗ + ● −), no icons, no emoji.
-- VA6 Motion only on opacity/transform, ≤ 240ms, except the Timecode counter and the AsciiImage shimmer (both fully static under reduced motion); with DevTools `prefers-reduced-motion: reduce` nothing moves (timecode static, shimmer off).
+- VA6 Motion only on opacity/transform, ≤ 240ms, except the Timecode counter and the AsciiImage live signal (Task 7b: hum bar, sync slips, breath, and the module's tune-in, rings and grain; all fully static under reduced motion, no layout shift); with DevTools `prefers-reduced-motion: reduce` nothing moves (timecode static, ASCII shows the build-time render).
 - VA7 At 360px: `document.documentElement.scrollWidth <= 360` (no horizontal scroll); tap targets ≥ 24×24 CSS px.
 - VA8 AA contrast: body ≥ 4.5:1, large text/UI ≥ 3:1; a visible focus ring on every interactive element during a Tab walk; DOM order matches visual order.
 
 ### Files beyond the spec §6 tree
 
-`src/lib/{build-mode,env,entries,routes,assert-never,ascii-source}.ts`; `src/components/ui/{TitleSafe,LowerThird,BarsStrip,NoSignal}.astro` and `bar-tones.ts` (Task 7a); `src/components/quote/{QuoteForm,QuoteStatus}.astro`; colocated `*.test.ts`; `src/lib/admin-config.test.ts`; `docs/runbook.md`; the temporary `src/pages/index.astro` (deleted in Task 8).
+`src/lib/{build-mode,env,entries,routes,assert-never,ascii-source,ascii-glyphs,ascii-motion}.ts` (the last two from Task 7b); `src/components/ui/{TitleSafe,LowerThird,BarsStrip,NoSignal}.astro` and `bar-tones.ts` (Task 7a); `src/components/quote/{QuoteForm,QuoteStatus}.astro`; colocated `*.test.ts`; `src/lib/admin-config.test.ts`; `docs/runbook.md`; the temporary `src/pages/index.astro` (deleted in Task 8).
 
 ---
 
@@ -343,7 +351,7 @@ assert.ok(!out.includes('<')); assert.equal(JSON.parse(out).legalName, 'A</scrip
 - [ ] **Step 6: Gate and guard greps, plus `dist/index.html` checks.**
   - `grep -o '<link rel="alternate"[^>]*>' dist/index.html | wc -l` = 3 (`grep -c` counts lines, and compressed HTML is one line).
   - `og:image` content starts with `http://localhost:4321/_astro/`.
-  - `grep -c '<script' dist/index.html` = 0.
+  - `grep -c '<script' dist/index.html` = 0. *(From Task 7b: 1, the ASCII motion module; see the dist script guard.)*
   - `grep -q 'popover' dist/index.html` succeeds.
 - [ ] **Step 7: Visual acceptance.** VA1–VA8, plus:
   - The header matches the §8 wireframe at 1440px.
@@ -496,7 +504,7 @@ grep -q 'application/ld+json' dist/index.html && ! grep -q 'application/ld+json'
 grep -q '<html lang="tr"' dist/tr/index.html
 grep -q 'href="/applications/' dist/tr/index.html && ! grep -q 'href="/tr/applications/' dist/tr/index.html   # EN fallback links
 grep -q 'Disallow: /$' dist/robots.txt       # local build is non-production
-grep -rhoE '<script[^>]*>' dist --include=*.html --exclude-dir=admin | grep -v 'application/ld+json' | grep -v 'challenges.cloudflare.com/turnstile'   # prints nothing
+grep -rhoE '<script[^>]*>' dist --include=*.html --exclude-dir=admin | grep -v 'application/ld+json' | grep -v 'challenges.cloudflare.com/turnstile'   # prints nothing (from Task 7b: use the dist script guard in the header, which also allows the ASCII motion module)
 grep -rhoE 'href="/[^"#]*' dist --include=*.html | sed 's/href="//' | sort -u | while read p; do [ -f "dist${p}index.html" ] || [ -f "dist${p}" ] || echo "BROKEN $p"; done | grep -vE '^BROKEN /(tr/)?quote/$'   # prints nothing; the filter is for the G6 worktree only (T9's pages are not there yet); the manager re-runs this unfiltered on the merged tree
 ```
 - [ ] **Step 6: TR 404 location.** `test -f dist/tr/404.html`. If Astro emitted `dist/tr/404/index.html` instead, create `src/integrations/build-outputs.ts` with `relocateLocale404(dist: URL): Promise<void>`, run on `astro:build:done`, and register it in `astro.config.ts`. Add `src/integrations/build-outputs.test.ts` with a case on a temp dir (`tr/404/index.html` → `tr/404.html`, idempotent). Task 10 extends that file and keeps `relocateLocale404` and its test.
@@ -728,7 +736,7 @@ Model: Sonnet 5.5 · Group G8 · Spec §2, §13, §14
   4. **Editing flow:** editor → PR → preview (visual only: test keys, noindex, no CMS auth) → CODEOWNER merge → deploy.
   5. **Acceptance checks:**
      - Lighthouse (mobile, production URL): Performance ≥ 95 (target 100), Accessibility 100, Best Practices 100, SEO 100.
-     - 0 `<script>` outside the quote pages and `/admin/` (grep from Task 8, with `--exclude-dir=admin`); hero ASCII figure < 30 KB.
+     - No `<script>` outside the quote pages and `/admin/` except the ASCII motion module on pages with `AsciiImage` (the header's dist script guard); hero ASCII figure < 30 KB.
      - `curl -sI` shows every §11 header on `/`, the admin CSP on `/admin/`, and an immutable cache on `/_astro/*`; securityheaders.com grade ≥ A.
      - Quote with JS → `#sent` and a mail with Reply-To; without JS → `#error-verify` with the email; bad token (`cf-turnstile-response=bad`) → `#error-verify`; cross-origin → `#error-invalid`; GET → 405.
      - axe (`npx @axe-core/cli@<pinned>` ad hoc, never a dependency) with 0 violations on `/`, `/about/`, `/applications/`, one application, `/contact/`, `/privacy/`, `/quote/` (and each `#state`), the 404 page, `/tr/`, `/tr/quote/`.

@@ -15,7 +15,7 @@ Principles:
 
 ## 2. Goals / non-goals / anti-goals
 
-- **Goals:** Lighthouse ~100 across the board; near-zero client JS (Turnstile, `/quote` only); WCAG 2.2 AA; mobile-first; zero hosting cost; near-zero maintenance; typed content separate from code; EN at `/`, optional TR at `/tr/`.
+- **Goals:** Lighthouse ~100 across the board; near-zero client JS (Turnstile on `/quote`, plus one ≤ 2 KB self-hosted ASCII motion module on pages with the ASCII hero); WCAG 2.2 AA; mobile-first; zero hosting cost; near-zero maintenance; typed content separate from code; EN at `/`, optional TR at `/tr/`.
 - **Non-goals (forbidden):** visitor auth/accounts, payments, cart, servers/VPS/databases, paid services.
 - **Anti-goals:** `any`; swallowed errors; leftover `console.log`; magic numbers, raw hex or px in components; hardcoded copy; repeated style blocks; dead code; unused deps.
 
@@ -95,7 +95,7 @@ EDITOR ──► /admin (Sveltia, static) ──► sveltia-cms-auth Worker (Git
 │  ├─ assets/
 │  │  ├─ fonts/                      # 2 variable woff2 families (consumed by the fonts API)
 │  │  └─ uploads/                    # CMS image uploads → AVIF/WebP at build;
-│  │                                 #   seed: neutral test-card hero (ASCII source)
+│  │                                 #   seed: transmitter-mast hero (ASCII source; file test-card.png)
 │  ├─ styles/
 │  │  ├─ tokens.css                  # @theme: every design token
 │  │  └─ global.css                  # base, prose, grid, lower-third, scanline, reduced-motion
@@ -203,7 +203,7 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
 **v1 seed content.** The repo ships brand-neutral, realistic placeholder content:
 - EN: `settings`, `ui`, `navigation`, all pages, and 3 sample applications.
 - TR: `ui`, `navigation` and the home page only, to prove the plumbing and the EN fallback.
-- A neutral broadcast test-card style hero image is included as the ASCII source.
+- A bold broadcast motif is included as the ASCII source: a transmitter mast with signal waves radiating from its top (file name `test-card.png`, kept from the first seed; owner direction 2026-11-23: the look must evoke broadcasting to anyone).
 - Real tenant content is entered later by admins through the CMS.
 
 ## 8. Design system
@@ -253,11 +253,11 @@ A VU meter was considered and dropped: a second perpetual animation beside the r
 - Uppercase tracked mono labels with an index, e.g. `[02] APPLICATIONS`.
 - One two-tone headline per page.
 - Typographic glyphs (→ ↗ + ●) instead of icons.
-- Motion on opacity/transform only, ≤240ms.
+- Motion on opacity/transform only, ≤240ms. Exceptions: the Timecode counter and the AsciiImage live signal (ambient, static under reduced motion).
 - Scanlines on the hero only.
 - Accent for large text and graphics only.
 
-**Don't:** radius, shadows, gradients (except the ASCII shimmer mask and the hero scanlines), blur/glass, purple (the SMPTE magenta bar is the standard's own, not decoration), boxed content grids, emoji, icon packs, stock photos, centered three-icon feature rows.
+**Don't:** radius, shadows, gradients (except the ASCII hum bar and the hero scanlines), blur/glass, purple (the SMPTE magenta bar is the standard's own, not decoration), boxed content grids, emoji, icon packs, stock photos, centered three-icon feature rows.
 
 | Block | Visual |
 |---|---|
@@ -276,7 +276,13 @@ A VU meter was considered and dropped: a second perpetual animation beside the r
   - Luminance picks a glyph from a ramp; each glyph gets one of 6 accent/ink tones.
   - Same-tone runs merge into one `<span>`.
   - Output is a `<pre aria-hidden>` inside a `<figure role="img" aria-label>`, sized with container query units.
-  - Optional CSS shimmer, only under `prefers-reduced-motion: no-preference`.
+  - **Signature moment: a live broadcast signal** (Task 7b; owner: "ASCII effects must be animated", and the effect must evoke broadcasting to anyone). Only under `prefers-reduced-motion: no-preference`; the build-time render is the no-JS and reduced-motion picture. Zero layout shift: rows are full-width inline-blocks, motion is transform, opacity and same-width glyphs only. Each effect maps to a broadcast idea:
+    - *Tuning in* (module): when the figure first scrolls into view, the frame is static noise that resolves glyph by glyph into the picture over about 1.2 s (random order, rolling roughly top-down; tones settle with their glyphs).
+    - *Transmission* (module): rings of brightness travel outward from the transmitter (`waveOrigin`, a `data-wave-origin` "x y" on the figure; default top centre, the seed's mast top). Glyphs under a ring step up in tone, a dotted front crosses empty sky, and the signal fades with distance. A little glyph grain (rare ramp-neighbour flicker) rides on top.
+    - *Hum bar* (CSS): a soft colour-dodge band rolls slowly down the picture, like mains hum on a monitor.
+    - *Sync slip* (CSS): every 8 to 20 s, at uneven gaps, a band of rows tears sideways by a fraction of a glyph and dips for two frames (a dropout).
+    - *Breath* (CSS, no-JS picture only): the brightest tone dims and recovers in coarse steps.
+  - The module (`lib/ascii-motion.ts` pure logic, thin glue in the component) is one Astro-bundled `/_astro/*.js` file (≤ 2 KB gzipped, CSP `script-src 'self'`). It runs only on the visible grid, pauses offscreen and in hidden tabs, never runs under reduced motion (and follows changes to it), and restores the build-time markup whenever it stops.
 - **`TallyStrip`:** `■ LIVE` plus SMPTE timecode `HH:MM:SS:FF`, made with a CSS `@property` counter (no JS), channel, `■ PGM ■ PVW` and the format. Static under reduced motion.
 
 ```
@@ -514,5 +520,5 @@ Deploy order: **auth Worker → GitHub App callback → site.**
 22. `sveltia-cms-auth` is not vendored. It is deployed once, by hand, from the official repo as its own Worker before the site. Its URL is set by a one-time manual edit of `config.yml` `base_url` and the `/admin/*` CSP in `_headers`, not a build variable: a generator step for two static values that change at most once would be over-engineering. Deploy order: auth Worker → GitHub App callback → site.
 23. Quote `solutions` are validated against a generated allow-list. A small Astro integration (`astro:build:done`) writes `worker/generated/solutions.json` (application slugs + `general`), and the Worker imports it. Build order is `astro build` → Worker bundle. Unknown slugs are rejected.
 24. PR preview builds are for visual review only. They use Turnstile's official always-pass test keys, `SITE_URL` falls back to the preview host, previews are `noindex` (`X-Robots-Tag` + disallow-all `robots.txt`), and CMS auth is not expected to work on them. Production keys are used only on `main`.
-25. v1 ships brand-neutral, realistic placeholder seed content: EN for settings, ui, navigation, all pages and 3 sample applications; TR for ui, navigation and home only, to prove the plumbing and fallback. A neutral test-card hero image is the ASCII source. Real content is entered later by admins via the CMS.
+25. v1 ships brand-neutral, realistic placeholder seed content: EN for settings, ui, navigation, all pages and 3 sample applications; TR for ui, navigation and home only, to prove the plumbing and fallback. A transmitter-mast hero image (signal waves from its top) is the ASCII source. Real content is entered later by admins via the CMS.
 26. The accent is validated, never adjusted. The CMS field is restricted to a 6-digit hex pattern with a contrast hint, and the build fails loudly, naming the field, when contrast against the canvas is below 3:1. Admins see the failure on the PR preview before merging.

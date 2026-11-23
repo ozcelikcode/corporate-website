@@ -61,7 +61,7 @@
 - `scanlines` goes on the ASCII media cell only, never over text.
 - Motion defaults: `--animate-*` reset (no `animate-*` utilities); bare `transition*` utilities default to `--duration-fast` + `--ease-signal`. `ring-*`/`inset-ring-*` still emit `box-shadow` (bare-number widths, no theme namespace to reset): never use them; focus uses `outline`.
 - The `crosshair` utility was removed in Task 7a. `prose` h3+ reuse `label-mono` via `@apply`; weights use `--font-weight-semibold`.
-- Exceptions to "no gradients": `scanlines` (hard-stop `repeating-linear-gradient` overlay, static) and the AsciiImage shimmer mask (Task 6).
+- Exceptions to "no gradients": `scanlines` (hard-stop `repeating-linear-gradient` overlay, static) and the AsciiImage hum bar band (Task 7b; replaced the Task 6 shimmer mask).
 - Biome parses Tailwind CSS via `css.parser.tailwindDirectives: true`.
 - Font glyph gaps: the Fontsource latin/latin-ext subsets lack `→ ↗ ●` in both families. Arrows are drawn by the `Glyph` SVG atom and the `●` is replaced by a CSS square lamp in `Tally`. Turkish `ÇĞİıÖŞÜ çğıöşü` is fully covered.
 
@@ -71,11 +71,11 @@ Do:
 - Uppercase tracked mono labels with index, e.g. `[02] APPLICATIONS`.
 - One two-tone headline per page.
 - Typographic glyphs (→ ↗ + ●) instead of icons.
-- Motion on opacity/transform only, at most 240ms; scanlines on hero only.
+- Motion on opacity/transform only, at most 240ms; scanlines on hero only. Exceptions: Timecode and the AsciiImage live signal (Task 7b), both static under reduced motion.
 - Accent for large text and graphics only, never body text.
 
 Don't:
-- Radius, shadows, gradients (except ASCII shimmer mask), blur/glass, purple, emoji, icon packs, stock photos, centred three-icon rows.
+- Radius, shadows, gradients (except the ASCII hum bar and hero scanlines), blur/glass, purple, emoji, icon packs, stock photos, centred three-icon rows.
 - Inter, Geist, Space Grotesk, Poppins, Montserrat.
 
 ## UI atoms (`src/components/ui/`)
@@ -123,22 +123,27 @@ Don't:
 - Footer: full-bleed `border-t border-line`; `BarsStrip` at the content edge pulled up by `-mt-(--border-hairline)` so it lies on the rule; then spaced `GridFrame columns={4}`; every column's first row is a `min-h-11 flex items-center` box (logo link, nav row, Contact/Follow label wrappers), so the first rows share one line; indexed nav; Contact and Follow continue the numbering (`[05]`, `[06]`); contacts in `<address>`; ↗ on https links via Glyph; rights line `© BUILD_YEAR legalName footerRights`.
 
 ## ASCII (Task 6, fix round 1)
-- Constants in `lib/ascii.ts`: `ASCII_RAMP = ' .:-=+*#%@'`, `TONE_COUNT = 6`, `CHAR_ASPECT = 0.5`, `ASCII_COLUMNS = 96`, `ASCII_COLUMNS_COMPACT = 48`.
-- Tones: glyph `min(9, floor(l*10/256))`, tone `min(5, floor(l*6/256))` → `--color-tone-0…5`. Bright = dense glyph. Same-tone runs become one `<span class="tN">`; all-space runs are bare text; trailing blanks are trimmed.
+- Constants: `lib/ascii-glyphs.ts` (sharp-free, shared with the client module, Task 7b) holds `ASCII_RAMP = ' .:-=+*#%@'`, `TONE_COUNT = 6`, `CHAR_ASPECT = 0.5`; `lib/ascii.ts` holds `ASCII_COLUMNS = 96`, `ASCII_COLUMNS_COMPACT = 48`. Never import `ascii.ts` values into client code (it imports `sharp`); `import type` is fine.
+- Tones: glyph `min(9, floor(l*10/256))`, tone `min(5, floor(l*6/256))` → `--color-tone-0…5`. Bright = dense glyph. Same-tone runs become one `<span class="tN">`; all-space runs are bare text; trailing blanks are trimmed (`runsHtml`). Every row is wrapped in a bare `<span>` (Task 7b), rows joined by `\n` (no leading newline); a blank row is `<span></span>`. CSS makes rows `inline-block` at `inline-size: 100%` (same line box as text; full width so a row whose text length changes never moves the line break after it: that was measured as CLS).
 - Pipeline (sharp): `autoOrient` → `resize fill` → `flatten` on black → `normalise` → `toColourspace('b-w')` → `raw`. Flatten is for correct translucency: sharp 0.35.5's `b-w` already drops alpha silently. Memoized per `file@cols`; a rejected render is evicted.
 - Two grids per figure: 96 columns and 48 compact. `@container (inline-size < 30rem)` on the figure swaps them (container queries cannot use `var()`, so 30rem is a literal). Both `<pre>` are aria-hidden; the figure keeps `role="img"` and `aria-label`.
 - `AsciiImage` (`ui/`): `--ascii-advance: 0.7` (Martian Mono, measured), font size `100cqi / cols / advance`, line height `advance / CHAR_ASPECT`. Markup comes from `lib/ascii-markup.ts` (`asciiMarkup`) via `set:html`, so spans carry no scoped attributes.
 - Budget: `ASCII_HTML_BUDGET = 30 * 1024` per figure; `assertAsciiBudget` fails the build. Seed figure is 16.5 KB.
 - Upload source: `resolveUploadPath` lists `src/assets/uploads` on disk and matches the emitted file name (build `<stem>.<hash>.<ext>`, dev `<stem>.<ext>?…`). Never `import.meta.glob` (importing ships the original) and never `fsPath`. Upload names must be unique across subfolders; ambiguity throws.
-- Shimmer: alpha-only mask band, 600% size, 45/50/55 band, 78% floor, 9 s linear. Declared only under `prefers-reduced-motion: no-preference`.
+- Live signal (Task 7b, owner: "ASCII effects must be animated" and must evoke broadcasting to anyone). Only under `prefers-reduced-motion: no-preference`; the build-time render is the no-JS and reduced-motion picture. Named custom properties at the top of `AsciiImage`:
+  - Hum bar: figure `::after`, a `linear-gradient` band (`--ascii-roll-band` 0.45 of the height), `mix-blend-mode: color-dodge` with a dim opaque glow (`color-mix(ink 28%, black)`; a bright translucent glow clipped the canvas to grey), translateY only, 9 s, travelling `--ascii-roll-travel` 2 figure heights so it rests between passes. The figure has a canvas background because TitleSafe's `isolation: isolate` would otherwise give the dodge a transparent backdrop.
+  - Sync slip: rows 5–6 (13.1 s) and 10–12 (19.7 s, reverse, delay −6.3 s) tear `0.45ch` with an opacity dip for two step-end keyframes (96–98%).
+  - Breath: `.t5` opacity to 0.8, `steps(8)` alternate 2.6 s, only on `[data-ascii]:not([data-live])` (the no-JS picture).
+  - Module (`<script>` in AsciiImage, pure logic in `lib/ascii-motion.ts`, 20 tests): per figure, IntersectionObserver on both `<pre>`; the intersecting one is the visible grid (respects the container swap). First time: tune-in, 1.2 s of 25 fps frames where each cell (random threshold, 35% row bias) shows `NOISE_TONE` static until it locks. Then live frames at 12.5 fps (`LIVE_FRAME_MS` 80): `liveRuns` adds `waveBoost` tones under rings from `data-wave-origin` ("x y", `parseOrigin`, default `WAVE_ORIGIN` {0.5, 1/3}; `ringDistance` in picture widths, a row = 2 columns), speed 0.16, spacing 0.24, trail 0.07, gain 2, reach 0.9; a dotted front (`.`, depth 0.012) crosses blank sky; flicker 0.4% per glyph per frame to a ramp neighbour. Stops (and restores the saved row markup byte for byte) offscreen, on `document.hidden`, under reduced motion (`change` listened). Sets `data-live` while it drives the figure.
+  - Cost: about 0.23 ms compute plus about 1 ms of row `innerHTML` writes and reads per 80 ms tick; JS 3.2 KB raw, 1.7 KB gzipped.
 - Hero media cell: give the figure a definite track (`minmax(0, 1fr)` / `min-w-0`); wrap it in `<TitleSafe scanlines>` (no AsciiImage change needed).
-- Seed `test-card.png` is a generated card (seven grey bars, ringed disc with crosshair, amber inner ring, 10-step wedge) that matches `imageAlt`.
+- Seed `test-card.png` (name kept) is, since Task 7b, a generated transmitter mast: a lattice tower, a bright emitter disc at (640, 240) of 1280×720 (= `WAVE_ORIGIN`), four pairs of arcs fading outward, a ground bar. Reads at 96 and 48 columns. `imageAlt` EN/TR describe it.
 
 ## Design direction (owner feedback 2026-11-23, implemented in Task 7a)
 - Border budget: hairlines only on (1) header bottom / footer top edges, (2) section dividers (`SectionRenderer` owns one `border-t border-line` rule per section after the first), (3) form controls (incl. buttons and the menu key), (4) the `TitleSafe` media frame. Content grids, cards, feature lists, FAQ, CTA: spacing + `surface` vs `canvas` tone, no boxed cells. Crosshairs retired.
 - Broadcast details, used sparingly: TallyStrip PGM/PVW; title-safe marks only on the hero media and the ApplicationPage cover; lower thirds on section headings and app card titles only; rundown `feature-list` with `duration`; one SMPTE bars strip (footer rule); `NoSignal` on the 404. VU meter dropped (clutter, a second perpetual animation next to the timecode).
 - Scaffold page (Task 7 on): EN home + about (`pageTitle`) + contact through `SectionRenderer` (all 7 blocks, both h1 paths, so 2 h1s by construction); the atom showcase and its swatch/hairline exceptions are gone. Prose keeps its blockquote rule and `hr` (typographic, inside rich text).
-- Seed `test-card.png` kept (grey bars): the ASCII render is luminance-only, so SMPTE colour bars would look the same.
+- Seed image: the test card was replaced by the transmitter mast in Task 7b (owner: the look must evoke broadcasting to anyone).
 
 ## Coding standards
 - No `any`; strict TypeScript.
@@ -174,7 +179,7 @@ Don't:
 - Status: four `<section id={state} tabindex="-1" aria-labelledby>` panels shown only as `:target` (`not-target:hidden scroll-mt-24`); tally critical on errors, accent on sent; email fallback on error-verify and error-send.
 - Layout: gutter `[NN]` label plus noscript text; three surface panels (cols 4-12) hold the controls; consent, Turnstile and submit sit on the canvas (Turnstile needs 300 px).
 - `components/sections/band-class.ts` exports `CONTAINER`, `BAND`, `FIRST_BAND`, `DIVIDER`, shared by SectionRenderer, QuotePage and QuoteStatus. `Checkbox` has `checked?`; `Input` has `pattern?`.
-- QuotePage loads the Turnstile script (`is:inline`, async defer) through the `head` slot. It is the only client JS outside `/admin/`.
+- QuotePage loads the Turnstile script (`is:inline`, async defer) through the `head` slot. Outside `/admin/` the only other client JS is the ASCII motion module on pages with `AsciiImage` (Task 7b).
 - UI_KEYS is now 50 (`quote*` keys, `footerRights` in TR).
 
 ## Quote Worker (Task 10, `worker/`)

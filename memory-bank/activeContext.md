@@ -9,6 +9,7 @@
 ## Current focus
 - G6 done: Task 8 (routes, SEO, 404s, robots, sitemap, build outputs) and Task 9 (quote page, shared quote schema).
 - G7 done: Task 10 (Worker `/api/quote`, Turnstile, mail, `_headers`, extended `build-outputs.ts`), awaiting review. Next: Task 12 (runbook, acceptance).
+- Task 7b done (inserted after owner feedback "ASCII effects must be animated" and "the effect and look must evoke broadcasting to anyone"): the ASCII hero is a live broadcast signal (tune-in, transmission rings, hum bar, sync slips, grain); seed image is now a transmitter mast. Client JS constraint amended (one ≤ 2 KB module on pages with `AsciiImage`).
 - Plan: `docs/superpowers/plans/2026-11-23-corporate-site.md` (12 tasks, dispatch groups G1–G8, subagent-driven execution).
 
 ## Design direction (owner feedback, 2026-11-23; implemented in Task 7a)
@@ -22,7 +23,7 @@
 - TypeScript pinned at 6.0.3 (`@astrojs/check` peer range excludes 7.x).
 - Quote flow: plain HTML form, Turnstile, same-origin check, body cap; `send_email` with recipient/sender as Worker secrets; 303 redirect to `:target` status panels.
 - No honeypot or rate-limit binding.
-- ASCII hero rendered at build with `sharp`, 6 quantized tones, run-length spans, 30 KB HTML budget per figure.
+- ASCII hero rendered at build with `sharp`, 6 quantized tones, run-length spans, one span per row, 30 KB HTML budget per figure. Animated as a live broadcast signal (Task 7b): CSS hum bar and sync slips, plus one self-hosted module for tune-in and outward rings from `data-wave-origin`; static under reduced motion and without JS.
 - TallyStrip timecode is a CSS `@property` counter (no JS).
 - Accent must reach >= 3:1 contrast on canvas; `critical` is the only other semantic colour.
 - R2 files are linked, not embedded, in v1.

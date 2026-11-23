@@ -61,7 +61,7 @@ Dev dependencies:
 - Worker may use `console.error({ code, step })` only (no PII).
 
 ## Open verifications (builder)
-Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fields`, empty-list serialisation and owner step 6; `astro/zod` bundling in the Worker (else add `zod ^4.6.7`); Workers Builds Node/pnpm support; `send_email` on free plan; no inline `<script>` in `dist/` (CSP).
+Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fields`, empty-list serialisation and owner step 6; `astro/zod` bundling in the Worker (else add `zod ^4.6.7`); Workers Builds Node/pnpm support; `send_email` on free plan. No inline `<script>` in `dist/` (CSP): verified in Task 7b (dist script guard).
 
 ## Spec §14 results (Task 10)
 - `astro/zod` bundles in the Worker (`wrangler deploy --dry-run`): no `zod` pin needed. `cloudflare:email` and the JSON import (`with { type: 'json' }`) bundle too. Bundle `index.js` 792 KiB (limit 3 MiB).
@@ -69,6 +69,11 @@ Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fie
 - `astro:build:done` still passes `pages`; the allow-list comes from `pages[].pathname`.
 - Cloudflare `_headers`: two `/*` blocks do not merge (the later one replaced the first in `wrangler dev`), so the preview noindex line is inserted into the existing `/*` block (regex tolerant of CRLF, trailing spaces, comments; throws when no `/*` rule exists).
 - Local smoke test: `.dev.vars` (gitignored) with Turnstile's always-pass secret; `wrangler dev` on 8787 serves the CSP from `_headers`. Real email delivery and live siteverify are not verified locally.
+
+## Client scripts (Task 7b)
+- Astro 7 inlines a component `<script>` chunk under Vite's `build.assetsInlineLimit` (4 KiB; `shouldInlineScriptChunk` in `astro/dist/core/build/plugins/plugin-scripts.js`). The CSP (`script-src 'self'`) blocks inline scripts, so `astro.config.ts` sets `vite.build.assetsInlineLimit` to a function returning `false` for `.js` files (other assets keep the default via `undefined`).
+- Astro renders the module where the component is (`<script type="module" src="/_astro/AsciiImage.astro_astro_type_script_index_0_lang.<hash>.js">` at the start of the hero section), once per page, only on pages rendering `AsciiImage` (`/`, `/tr/`). Checked under the real CSP with `wrangler dev`.
+- The dist script guard in the plan header asserts this after every build.
 
 ## Test conventions
 - `node --test` with `node:assert/strict`; `*.test.ts` next to its unit; relative imports end in `.ts`; tested modules never import `astro:*` at runtime.
