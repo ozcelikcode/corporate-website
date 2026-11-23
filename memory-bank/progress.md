@@ -8,11 +8,13 @@
 - 2026-11-23: Implementation plan written (`docs/superpowers/plans/2026-11-23-corporate-site.md`, 12 tasks, groups G1–G8).
 - 2026-11-23: Task 1 toolchain scaffold done (configs, build-mode + 6 tests, worker stub, scaffold page).
 - 2026-11-23: Task 2 done: tokens, global styles and utilities, local Fontsource variable fonts, token swatch on the scaffold page.
+- 2026-11-23: Task 3 done: content schemas, i18n/content libs, seed content and images.
+- 2026-11-23: Task 4 done: 12 UI atoms + Glyph, atom showcase on the scaffold page.
+- Tasks 1–4 done (2026-11-23).
 
 ## Next
-- G3: Task 3 content ∥ Task 4 UI atoms.
-- Build tokens, global styles, i18n and content libs, content collections.
-- Build UI primitives, section blocks, layout components, pages, TR wrappers.
+- G4: Task 5 layout ∥ Task 6 ASCII ∥ Task 11 Sveltia.
+- Build section blocks, layout components, pages, TR wrappers.
 - Build the Worker (`/api/quote`), Turnstile verification, mail builder.
 - Configure Sveltia admin (`public/admin`) and `.github/CODEOWNERS`.
 - Resolve the "Left to the builder" verifications from the spec (section 14).
@@ -35,3 +37,5 @@
 - 2026-11-23: Project started; spec, memory bank and delegation skill created. No code yet.
 - 2026-11-23: Task 1 implemented; gate (build, check, lint, test) green.
 - 2026-11-23: Task 2 implemented; gate green, contrast measured (ink 16.5, ink-muted 8.3, line-strong 3.45 on canvas).
+- 2026-11-23: Task 3 implemented; build, check, lint, test green (37 tests). Fix rounds: internal href regex, z.strictObject, assertEnglishTwins, href lookahead.
+- 2026-11-23: Task 4 implemented; gate green; checked in browser at 360/768/1440 (timecode 25 fps, no grid holes, no horizontal scroll at 360, focus ring on all 18 interactive elements). Fix round 1 applied.

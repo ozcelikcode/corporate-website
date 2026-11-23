@@ -32,6 +32,13 @@
 - `ui`: keyed strings (TR may be partial, falls back to EN). `navigation`: header[], footer[] of {label, href}.
 - `pages`: title, description, ogImage?, sections[]. `applications`: name, slug, tagline, summary, category, cover+coverAlt, status, order, links[]?, brochure? (R2 URL), sections[].
 - Section block union in `src/lib/sections-schema.ts` (discriminated on `type`): `hero`, `statement`, `app-grid`, `feature-list`, `rich-text`, `cta`, `faq`. Shared by pages and applications. `SectionRenderer` uses an exhaustive switch.
+- All schemas are `z.strictObject` (unknown keys fail the build).
+- Entry ids come from the file path via `generateId`: `<locale>/<slug>` (settings `site`, ui `<locale>/strings`, navigation `<locale>/main`). An application's `slug` field never sets the id; `assertSlugMatches` fails the build on mismatch.
+- Internal href pattern `^\/(?![\/\\])`: rejects protocol-relative `//host` and a backslash after the leading slash. Used by `actionSchema` and `LINK_HREF_PATTERN`.
+- Fallback: `resolveLocalized` returns TR if present, else EN. `mergeByLocale` yields one entry per EN slug (sorted by `order`, then slug) and throws on a TR entry with no EN twin (`assertEnglishTwins`). `getPage` throws if EN is missing. Untranslated TR links point to EN URLs.
+- `UI_KEYS` (46) lives in `lib/i18n.ts`: EN ui must be exhaustive, TR may be partial.
+- `settings.accent` is checked by `accentContrast` (`lib/color.ts`): >= 3:1 against canvas.
+- Seed slugs: EN pages `home about contact privacy applications quote not-found`; TR page `home`; applications `newsroom-desk playout-control archive-search`.
 - Markdown rendered by `@astrojs/markdown-remark` via `lib/markdown.ts`.
 - `app-grid` with empty `apps` lists all applications by `order`.
 
@@ -42,6 +49,7 @@
 - `accent` = `var(--accent-seed)` (default `oklch(0.80 0.16 75)` on `:root`; BaseLayout overrides on `<html>`). `accent-dim` = 55 %, `accent-wash` = 12 % accent on canvas, mixed **in oklab** (oklch mixing swings the hue toward canvas hue 255: amber turned green).
 - `tone-0…5` (ASCII): ink-muted 30 % / 60 % on canvas (oklab), ink-muted, ink, accent-dim, accent.
 - Measured on canvas (default accent): ink 16.5, ink-muted 8.3, line-strong 3.45 (3.19 on surface), accent 10.0, accent-dim 3.35, critical 6.6, line 1.5.
+- `tracking-display` -0.02em (display headings); `tracking-label` 0.12em.
 - Type: `text-label` 0.75rem/1.4, `text-body` clamp(1rem…1.125rem)/1.55, `text-lede` clamp(1.125…1.375rem)/1.45, `text-h2` clamp(1.5…2.25rem)/1.1, `text-display` clamp(2.5…5.5rem)/0.98; `tracking-label` 0.12em; `font-sans`/`font-mono` via `@theme inline` → `--font-grotesk`/`--font-martian`. Fluid body size sits on `body` (not `html`) so rem stays 16px.
 - Other: `--spacing` 0.25rem, `max-w-page` (`--container-page` 90rem). Plain vars on `:root` (no utilities): `--border-hairline` 1px, `--border-focus` 0.125rem, `--z-header/popover/dialog` 10/20/30, `--duration-fast/base` 120/240ms, `--ease-signal` cubic-bezier(0.2, 0, 0, 1).
 - Base: canvas bg, ink text; `:focus-visible` = `--border-focus` solid accent, offset `--border-focus`; `::selection` accent-wash; global reduced-motion block zeroes animation/transition durations and delays (`!important` in base layer, Biome-ignored with reason).
@@ -52,7 +60,7 @@
 - `crosshair` declares `content: "+"` then `content: "+" / ""`, so browsers without alt-text support still draw the mark. `prose` h3+ reuse `label-mono` via `@apply`; weights use `--font-weight-semibold`.
 - Exceptions to "no gradients": `scanlines` (hard-stop `repeating-linear-gradient` overlay, static) and the AsciiImage shimmer mask (Task 6).
 - Biome parses Tailwind CSS via `css.parser.tailwindDirectives: true`.
-- Font glyph gaps: the Fontsource latin/latin-ext subsets lack `→ ↗ ●` in both families; they render from system fonts. Turkish `ÇĞİıÖŞÜ çğıöşü` is fully covered.
+- Font glyph gaps: the Fontsource latin/latin-ext subsets lack `→ ↗ ●` in both families. Arrows are drawn by the `Glyph` SVG atom and the `●` is replaced by a CSS square lamp in `Tally`. Turkish `ÇĞİıÖŞÜ çğıöşü` is fully covered.
 
 ## Visual language
 Do:
@@ -66,6 +74,22 @@ Do:
 Don't:
 - Radius, shadows, gradients (except ASCII shimmer mask), blur/glass, purple, emoji, icon packs, stock photos, centred three-icon rows.
 - Inter, Geist, Space Grotesk, Poppins, Montserrat.
+
+## UI atoms (`src/components/ui/`)
+- `Button {href?, type?, intent?: primary|secondary, size?: md|sm, glyph?: '→'|'↗'|null}`: `<a>` when `href` is set (then `type` is ignored), else `<button type>`. Default glyph ↗ for `https://`, → otherwise. `min-h-11`. Named group `group/button`. Label text always ink. md puts the arrow in a square end segment (accent fill on primary); sm inline.
+- `Label {text, index?, as?}`: `[NN] TEXT`, `label-mono`, index in ink.
+- `Heading {level: 1|2|3, text, accent?, size?: display|h2}`: `size` defaults to display for h1, h2 otherwise. `accent` is a second block line in accent.
+- `Tally {text, tone?: accent|muted|critical, dot?}`: lamp is a CSS square (`size-2`), never a `●` character.
+- `Timecode {prefix}`: `@property` integer counters with `steps()`. Constants reach CSS as `--tc-*` custom properties via one root `style` object. Animates only under `prefers-reduced-motion: no-preference`; `aria-hidden`.
+- `GridFrame {as?, columns?: 1|2|3|4|12, crosshairs?}`: children are `cell`s. For 2/3/4 columns the last cell fills its row. For 12 columns the children's `lg:col-span-*` must sum to 12 per row.
+- Tailwind v4 does not order stacked arbitrary variants by breakpoint: keep breakpoint rules disjoint (`md:max-lg:`).
+- `Field {id, label, hint?, optionalLabel?}`: hint id via `hintId(id)` (`hint-id.ts`, tested), used for `aria-describedby`.
+- `Input`, `Textarea`, `Select` share `CONTROL_CLASS` (`control-class.ts`): line-strong border, surface fill, `min-h-11`, `user-invalid:border-critical`.
+- `Checkbox`: native input, `accent-accent`, label in slot.
+- `Prose {html}`.
+- `Glyph {name: '→'|'↗', class?}`: inline SVG at label size, `aria-hidden`. Always use it, never arrow text.
+- Never `ring-*` or `animate-*`; focus uses `outline`.
+- cva variant maps are named constants typed against Props (`Record<NonNullable<Props['x']>, ...>`), so a missing variant fails `astro check`.
 
 ## Coding standards
 - No `any`; strict TypeScript.

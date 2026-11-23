@@ -2,13 +2,13 @@
 
 ## Current state (2026-11-23)
 - Design spec written: `docs/superpowers/specs/2026-11-23-corporate-site-design.md`.
-- Status: owner APPROVED the spec on 2026-11-23. Tasks 1 (toolchain) and 2 (tokens, fonts) implemented on `feat/site-v1`.
+- Status: owner APPROVED the spec on 2026-11-23. Tasks 1–4 implemented on `feat/site-v1` (toolchain, tokens/fonts, content schemas + seed + i18n libs, UI atoms).
 - Repo decision (2026-11-23): GitHub repo is public, so CODEOWNERS-enforced branch protection on `main` is free.
 - Memory bank and project instructions (`CLAUDE.md`, team-delegation skill) are set up.
 
-## Next step
-- Implementation plan written: `docs/superpowers/plans/2026-11-23-corporate-site.md` (12 tasks, 8 dispatch groups G1–G8, subagent-driven execution).
-- G3: Task 3 (content) ∥ Task 4 (UI atoms).
+## Current focus
+- G4: Task 5 (layout) ∥ Task 6 (ASCII hero) ∥ Task 11 (Sveltia).
+- Plan: `docs/superpowers/plans/2026-11-23-corporate-site.md` (12 tasks, dispatch groups G1–G8, subagent-driven execution).
 
 ## Key decisions so far
 - Own UI kit of about 12 Astro primitives with `class-variance-authority`; no shadcn/React islands.
