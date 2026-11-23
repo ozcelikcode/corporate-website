@@ -1,13 +1,122 @@
 ---
+// Temporary token swatch (Tasks 1–7); replaced by real routes in Task 8.
+import { Font } from 'astro:assets';
+import '../styles/global.css';
+
+const COLOURS = [
+  { name: 'canvas', swatch: 'bg-canvas' },
+  { name: 'surface', swatch: 'bg-surface' },
+  { name: 'ink', swatch: 'bg-ink' },
+  { name: 'ink-muted', swatch: 'bg-ink-muted' },
+  { name: 'line', swatch: 'bg-line' },
+  { name: 'line-strong', swatch: 'bg-line-strong' },
+  { name: 'critical', swatch: 'bg-critical' },
+  { name: 'accent', swatch: 'bg-accent' },
+  { name: 'accent-dim', swatch: 'bg-accent-dim' },
+  { name: 'accent-wash', swatch: 'bg-accent-wash' },
+  { name: 'tone-0', swatch: 'bg-tone-0' },
+  { name: 'tone-1', swatch: 'bg-tone-1' },
+  { name: 'tone-2', swatch: 'bg-tone-2' },
+  { name: 'tone-3', swatch: 'bg-tone-3' },
+  { name: 'tone-4', swatch: 'bg-tone-4' },
+  { name: 'tone-5', swatch: 'bg-tone-5' },
+] as const;
+
+const TEXT_SCALE = [
+  { name: 'display', className: 'text-display font-semibold' },
+  { name: 'h2', className: 'text-h2 font-semibold' },
+  { name: 'lede', className: 'text-lede text-ink-muted' },
+  { name: 'body', className: 'text-body' },
+  { name: 'label', className: 'label-mono text-ink-muted' },
+] as const;
+
+const FAMILIES = [
+  { name: 'Schibsted Grotesk', className: 'font-sans' },
+  { name: 'Schibsted Grotesk italic', className: 'font-sans italic' },
+  { name: 'Martian Mono', className: 'font-mono' },
+] as const;
+
+const TURKISH_SAMPLE = 'ÇĞİıÖŞÜ çğıöşü';
+const GLYPHS = '→ ↗ + ● − × ·';
 ---
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>Scaffold</title>
+    <title>Scaffold · tokens</title>
+    <Font cssVariable="--font-grotesk" preload />
+    <Font cssVariable="--font-martian" preload />
   </head>
   <body>
-    <main></main>
+    <main class="mx-auto max-w-page px-4 py-12">
+      <header class="scanlines grid-hairline">
+        <div class="cell">
+          <p class="label-mono text-accent">[00] Tokens</p>
+          <h1 class="mt-4 text-display font-semibold">
+            Signal <span class="text-accent">on air.</span>
+          </h1>
+        </div>
+      </header>
+
+      <section class="mt-12" aria-labelledby="colour-title">
+        <h2 id="colour-title" class="label-mono text-ink-muted">[01] Colour</h2>
+        <ul class="grid-hairline mt-4 grid-cols-2 md:grid-cols-4">
+          {
+            COLOURS.map(({ name, swatch }) => (
+              <li class="cell crosshair">
+                <span class:list={['block h-16 border border-line-strong', swatch]} />
+                <code class="label-mono mt-3 block text-ink-muted">--color-{name}</code>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="mt-12" aria-labelledby="type-title">
+        <h2 id="type-title" class="label-mono text-ink-muted">[02] Type scale</h2>
+        <ul class="grid-hairline mt-4">
+          {
+            TEXT_SCALE.map(({ name, className }) => (
+              <li class="cell">
+                <span class="label-mono text-ink-muted">text-{name}</span>
+                <p class:list={['mt-2', className]}>Every newsroom stays on air.</p>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="mt-12" aria-labelledby="glyph-title">
+        <h2 id="glyph-title" class="label-mono text-ink-muted">[03] Turkish and glyphs</h2>
+        <ul class="grid-hairline mt-4 md:grid-cols-3">
+          {
+            FAMILIES.map(({ name, className }) => (
+              <li class:list={['cell', className]}>
+                <span class="label-mono text-ink-muted">{name}</span>
+                <p class="mt-2 text-h2" lang="tr">{TURKISH_SAMPLE}</p>
+                <p class="mt-2 text-h2">{GLYPHS}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="mt-12" aria-labelledby="prose-title">
+        <h2 id="prose-title" class="label-mono text-ink-muted">[04] Prose</h2>
+        <div class="prose mt-4">
+          <p>
+            Body copy in ink on canvas. <a href="#prose-title">An inline link</a> uses a
+            hairline underline. <strong>Strong text</strong> and <code>mono code</code>.
+          </p>
+          <h3>A mono subheading</h3>
+          <ul>
+            <li>First list item</li>
+            <li>Second list item</li>
+          </ul>
+          <p class="text-critical">Critical: shown only for errors.</p>
+        </div>
+      </section>
+    </main>
   </body>
 </html>
