@@ -45,6 +45,7 @@ Dev dependencies:
 - Build vars (dashboard): `SITE_URL`, `PUBLIC_TURNSTILE_SITE_KEY` (via `astro:env`).
 
 ## CMS
+- Sveltia media folders (0.271.2): global `public_folder` must start with `/` (relative is rejected at load: `public.d.ts`, https://sveltiacms.app/en/docs/media/internal). A collection/file `media_folder` without a leading `/` is relative to the entry/file, so pages and applications use `../../../assets/uploads`, settings `../../assets/uploads` (what Astro `image()` resolves); `public_folder` is omitted there (defaults to it).
 - Sveltia CMS (pinned exactly, loaded from a pinned bundle with SRI in `src/pages/admin/index.astro`; pre-1.0, tested at 0.271.2).
 - Auth: `sveltia-cms-auth` on a free Worker, GitHub App OAuth. Vars: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `ALLOWED_DOMAINS`.
 - `publish_mode: editorial_workflow`; i18n `multiple_folders` en/tr (default en, layout `<folder>/<locale>/<slug>.yaml`); settings as singleton; `media_folder: src/assets/uploads`.

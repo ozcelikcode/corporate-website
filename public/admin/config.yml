@@ -11,8 +11,12 @@ backend:
 # Editors submit a branch + PR per entry; only users who can merge to main publish.
 publish_mode: editorial_workflow
 
+# Global folders: public_folder must be a site path starting with "/" (relative paths are
+# rejected). Collections and the settings file override both with entry-relative paths,
+# because Astro's image() resolves values relative to the YAML file
+# (https://sveltiacms.app/en/docs/media/internal#collection-level-configuration).
 media_folder: src/assets/uploads
-public_folder: ../../assets/uploads
+public_folder: /assets/uploads
 
 # Blank optional fields are left out of the YAML instead of being saved as "" or []
 # (https://sveltiacms.app/en/docs/data-output#controlling-data-output). The schemas also
@@ -35,8 +39,9 @@ singletons:
     file: src/content/settings/site.yaml
     icon: settings
     # Not localised: no field below sets i18n, so the file is shared by all locales.
-    media_folder: src/assets/uploads
-    public_folder: ../../assets/uploads
+    # Relative media_folder = relative to the file; public_folder defaults to it, so the
+    # YAML value is ../../assets/uploads/<name> (src/content/settings -> src/assets/uploads).
+    media_folder: ../../assets/uploads
     fields:
       - { name: brandName, label: Brand name, widget: string }
       - { name: logo, label: Logo, widget: image }
@@ -90,8 +95,6 @@ collections:
     create: false
     delete: false
     summary: Interface strings
-    media_folder: src/assets/uploads
-    public_folder: ../../../assets/uploads
     i18n: true
     fields:
       - name: skipToContent
@@ -297,8 +300,6 @@ collections:
     create: false
     delete: false
     summary: Main navigation
-    media_folder: src/assets/uploads
-    public_folder: ../../../assets/uploads
     i18n: true
     fields:
       - name: header
@@ -338,8 +339,9 @@ collections:
     folder: src/content/pages
     slug:
       editable: [create]
-    media_folder: src/assets/uploads
-    public_folder: ../../../assets/uploads
+    # Relative to the entry (src/content/<collection>/<locale>/<file>.yaml); public_folder
+    # defaults to the same value.
+    media_folder: ../../../assets/uploads
     i18n: true
     fields:
       - { name: title, label: Title, widget: string, i18n: true, required: [en] }
@@ -463,8 +465,9 @@ collections:
     slug: "{{fields.slug}}"
     identifier_field: name
     sortable_fields: [order, name]
-    media_folder: src/assets/uploads
-    public_folder: ../../../assets/uploads
+    # Relative to the entry (src/content/<collection>/<locale>/<file>.yaml); public_folder
+    # defaults to the same value.
+    media_folder: ../../../assets/uploads
     i18n: true
     fields:
       - { name: name, label: Name, widget: string, i18n: true, required: [en] }

@@ -54,3 +54,13 @@ test('config.yml limits the hero image to rasters the ASCII renderer reads', () 
     /- name: image\n {16}label: Image\n {16}widget: image\n {16}accept: "image\/png,image\/jpeg,image\/webp"$/m,
   );
 });
+
+test('config.yml media folders are valid for Sveltia and resolvable by Astro image()', () => {
+  // Global public_folder must be an absolute site path; relative ones are rejected at load.
+  assert.match(config, /^public_folder: \/\S+$/m);
+  assert.doesNotMatch(config, /^ +public_folder:/m);
+  // Entry-relative collection folders: pages and applications live in <collection>/<locale>/.
+  assert.equal(config.match(/^ {4}media_folder: \.\.\/\.\.\/\.\.\/assets\/uploads$/gm)?.length, 2);
+  // The settings file sits one level higher (src/content/settings/site.yaml).
+  assert.match(config, /^ {4}media_folder: \.\.\/\.\.\/assets\/uploads$/m);
+});
