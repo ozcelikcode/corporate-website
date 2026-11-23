@@ -71,7 +71,7 @@ Do these in order. None of them can be skipped: until they are done, anyone with
 1. [ ] **Workers Builds: non-production branch builds OFF** (3.5). Branch code would otherwise run with the production deploy token and secrets.
 2. [ ] **The `main` ruleset exists** (3.4), with every option listed there. Create it **before** adding any collaborator.
 3. [ ] **`ALLOWED_DOMAINS` on the auth Worker** lists exact hosts only: no wildcard, never empty (3.1).
-4. [ ] **GitHub repository security features on** (3.4): secret scanning, push protection, Dependabot alerts and updates, private vulnerability reporting; Actions disabled or "selected actions only".
+4. [ ] **GitHub repository security features on** (3.4): secret scanning, push protection, Dependabot alerts and updates, private vulnerability reporting; Actions disabled.
 5. [ ] **GitHub App** keeps "Expire user authorization tokens" on and is installed on this repository only (3.2).
 6. [ ] Only then add the first editor (Write role).
 
@@ -116,8 +116,8 @@ The repo is public, so these are free.
   - Without "dismiss stale approvals" and "most recent push", an editor could get an approval, push different commits and merge.
   - Add the **bypass list**: Repository admin role and Maintain role (always allow). Without a bypass an admin cannot approve their own PR and nothing could ever be published by the owner.
   - Do not add a required status check for Workers Builds: non-production builds are off (3.5), so no such check exists.
-- [ ] Settings, Code security: turn on **secret scanning**, **push protection**, **Dependabot alerts**, **Dependabot security updates** and **private vulnerability reporting** (all free on a public repo).
-- [ ] Settings, Actions, General: **Disable actions**, or choose "Allow select actions and reusable workflows" with nothing extra allowed. The repository has no workflows; a Write user could otherwise push one on a branch and run it.
+- [ ] Settings, Security and quality, Advanced Security: turn on **secret scanning**, **push protection**, **Dependabot alerts**, **Dependabot security updates** and **private vulnerability reporting** (all free on a public repo).
+- [ ] Settings, Actions, General: choose **Disable actions**. The repository has no workflows; a Write user could otherwise push one on a branch and run it. The weaker alternative, "Allow <owner>, and select non-<owner>, actions and reusable workflows", does not stop a workflow's own `run:` steps, so it protects much less.
 - [ ] Settings, Collaborators: add each editor with the **Write** role. Writers are not on the bypass list, so every editor PR needs 1 Code Owner approval.
 - [ ] Resulting model: Editor = submit, Admin = review + publish. GitHub, not the CMS, enforces it.
 
@@ -125,7 +125,7 @@ The repo is public, so these are free.
 
 - [ ] Cloudflare dashboard, Workers & Pages, Create, import this Git repository.
 - [ ] Worker name `corporate-site` (must match `wrangler.jsonc`).
-- [ ] Build command `pnpm build`; deploy command `npx wrangler deploy`; production branch `main`; **non-production branch builds OFF** (Settings, Builds, Branch control: untick "Builds for non-production branches").
+- [ ] Build command `pnpm build`; deploy command `npx wrangler deploy`; production branch `main`; **non-production branch builds OFF** (Worker, Settings, Build, Branch control: clear "Enable Preview Builds").
 - [ ] Why off: a build runs code from the pushed branch (`package.json`, `astro.config.ts`, `src/integrations/*`, even the `wrangler` binary from its lockfile) with the production deploy token, and a `versions upload` preview also gets the production secrets and the mail binding. Any editor with Write access could then deploy to production or read secrets without a review. Leave this off until you have set up the secure previews below.
 - [ ] To check a content PR, admins run `pnpm build` (and `pnpm preview`) locally on the PR branch.
 - [ ] Build variables (production, used on `main` only): `SITE_URL` = `https://<your-final-host>` (no trailing slash; use the `workers.dev` URL until a custom domain exists) and `PUBLIC_TURNSTILE_SITE_KEY` = the production site key from 3.7. A production build fails with a message naming the variable if either is missing or `SITE_URL` is not https.
@@ -178,7 +178,7 @@ Cloudflare requires a payment method on file to create any R2 bucket, even insid
 
 - [ ] Worker, Settings, Domains and Routes, add the custom domain (or add `"routes": [{ "pattern": "<domain>", "custom_domain": true }]` to `wrangler.jsonc`).
 - [ ] Then update, in this order: `SITE_URL` build variable (redeploy), the Turnstile widget hostnames, the auth Worker `ALLOWED_DOMAINS` (exact hosts, no wildcard), the R2 CORS origin.
-- [ ] **Rate limit the quote endpoint.** Cloudflare dashboard, the zone, Security, WAF, Rate limiting rules (free plan: 1 rule): match `URI Path` equals `/api/quote` and `Method` equals `POST`, count per IP, for example 5 requests per 10 seconds, action Block for 10 seconds. Turnstile alone does not stop a human-solved flood. WAF rules only apply on the custom domain, so do the next step too.
+- [ ] **Rate limit the quote endpoint.** Cloudflare dashboard, the zone, Security, WAF, Rate limiting rules (Free plan: 1 rule, and it can only match the URI Path, not the method): match `URI Path` equals `/api/quote`, count per IP, for example 5 requests per 10 seconds, action Block for 10 seconds. `GET` already returns 405, so matching the path only is fine. Turnstile alone does not stop a human-solved flood. WAF rules only apply on the custom domain, so do the next step too.
 - [ ] **Close the other hosts.** In `wrangler.jsonc` set `"workers_dev": false` and `"preview_urls": false` (today both are `true`), commit to `main` and let Workers Builds deploy. Production is then reachable only on the custom domain, where the rate-limit rule applies. Before this, make sure every URL you use (Turnstile hostnames, `ALLOWED_DOMAINS`, `SITE_URL`) is the custom domain.
 - [ ] **Logs.** `observability` is on, which stores invocation logs (request URL and Cloudflare request metadata) next to the PII-free error lines. Decide: keep it and mention it on the privacy page, or set `"observability": { "enabled": true, "logs": { "invocation_logs": false } }` in `wrangler.jsonc`.
 

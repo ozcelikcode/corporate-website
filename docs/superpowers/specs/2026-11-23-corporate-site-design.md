@@ -60,7 +60,7 @@ VISITOR ──► Cloudflare edge
 EDITOR ──► /admin (Sveltia, static) ──► sveltia-cms-auth Worker (GitHub App OAuth;
               separate Worker from the official repo, deployed by hand, not vendored here)
               └─ editorial_workflow: branch + PR per entry
-                    └─ ADMIN (CODEOWNER) reviews preview build, merges to main
+                    └─ ADMIN (CODEOWNER) reviews the YAML diff (and a local build), merges to main
                           └─ Cloudflare Workers Builds: pnpm build → wrangler deploy
 ```
 
@@ -472,7 +472,7 @@ Deploy order: **auth Worker → GitHub App callback → site.**
 8. **Workers Builds (the site):**
    - Production branch `main`; build with `pnpm build`, deploy with `npx wrangler deploy`.
    - Build vars (production values, used on `main` only): `SITE_URL`, `PUBLIC_TURNSTILE_SITE_KEY`.
-   - Preview builds on for PR branches. They are for visual review only: Turnstile test keys, `SITE_URL` = preview host, `noindex`, and CMS auth not expected to work.
+   - Non-production branch builds OFF (Settings, Build, Branch control, clear "Enable Preview Builds"): branch code would run with the production deploy token and secrets. Admins preview locally (`pnpm build`, `pnpm preview`). Secure previews (separate Worker without production secrets, behind Cloudflare Access) are an optional later step.
 9. **Turnstile:** production Managed widget with hostnames set. `TURNSTILE_SECRET_KEY` as a secret. Production keys live on `main` only.
 10. **Email Routing (day one, no custom hostname needed):** the zone is on the account. Enable Email Routing, verify the destination inbox, then set `QUOTE_TO` and `QUOTE_FROM`.
 11. **R2:**
@@ -522,13 +522,13 @@ Deploy order: **auth Worker → GitHub App callback → site.**
 14. Per-locale 404s come from `404-page` handling. `auto-trailing-slash` is paired with `trailingSlash: 'always'`.
 15. `@astrojs/markdown-remark` is added explicitly, because it is an optional peer in Astro 7.
 16. R2 files are linked, not embedded, in v1, so the CSP does not name the assets host.
-17. Workers Builds preview builds run for PR branches, so admins can review before merging (visual review only, see 24).
+17. No hosted preview builds by default (security: they would run branch code with production secrets). Admins review the YAML diff and run the branch locally before merging (see 24).
 18. Component files are PascalCase; all other files are kebab-case.
 19. Structured, PII-free `console.error` in the Worker is the only console use allowed.
 20. TypeScript is pinned to 6.0.3, not 7.0.2, because of the `@astrojs/check` peer range.
 21. The repo is public (decided 2026-11-23), so branch protection on main enforces 1 CODEOWNERS approval for free.
 22. `sveltia-cms-auth` is not vendored. It is deployed once, by hand, from the official repo as its own Worker before the site. Its URL is set by a one-time manual edit of `config.yml` `base_url` and the `/admin/*` CSP in `_headers`, not a build variable: a generator step for two static values that change at most once would be over-engineering. Deploy order: auth Worker → GitHub App callback → site.
 23. Quote `solutions` are validated against a generated allow-list. A small Astro integration (`astro:build:done`) writes `worker/generated/solutions.json` (application slugs + `general`), and the Worker imports it. Build order is `astro build` → Worker bundle. Unknown slugs are rejected.
-24. PR preview builds are for visual review only. They use Turnstile's official always-pass test keys, `SITE_URL` falls back to the preview host, previews are `noindex` (`X-Robots-Tag` + disallow-all `robots.txt`), and CMS auth is not expected to work on them. Production keys are used only on `main`.
+24. Any non-production build (local, or a hosted preview if the owner later sets up secure previews) uses Turnstile's official always-pass test keys, `SITE_URL` falls back to the preview host, previews are `noindex` (`X-Robots-Tag` + disallow-all `robots.txt`), and CMS auth is not expected to work on them. Production keys are used only on `main`.
 25. v1 ships brand-neutral, realistic placeholder seed content: EN for settings, ui, navigation, all pages and 3 sample applications; TR for ui, navigation and home only, to prove the plumbing and fallback. A transmitter-mast hero image (signal waves from its top) is the ASCII source. Real content is entered later by admins via the CMS.
 26. The accent is validated, never adjusted. The CMS field is restricted to a 6-digit hex pattern with a contrast hint, and the build fails loudly, naming the field, when contrast against the canvas is below 3:1. Admins see the failure on the PR preview before merging.

@@ -99,6 +99,10 @@ Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fie
 - CMS: `ogImage` (settings and pages) and application `cover` have `accept: image/png,image/jpeg,image/webp` (field-level, as on the hero image); the schema also rejects `format === 'svg'` for them (`rasterImage`). Logo may stay SVG. `organization.url` is https-only.
 - GitHub/Cloudflare items (ruleset, ALLOWED_DOMAINS, WAF rate limit, `workers_dev`/`preview_urls` off, security features) are owner steps in `docs/runbook.md` ("Security checklist before the first editor", 3.4, 3.5, 3.11).
 
+## CMS folder collections (fix 2026-11-24)
+- Sveltia 0.271.2 defaults to Markdown front matter (`.md`) for folder collections, so ui/navigation/pages/applications listed 0 entries. They now set `format: yaml` and `extension: yaml` (`format: yaml` alone derives `.yml`). Structure `multiple_folders`: `<folder>/<locale>/<slug>.yaml`. `admin-config.test.ts` derives the layout from config and checks it against `src/content` (every subfolder covered once, all files `.yaml` under a locale folder). Live check needs the native folder picker (owner).
+- Markdown: bare `www.`/`http://` text stays plain text (only https autolinks link); footnote ids are scoped to the section prefix.
+
 ## Tooling notes
 - pnpm 12 blocks install scripts: `pnpm-workspace.yaml` has `allowBuilds` for esbuild and workerd, and `minimumReleaseAgeExclude` for `@cloudflare/workers-types@5.20261123.1`.
 - Biome 2.6: `linter.rules.preset: "recommended"`; Markdown formatter/linter disabled (docs are not reformatted); `.superpowers` and `.code-review-graph` excluded.

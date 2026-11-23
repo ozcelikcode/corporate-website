@@ -22,7 +22,7 @@ A static, brand-agnostic corporate showcase site. It presents the brand's identi
 ### Roles
 - Visitor: reads the site, submits the quote form. No account.
 - Editor (GitHub Write): edits content in the CMS; each entry becomes a branch + PR.
-- Admin (Maintain/Admin + CODEOWNER): reviews the preview build and merges to `main`.
+- Admin (Maintain/Admin + CODEOWNER): reviews the YAML diff and a local build (no hosted previews by default) and merges to `main`.
 
 ## Out of scope (forbidden)
 - Visitor authentication or accounts.
