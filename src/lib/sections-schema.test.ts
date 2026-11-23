@@ -74,3 +74,13 @@ test('feature-list rejects 0 and 9 items', () => {
   assert.equal(parse({ ...list, items: Array.from({ length: 9 }, () => item) }).success, false);
   assert.equal(parse({ ...list, items: Array.from({ length: 8 }, () => item) }).success, true);
 });
+
+test('rejects protocol-relative hrefs and accepts site-relative ones', () => {
+  const withHref = (href: string) => parse({ ...fixtures.hero, actions: [{ label: 'Go', href }] });
+  assert.equal(withHref('//evil.com').success, false);
+  assert.equal(withHref('/about/').success, true);
+});
+
+test('rejects an unknown key on a section', () => {
+  assert.equal(parse({ ...fixtures.statement, extra: 'typo' }).success, false);
+});

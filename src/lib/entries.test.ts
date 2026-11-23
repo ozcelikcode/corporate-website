@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  assertEnglishTwins,
   assertSlugMatches,
   type Entry,
   localesFor,
@@ -69,4 +70,9 @@ test('selectApps returns all for no slugs, else the given order', () => {
 test('assertSlugMatches fails when the slug differs from the file name', () => {
   assert.throws(() => assertSlugMatches('en/newsroom-desk', 'newsroom'), /newsroom-desk/);
   assert.doesNotThrow(() => assertSlugMatches('en/newsroom-desk', 'newsroom-desk'));
+});
+
+test('assertEnglishTwins returns EN slugs and throws on an orphan', () => {
+  assert.deepEqual([...assertEnglishTwins([en('a'), tr('a')])], ['a']);
+  assert.throws(() => assertEnglishTwins([en('a'), tr('orphan')]), /tr\/orphan/);
 });

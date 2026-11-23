@@ -15,7 +15,10 @@ const MAX_ACTIONS = 2;
 const MAX_ITEMS = 8;
 export const LABEL_MAX = 32;
 const label = z.string().max(LABEL_MAX); // mono tally label, e.g. "MISSION"
-export const actionSchema = z.object({ label, href: z.string().regex(/^(\/|https:\/\/)/) });
+export const actionSchema = z.strictObject({
+  label,
+  href: z.string().regex(/^(\/(?!\/)|https:\/\/)/),
+});
 const md = z.string(); // Markdown, rendered by lib/markdown.ts
 
 export type Action = z.infer<typeof actionSchema>;
@@ -23,7 +26,7 @@ export type Action = z.infer<typeof actionSchema>;
 export const sectionsSchema = ({ image }: SchemaContext) =>
   z.array(
     z.discriminatedUnion('type', [
-      z.object({
+      z.strictObject({
         type: z.literal('hero'),
         label,
         headline: z.string(),
@@ -33,33 +36,33 @@ export const sectionsSchema = ({ image }: SchemaContext) =>
         image: image(),
         imageAlt: z.string(),
       }),
-      z.object({ type: z.literal('statement'), label, text: z.string() }),
-      z.object({
+      z.strictObject({ type: z.literal('statement'), label, text: z.string() }),
+      z.strictObject({
         type: z.literal('app-grid'),
         label,
         heading: z.string(),
         apps: z.array(z.string()).default([]), // slugs; empty = all, by `order`
       }),
-      z.object({
+      z.strictObject({
         type: z.literal('feature-list'),
         label,
         heading: z.string(),
         items: z
-          .array(z.object({ title: z.string(), body: z.string() }))
+          .array(z.strictObject({ title: z.string(), body: z.string() }))
           .min(1)
           .max(MAX_ITEMS),
       }),
-      z.object({ type: z.literal('rich-text'), body: md }),
-      z.object({
+      z.strictObject({ type: z.literal('rich-text'), body: md }),
+      z.strictObject({
         type: z.literal('cta'),
         heading: z.string(),
         text: z.string().optional(),
         action: actionSchema,
       }),
-      z.object({
+      z.strictObject({
         type: z.literal('faq'),
         label,
-        items: z.array(z.object({ q: z.string(), a: md })).min(1),
+        items: z.array(z.strictObject({ q: z.string(), a: md })).min(1),
       }),
     ]),
   );

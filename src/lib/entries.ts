@@ -38,11 +38,8 @@ export function localesFor<T>(entries: readonly Entry<T>[], slug: string): Local
   });
 }
 
-/** One entry per EN slug (the locale's version when translated), sorted by `order`, then slug. */
-export function mergeByLocale<T extends { order: number }>(
-  entries: readonly Entry<T>[],
-  locale: Locale,
-): Resolved<T>[] {
+/** Slugs of the EN entries; throws on any entry (e.g. a TR one) whose slug has no EN twin. */
+export function assertEnglishTwins<T>(entries: readonly Entry<T>[]): Set<string> {
   const enSlugs = new Set<string>();
   for (const entry of entries) {
     const parsed = parseEntryId(entry.id);
@@ -53,6 +50,15 @@ export function mergeByLocale<T extends { order: number }>(
       throw new Error(`Entry "${entry.id}" has no ${DEFAULT_LOCALE} twin`);
     }
   }
+  return enSlugs;
+}
+
+/** One entry per EN slug (the locale's version when translated), sorted by `order`, then slug. */
+export function mergeByLocale<T extends { order: number }>(
+  entries: readonly Entry<T>[],
+  locale: Locale,
+): Resolved<T>[] {
+  const enSlugs = assertEnglishTwins(entries);
   const merged: Resolved<T>[] = [];
   for (const slug of enSlugs) {
     const resolved = resolveLocalized(entries, locale, slug);

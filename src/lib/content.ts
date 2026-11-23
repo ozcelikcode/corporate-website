@@ -1,6 +1,7 @@
 import { type CollectionEntry, getCollection } from 'astro:content';
 import { z } from 'astro/zod';
 import {
+  assertEnglishTwins,
   assertSlugMatches,
   localesFor,
   mergeByLocale,
@@ -37,7 +38,10 @@ export async function getUiDictionary(): Promise<UiDictionary> {
   const parsed = englishUiSchema.safeParse(en);
   if (!parsed.success) {
     const missing = UI_KEYS.filter((key) => en[key] === undefined);
-    throw new Error(`ui/${DEFAULT_LOCALE}/${UI_SLUG}.yaml is missing keys: ${missing.join(', ')}`);
+    const empty = UI_KEYS.filter((key) => en[key] === '');
+    throw new Error(
+      `ui/${DEFAULT_LOCALE}/${UI_SLUG}.yaml is invalid; missing keys: ${missing.join(', ') || 'none'}; empty keys: ${empty.join(', ') || 'none'}`,
+    );
   }
   return { en: parsed.data, tr: strings('tr') ?? {} };
 }
@@ -57,12 +61,8 @@ export async function getPage(locale: Locale, slug: string): Promise<Resolved<Pa
 /** Pages that exist in `locale` itself; a translation without an EN twin fails the build. */
 export async function listTranslatedPages(locale: Locale): Promise<Resolved<PageData>[]> {
   const entries = await getCollection('pages');
+  assertEnglishTwins(entries);
   const resolved = entries.map((entry) => ({ data: entry.data, ...parseEntryId(entry.id) }));
-  for (const page of resolved) {
-    if (!resolved.some((other) => other.locale === DEFAULT_LOCALE && other.slug === page.slug)) {
-      throw new Error(`Entry "${page.locale}/${page.slug}" has no ${DEFAULT_LOCALE} twin`);
-    }
-  }
   return resolved.filter((page) => page.locale === locale);
 }
 

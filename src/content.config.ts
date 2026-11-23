@@ -10,7 +10,7 @@ const TAGLINE_MAX = 120;
 const CONTRAST_DECIMALS = 2;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const CONTACT_HREF_PATTERN = /^(mailto:|tel:|https:\/\/)/;
-const LINK_HREF_PATTERN = /^(\/|https:\/\/|mailto:)/;
+const LINK_HREF_PATTERN = /^(\/(?!\/)|https:\/\/|mailto:)/;
 
 // Ids come from the file path (`<locale>/<slug>`), never from a `slug` field: slugs repeat across locales.
 const fromYaml = (base: string) =>
@@ -34,18 +34,18 @@ const accent = z
     }
   });
 
-const contact = z.object({
+const contact = z.strictObject({
   kind: z.enum(['email', 'phone', 'address']),
   value: z.string(),
   href: z.string().regex(CONTACT_HREF_PATTERN),
 });
 
-const link = z.object({ label: z.string(), href: z.string().regex(LINK_HREF_PATTERN) });
+const link = z.strictObject({ label: z.string(), href: z.string().regex(LINK_HREF_PATTERN) });
 
 const settings = defineCollection({
   loader: fromYaml('./src/content/settings'),
   schema: ({ image }) =>
-    z.object({
+    z.strictObject({
       brandName: z.string(),
       logo: image(),
       logoAlt: z.string(),
@@ -57,10 +57,10 @@ const settings = defineCollection({
           message: 'settings.contacts needs at least one entry with kind "email"',
         }),
       socials: z
-        .array(z.object({ label: z.string(), href: z.string().regex(/^https:\/\//) }))
+        .array(z.strictObject({ label: z.string(), href: z.string().regex(/^https:\/\//) }))
         .default([]),
       ogImage: image(),
-      organization: z.object({
+      organization: z.strictObject({
         legalName: z.string(),
         url: z.url(),
         address: z.string().optional(),
@@ -75,13 +75,13 @@ const ui = defineCollection({
 
 const navigation = defineCollection({
   loader: fromYaml('./src/content/navigation'),
-  schema: z.object({ header: z.array(link).min(1), footer: z.array(link) }),
+  schema: z.strictObject({ header: z.array(link).min(1), footer: z.array(link) }),
 });
 
 const pages = defineCollection({
   loader: fromYaml('./src/content/pages'),
   schema: (context) =>
-    z.object({
+    z.strictObject({
       title: z.string(),
       description: z.string().min(1).max(DESCRIPTION_MAX),
       ogImage: context.image().optional(),
@@ -92,7 +92,7 @@ const pages = defineCollection({
 const applications = defineCollection({
   loader: fromYaml('./src/content/applications'),
   schema: (context) =>
-    z.object({
+    z.strictObject({
       name: z.string(),
       slug: z.string().regex(SLUG_PATTERN),
       tagline: z.string().max(TAGLINE_MAX),
