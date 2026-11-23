@@ -1,0 +1,110 @@
+---
+/**
+ * The signature image: an upload rendered as coloured ASCII at build time (zero runtime cost).
+ * Same-tone runs become one span; the glyph grid fills the container width through container
+ * query units. Screen readers get `alt` from the figure; the glyphs are hidden.
+ * Spans come from a string (`set:html`), so they carry no scoped-style attributes: smaller HTML.
+ */
+import type { ImageMetadata } from 'astro';
+import { ASCII_COLUMNS, type AsciiRun, CHAR_ASPECT, renderAscii } from '../../lib/ascii.ts';
+import { resolveUploadPath } from '../../lib/ascii-source.ts';
+
+interface Props {
+  image: ImageMetadata;
+  alt: string;
+  cols?: number;
+}
+
+/** A run of spaces needs no colour, so it stays bare text. */
+const BLANK_RUN = /^ +$/;
+
+function runHtml({ tone, text }: AsciiRun): string {
+  return BLANK_RUN.test(text) ? text : `<span class="t${tone}">${text}</span>`;
+}
+
+const { image, alt, cols = ASCII_COLUMNS } = Astro.props;
+const grid = await renderAscii(resolveUploadPath(image), cols);
+
+// Trailing blanks are dropped: the font size follows the column count, not the line length.
+// The leading newline is eaten by the HTML parser, so a blank first row survives.
+const html = `\n${grid.lines.map((line) => line.map(runHtml).join('').trimEnd()).join('\n')}`;
+---
+<figure
+  role="img"
+  aria-label={alt}
+  data-ascii
+  style={{ '--ascii-cols': grid.cols, '--ascii-aspect': CHAR_ASPECT }}
+>
+  <pre class="font-mono" aria-hidden="true" set:html={html} />
+</figure>
+
+<style>
+  [data-ascii] {
+    /* Martian Mono glyph advance in em: 700 of 1000 units (fixed pitch), checked in the browser. */
+    --ascii-advance: 0.7;
+    /* Shimmer: one slow sweep, then a rest while the band sits off-canvas. */
+    --ascii-shimmer-duration: 9s;
+    --ascii-shimmer-floor: 78%;
+
+    container-type: inline-size;
+    margin: 0;
+  }
+
+  pre {
+    margin: 0;
+    overflow: hidden;
+    font-size: calc(100cqi / var(--ascii-cols) / var(--ascii-advance));
+    /* Row height = advance ÷ cell aspect, so the grid keeps the image's proportions. */
+    line-height: calc(var(--ascii-advance) / var(--ascii-aspect));
+    letter-spacing: 0;
+    font-kerning: none;
+    font-variant-ligatures: none;
+  }
+
+  pre :global(.t0) {
+    color: var(--color-tone-0);
+  }
+
+  pre :global(.t1) {
+    color: var(--color-tone-1);
+  }
+
+  pre :global(.t2) {
+    color: var(--color-tone-2);
+  }
+
+  pre :global(.t3) {
+    color: var(--color-tone-3);
+  }
+
+  pre :global(.t4) {
+    color: var(--color-tone-4);
+  }
+
+  pre :global(.t5) {
+    color: var(--color-tone-5);
+  }
+
+  /* Documented exception to "no gradients": an alpha-only mask band, only when motion is welcome. */
+  @media (prefers-reduced-motion: no-preference) {
+    pre {
+      mask-image: linear-gradient(
+        100deg,
+        color-mix(in srgb, black var(--ascii-shimmer-floor), transparent) 40%,
+        black 50%,
+        color-mix(in srgb, black var(--ascii-shimmer-floor), transparent) 60%
+      );
+      mask-size: 300% 100%;
+      mask-position: 100% 0;
+      animation: ascii-shimmer var(--ascii-shimmer-duration) var(--ease-signal) infinite;
+    }
+  }
+
+  /* With a 300% mask, 100% and 0% both park the band off-canvas: the last 40% is a rest. */
+  @keyframes ascii-shimmer {
+    60%,
+    to {
+      mask-position: 0 0;
+    }
+  }
+</style>
