@@ -124,6 +124,7 @@ test('renderMarkdown rejects non-allowed link and image schemes', async () => {
     '[x](/\\evil.example/)',
     '[x](</\t/evil.example/>)',
     '[x](relative/page/)',
+    '[x](< /about/>)',
     '[x][r]\n\n[r]: javascript:alert(1)',
     '<javascript:alert(1)>',
   ])
@@ -145,4 +146,42 @@ test('renderMarkdown keeps links and images with allowed URLs', async () => {
   );
   assert.equal(html.match(/<a href=/g)?.length, 5);
   assert.equal(html.match(/<img src=/g)?.length, 2);
+});
+
+test('renderMarkdown keeps bare www and http text as plain text, https autolinks as links', async () => {
+  const html = await renderMarkdown(
+    'See www.example.com or http://example.com/a and https://example.com/b.',
+    PREFIX,
+    KEEP,
+  );
+  assert.match(html, /See www\.example\.com or http:\/\/example\.com\/a and /);
+  assert.deepEqual(
+    [...html.matchAll(/ href="([^"]*)"/g)].map((m) => m[1]),
+    ['https://example.com/b'],
+  );
+  await assert.rejects(renderMarkdown('<http://example.com>', PREFIX, KEEP), /Unsafe URL/);
+  await assert.rejects(renderMarkdown('[http://x.com](http://x.com)', PREFIX, KEEP), /Unsafe URL/);
+});
+
+test('renderMarkdown scopes footnote ids and links to the block prefix', async () => {
+  const source = 'Hi[^1]\n\n[^1]: Note.';
+  const [a, b] = await Promise.all([
+    renderMarkdown(source, 's1', KEEP),
+    renderMarkdown(source, 's2', KEEP),
+  ]);
+  for (const [html, prefix] of [
+    [a, 's1'],
+    [b, 's2'],
+  ] as const) {
+    assert.doesNotMatch(html, /user-content|"footnote-label"/);
+    const ids = [...html.matchAll(/ id="([^"]*)"/g)].map((m) => m[1] as string);
+    assert.equal(new Set(ids).size, ids.length);
+    assert.ok(
+      ids.every((id) => id.startsWith(`${prefix}-`)),
+      ids.join(),
+    );
+    for (const ref of html.matchAll(/(?:href="#|aria-describedby=")([^"]*)"/g))
+      assert.ok(ids.includes(ref[1] as string), `${ref[1]} resolves`);
+  }
+  assert.ok(![...a.matchAll(/ id="([^"]*)"/g)].some((m) => b.includes(` id="${m[1]}"`)));
 });
