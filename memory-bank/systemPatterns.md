@@ -37,7 +37,7 @@
 
 ## Design tokens (Task 2, `src/styles/tokens.css` + `global.css`)
 - Single dark theme (`color-scheme: dark`), like a monitor wall. `global.css` does `@import "tailwindcss" source("../")` (scans `src/` only) then `tokens.css`.
-- Reset to `initial` first: `--color-*`, `--radius-*`, `--shadow-*`, `--inset-shadow-*`, `--drop-shadow-*`, `--blur-*`, `--font-*`, `--text-*`, plus `--text-shadow-*` (not covered by `--text-*`). Radius/elevation utilities do not exist, except Tailwind's static `rounded-full`/`rounded-none` (guard grep catches any `rounded`).
+- Reset to `initial` first: `--color-*`, `--radius-*`, `--shadow-*`, `--inset-shadow-*`, `--drop-shadow-*`, `--blur-*`, `--font-*`, `--text-*`, plus `--text-shadow-*` (not covered by `--text-*`) and `--animate-*`. Radius/elevation utilities do not exist, except Tailwind's static `rounded-full`/`rounded-none` (guard grep catches any `rounded`).
 - Colours (OKLCH): canvas `0.17 0.008 255`, surface `0.21 0.008 255`, ink `0.95 0.005 255`, ink-muted `0.74 0.01 255`, line `0.32 0.01 255` (decorative grid only), line-strong `0.52 0.012 255` (control borders), critical `0.70 0.17 30`.
 - `accent` = `var(--accent-seed)` (default `oklch(0.80 0.16 75)` on `:root`; BaseLayout overrides on `<html>`). `accent-dim` = 55 %, `accent-wash` = 12 % accent on canvas, mixed **in oklab** (oklch mixing swings the hue toward canvas hue 255: amber turned green).
 - `tone-0…5` (ASCII): ink-muted 30 % / 60 % on canvas (oklab), ink-muted, ink, accent-dim, accent.
@@ -46,6 +46,10 @@
 - Other: `--spacing` 0.25rem, `max-w-page` (`--container-page` 90rem). Plain vars on `:root` (no utilities): `--border-hairline` 1px, `--border-focus` 0.125rem, `--z-header/popover/dialog` 10/20/30, `--duration-fast/base` 120/240ms, `--ease-signal` cubic-bezier(0.2, 0, 0, 1).
 - Base: canvas bg, ink text; `:focus-visible` = `--border-focus` solid accent, offset `--border-focus`; `::selection` accent-wash; global reduced-motion block zeroes animation/transition durations and delays (`!important` in base layer, Biome-ignored with reason).
 - Utilities (`@utility` in `global.css`): `grid-hairline` (grid, gap = hairline, line bg, outer hairline border; children use `cell`), `cell` (canvas bg, padding `--spacing(6)`, relative), `crosshair` ("+" `::before` centred on the element's top-left intersection, `content: "+" / ""` so AT ignores it), `label-mono` (mono, label size, tracking, uppercase), `scanlines` (hero only), `prose` (≤ 68ch, mono uppercase h3+).
+- `grid-hairline` needs complete last rows: the line-coloured background shows through any empty track, so pad the last row with empty `cell`s or span the last item across the remaining columns (Task 7 relies on this).
+- `scanlines` goes on the ASCII media cell only, never over text.
+- Motion defaults: `--animate-*` reset (no `animate-*` utilities); bare `transition*` utilities default to `--duration-fast` + `--ease-signal`. `ring-*`/`inset-ring-*` still emit `box-shadow` (bare-number widths, no theme namespace to reset): never use them; focus uses `outline`.
+- `crosshair` declares `content: "+"` then `content: "+" / ""`, so browsers without alt-text support still draw the mark. `prose` h3+ reuse `label-mono` via `@apply`; weights use `--font-weight-semibold`.
 - Exceptions to "no gradients": `scanlines` (hard-stop `repeating-linear-gradient` overlay, static) and the AsciiImage shimmer mask (Task 6).
 - Biome parses Tailwind CSS via `css.parser.tailwindDirectives: true`.
 - Font glyph gaps: the Fontsource latin/latin-ext subsets lack `→ ↗ ●` in both families; they render from system fonts. Turkish `ÇĞİıÖŞÜ çğıöşü` is fully covered.

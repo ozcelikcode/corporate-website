@@ -163,7 +163,7 @@ Token values (pinned; `color.ts` in Task 3 mirrors the canvas value):
 | `--color-line` / `--color-line-strong` | `oklch(0.32 0.01 255)` / `oklch(0.52 0.012 255)` (about 3.5:1 on canvas; `line` is decorative grid only, `line-strong` is for control borders) |
 | `--color-critical` | `oklch(0.70 0.17 30)` |
 | `--accent-seed` (default) | `oklch(0.80 0.16 75)` |
-| `--color-accent` / `-dim` / `-wash` | `var(--accent-seed)` / `color-mix(in oklch, var(--accent-seed) 55%, var(--color-canvas))` / `… 12% …` |
+| `--color-accent` / `-dim` / `-wash` | `var(--accent-seed)` / `color-mix(in oklab, var(--accent-seed) 55%, var(--color-canvas))` / `… 12% …` (oklab: oklch hue path runs through green) |
 | `--color-tone-0…5` | ink-muted 30% on canvas, ink-muted 60% on canvas, ink-muted, ink, accent-dim, accent |
 | Type | label `0.75rem`/1.4 · body `clamp(1rem, 0.96rem + 0.2vw, 1.125rem)`/1.55 · lede `clamp(1.125rem, 1.02rem + 0.5vw, 1.375rem)`/1.45 · h2 `clamp(1.5rem, 1.2rem + 1.5vw, 2.25rem)`/1.1 · display `clamp(2.5rem, 1.5rem + 5vw, 5.5rem)`/0.98 · `--tracking-label: 0.12em` |
 | Other | `--spacing: 0.25rem` · `--border-hairline: 1px` · `--border-focus: 0.125rem` · `--container-page: 90rem` · z 10/20/30 · `120ms`/`240ms` · `--ease-signal: cubic-bezier(0.2, 0, 0, 1)` |
