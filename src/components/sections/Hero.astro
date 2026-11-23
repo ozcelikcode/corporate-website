@@ -2,25 +2,25 @@
 /**
  * Page opener: indexed label, the page's one two-tone headline (display size), lede and up to two
  * actions on the left; the ASCII render of the hero image on the right, in the title-safe frame
- * with scanlines. That frame and its marks are the hero's only lines. Stacked below `lg`.
+ * with scanlines. That frame and its marks are the hero's only lines. Stacked below `lg`; from
+ * `lg` an even 6/6 split, so the image carries the first impression (96-column glyphs about
+ * 0.55rem at 1440, against 0.45rem in a 5-column track).
  */
 import AsciiImage from '../ui/AsciiImage.astro';
 import Button from '../ui/Button.astro';
 import GridFrame from '../ui/GridFrame.astro';
 import Heading from '../ui/Heading.astro';
 import Label from '../ui/Label.astro';
+import { LEDE_CLASS } from '../ui/lede-class.ts';
 import TitleSafe from '../ui/TitleSafe.astro';
 import type { BlockProps } from './block-props.ts';
 
 type Props = BlockProps<'hero'>;
 
-/** Lede measure from spec §8 (the wireframe's "max 60ch"). */
-const LEDE = 'max-w-[60ch] text-lede text-ink-muted';
-
 const { section, index, headingLevel } = Astro.props;
 ---
 <GridFrame columns={12}>
-  <div class="flex flex-col items-start gap-8 lg:col-span-7 lg:self-center">
+  <div class="flex flex-col items-start gap-8 lg:col-span-6 lg:self-center">
     <Label text={section.label} index={index} />
     <Heading
       level={headingLevel}
@@ -28,7 +28,7 @@ const { section, index, headingLevel } = Astro.props;
       text={section.headline}
       accent={section.headlineAccent}
     />
-    <p class={LEDE}>{section.lede}</p>
+    <p class={LEDE_CLASS}>{section.lede}</p>
     {
       section.actions.length > 0 && (
         <div class="flex flex-wrap gap-4">
@@ -41,7 +41,7 @@ const { section, index, headingLevel } = Astro.props;
       )
     }
   </div>
-  <div class="min-w-0 lg:col-span-5 lg:self-center">
+  <div class="min-w-0 lg:col-span-6 lg:self-center">
     <TitleSafe scanlines>
       <AsciiImage image={section.image} alt={section.imageAlt} />
     </TitleSafe>

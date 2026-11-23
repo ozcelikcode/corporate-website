@@ -106,3 +106,25 @@ test('DURATION_PATTERN is anchored', () => {
   assert.equal(DURATION_PATTERN.test(' 00:00:30'), false);
   assert.equal(DURATION_PATTERN.test('00:00:30 '), false);
 });
+
+const issueMessages = (sections: unknown[]) => {
+  const result = schema.safeParse(sections);
+  return result.success ? [] : result.error.issues.map((issue) => issue.message);
+};
+
+test('accepts a page without a hero and a page whose hero comes first', () => {
+  assert.deepEqual(issueMessages([fixtures.statement]), []);
+  assert.deepEqual(issueMessages([fixtures.hero, fixtures.statement]), []);
+});
+
+test('rejects a hero that is not the first section', () => {
+  assert.deepEqual(issueMessages([fixtures.statement, fixtures.hero]), [
+    'A hero section must be the first section (found at position 2)',
+  ]);
+});
+
+test('rejects a second hero', () => {
+  assert.deepEqual(issueMessages([fixtures.hero, fixtures.statement, fixtures.hero]), [
+    'Only one hero section is allowed (another one at position 3)',
+  ]);
+});

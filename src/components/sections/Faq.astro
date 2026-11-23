@@ -10,14 +10,20 @@ import { renderMarkdown } from '../../lib/markdown.ts';
 import GridFrame from '../ui/GridFrame.astro';
 import Label from '../ui/Label.astro';
 import Prose from '../ui/Prose.astro';
-import type { BlockProps } from './block-props.ts';
+import { type BlockProps, sectionIdPrefix } from './block-props.ts';
 
 type Props = BlockProps<'faq'>;
+
+/** Answer id prefixes count items from 1. */
+const FIRST_ITEM = 1;
 
 const { section, index, headingLevel } = Astro.props;
 const HeadingTag = `h${headingLevel}` as const;
 const items = await Promise.all(
-  section.items.map(async (item) => ({ q: item.q, html: await renderMarkdown(item.a) })),
+  section.items.map(async (item, i) => ({
+    q: item.q,
+    html: await renderMarkdown(item.a, `${sectionIdPrefix(index)}-${i + FIRST_ITEM}`),
+  })),
 );
 ---
 <GridFrame columns={12}>

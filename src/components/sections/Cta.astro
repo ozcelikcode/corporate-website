@@ -7,6 +7,7 @@ import { getUiDictionary } from '../../lib/content.ts';
 import { t } from '../../lib/i18n.ts';
 import Button from '../ui/Button.astro';
 import Heading from '../ui/Heading.astro';
+import { LEDE_CLASS } from '../ui/lede-class.ts';
 import Tally from '../ui/Tally.astro';
 import type { BlockProps } from './block-props.ts';
 
@@ -19,7 +20,7 @@ const onAir = t(await getUiDictionary(), locale, 'tallyOnAir');
   <div class="flex flex-col items-start gap-6 lg:col-span-8">
     <Tally text={onAir} tone="accent" />
     <Heading level={headingLevel} text={section.heading} />
-    {section.text !== undefined && <p class="max-w-[60ch] text-lede text-ink-muted">{section.text}</p>}
+    {section.text !== undefined && <p class={LEDE_CLASS}>{section.text}</p>}
   </div>
   <div class="lg:col-span-4 lg:justify-self-end">
     <Button href={section.action.href}>{section.action.label}</Button>

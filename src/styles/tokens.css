@@ -74,6 +74,7 @@
   /* Space and layout */
   --spacing: 0.25rem;
   --container-page: 90rem;
+  --container-measure: 60ch; /* lede and short body copy (spec §8 wireframe: "max 60ch") */
 }
 
 /* Font families come from the Astro fonts API (--font-grotesk, --font-martian). */

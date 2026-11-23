@@ -6,12 +6,12 @@
 import { renderMarkdown } from '../../lib/markdown.ts';
 import GridFrame from '../ui/GridFrame.astro';
 import Prose from '../ui/Prose.astro';
-import type { BlockProps } from './block-props.ts';
+import { type BlockProps, sectionIdPrefix } from './block-props.ts';
 
 type Props = BlockProps<'rich-text'>;
 
-const { section } = Astro.props;
-const html = await renderMarkdown(section.body);
+const { section, index } = Astro.props;
+const html = await renderMarkdown(section.body, sectionIdPrefix(index));
 ---
 <GridFrame columns={12}>
   <div class="lg:col-span-9 lg:col-start-4"><Prose html={html} /></div>

@@ -12,3 +12,8 @@ export type BlockProps<T extends Section['type']> = {
   locale: Locale;
   headingLevel: T extends 'hero' ? 1 | 2 : 2;
 };
+
+/** Id prefix for Markdown headings rendered inside the block at `index` (unique per page). */
+export function sectionIdPrefix(index: number): string {
+  return `section-${index}`;
+}

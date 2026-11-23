@@ -8,9 +8,11 @@
  * - `md`: number | title over body | duration;
  * - `lg`: number | title | body | duration, like a rundown sheet.
  * Below `md` each row is its own two-column grid; from `md` it inherits the list's column gap.
- * Item titles are h3 (the section heading is h2). The DOM keeps the `lg` reading order. The running number repeats the list's own numbering, so
- * it is hidden from assistive tech.
+ * Item titles are h3 (the section heading is h2). The duration is a `<time datetime="PT…">`, so
+ * assistive tech gets a real length. The DOM keeps the `lg` reading order. The running number
+ * repeats the list's own numbering, so it is hidden from assistive tech.
  */
+import { durationToIso } from '../../lib/duration.ts';
 import LowerThird from '../ui/LowerThird.astro';
 import { padIndex } from '../ui/pad-index.ts';
 import type { BlockProps } from './block-props.ts';
@@ -36,13 +38,16 @@ const { section, index, headingLevel } = Astro.props;
           <h3 class="col-span-2 row-start-2 text-lede font-semibold md:col-span-1 md:col-start-2 md:row-start-1">
             {item.title}
           </h3>
-          <p class="col-span-2 row-start-3 max-w-[60ch] text-ink-muted md:col-span-1 md:col-start-2 md:row-start-2 lg:col-start-3 lg:row-start-1">
+          <p class="col-span-2 row-start-3 max-w-measure text-ink-muted md:col-span-1 md:col-start-2 md:row-start-2 lg:col-start-3 lg:row-start-1">
             {item.body}
           </p>
           {item.duration !== undefined && (
-            <span class="col-start-2 row-start-1 justify-self-end label-mono text-ink-muted md:col-start-3 lg:col-start-4">
+            <time
+              datetime={durationToIso(item.duration)}
+              class="col-start-2 row-start-1 justify-self-end label-mono text-ink-muted md:col-start-3 lg:col-start-4"
+            >
               {item.duration}
-            </span>
+            </time>
           )}
         </li>
       ))
