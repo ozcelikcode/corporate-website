@@ -31,6 +31,13 @@ export const GENERAL_SOLUTION = 'general';
 export const QUOTE_STATES = ['sent', 'error-invalid', 'error-verify', 'error-send'] as const;
 export type QuoteState = (typeof QUOTE_STATES)[number];
 
+/**
+ * `pattern` for the email input: the browser's `type="email"` check accepts `name@host`, while
+ * `z.email()` also needs a dot in the domain. Browsers anchor the pattern and compile it with the
+ * `v` flag, so it uses no class syntax that `v` reserves.
+ */
+export const EMAIL_INPUT_PATTERN = '[^@\\s]+@[^@\\s]+\\.[^@\\s]+';
+
 /** Hidden field the Turnstile widget adds to the form. */
 export const TURNSTILE_FIELD = 'cf-turnstile-response';
 

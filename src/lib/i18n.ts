@@ -71,6 +71,7 @@ export const UI_KEYS = [
   'quoteSolutionsGeneral',
   'quoteSolutionsHint',
   'quoteTimeline',
+  'quoteTimelinePlaceholder',
   'quoteTimelineAsap',
   'quoteTimelineQuarter',
   'quoteTimelineHalfYear',

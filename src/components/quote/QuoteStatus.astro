@@ -8,6 +8,7 @@
  */
 import { type Locale, t, type UiDictionary, type UiKey } from '../../lib/i18n.ts';
 import { QUOTE_STATES, type QuoteState } from '../../lib/quote-schema.ts';
+import { CONTAINER } from '../sections/band-class.ts';
 import GridFrame from '../ui/GridFrame.astro';
 import { LEDE_CLASS } from '../ui/lede-class.ts';
 import Tally from '../ui/Tally.astro';
@@ -47,24 +48,29 @@ const MAILTO = 'mailto:';
  * Hidden unless targeted; the scroll margin keeps a targeted panel clear of the sticky header
  * (h-16) with room to spare. The panel sits in the page container, aligned with the form.
  */
-const PANEL_BAND =
-  'mx-auto max-w-page scroll-mt-24 px-4 pb-16 not-target:hidden focus:outline-none md:px-8 md:pb-24';
+const PANEL_BAND = [CONTAINER, 'scroll-mt-24 pb-16 not-target:hidden focus:outline-none md:pb-24'];
 /** Aligned with the form panels (from column 4 on `lg`). */
 const PANEL = 'flex flex-col items-start gap-6 bg-surface p-6 md:p-12 lg:col-span-9 lg:col-start-4';
 const EMAIL_LINK =
   'text-lede text-ink underline decoration-line-strong underline-offset-4 hover:decoration-ink';
 
 const { locale, ui: dict, email } = Astro.props;
+const headingId = (state: QuoteState) => `${state}-title`;
 const ui = (key: UiKey) => t(dict, locale, key);
 ---
 {
   QUOTE_STATES.map((state) => {
     const panel = PANELS[state];
     return (
-      <section id={state} tabindex="-1" class={PANEL_BAND}>
+      <section
+        id={state}
+        tabindex="-1"
+        aria-labelledby={headingId(state)}
+        class:list={PANEL_BAND}
+      >
         <GridFrame columns={12}>
           <div class={PANEL}>
-            <h2>
+            <h2 id={headingId(state)}>
               <Tally text={ui(panel.title)} tone={panel.tone} />
             </h2>
             <p class={LEDE_CLASS}>{ui(panel.body)}</p>

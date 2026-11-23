@@ -9,6 +9,7 @@
  */
 import { type Locale, t, type UiDictionary, type UiKey } from '../../lib/i18n.ts';
 import {
+  EMAIL_INPUT_PATTERN,
   GENERAL_SOLUTION,
   QUOTE_LIMITS,
   TIMELINES,
@@ -42,11 +43,8 @@ const MAILTO = 'mailto:';
 const TURNSTILE_ACTION = 'quote';
 const TURNSTILE_THEME = 'dark';
 const TURNSTILE_SIZE = 'flexible';
-/**
- * The placeholder option of the required select: an empty value, so `required` blocks submission
- * until a timeline is picked. An option needs visible text, so it shows a dash (no copy).
- */
-const PLACEHOLDER = { value: '', label: '—' } as const;
+/** The required select's placeholder option: its empty value keeps `required` meaningful. */
+const PLACEHOLDER_VALUE = '';
 
 const TIMELINE_LABEL_KEYS = {
   asap: 'quoteTimelineAsap',
@@ -64,12 +62,16 @@ const { locale, ui: dict, solutions, privacyHref, siteKey, email, index } = Astr
 const ui = (key: UiKey) => t(dict, locale, key);
 const optional = ui('quoteOptional');
 
+/**
+ * `general` starts checked: the schema needs at least one solution and HTML cannot require one of
+ * a checkbox group, so a visitor who picks nothing still submits a valid form (no lost input).
+ */
 const solutionOptions = [
   ...solutions,
   { value: GENERAL_SOLUTION, label: ui('quoteSolutionsGeneral') },
 ];
 const timelineOptions = [
-  PLACEHOLDER,
+  { value: PLACEHOLDER_VALUE, label: ui('quoteTimelinePlaceholder') },
   ...TIMELINES.map((value) => ({ value, label: ui(TIMELINE_LABEL_KEYS[value]) })),
 ];
 const solutionsHintId = hintId('quote-solutions');
@@ -78,7 +80,7 @@ const solutionsHintId = hintId('quote-solutions');
   <input type="hidden" name="locale" value={locale} />
   <GridFrame columns={12}>
     <div class="flex flex-col gap-6 lg:col-span-3">
-      <Label index={index} />
+      <Label text={ui('navQuote')} index={index} />
       <noscript>
         <p class="text-ink-muted">{ui('quoteNoScript')}</p>
         <p class="mt-4">
@@ -99,6 +101,7 @@ const solutionsHintId = hintId('quote-solutions');
               type="email"
               required
               maxlength={QUOTE_LIMITS.email}
+              pattern={EMAIL_INPUT_PATTERN}
               autocomplete="email"
             />
           </Field>
@@ -131,7 +134,12 @@ const solutionsHintId = hintId('quote-solutions');
           {
             solutionOptions.map(({ value, label }) => (
               <li>
-                <Checkbox id={`quote-solution-${value}`} name="solutions" value={value}>
+                <Checkbox
+                  id={`quote-solution-${value}`}
+                  name="solutions"
+                  value={value}
+                  checked={value === GENERAL_SOLUTION}
+                >
                   {label}
                 </Checkbox>
               </li>

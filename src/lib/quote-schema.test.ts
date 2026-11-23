@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  EMAIL_INPUT_PATTERN,
   formDataToInput,
   QUOTE_LIMITS,
   QUOTE_STATES,
@@ -113,4 +114,17 @@ test('formDataToInput keeps a `__proto__` field as an own property', () => {
   const input = formDataToInput(fd);
   assert.equal(Object.getPrototypeOf(input), Object.prototype);
   assert.ok(Object.hasOwn(input, '__proto__'));
+});
+
+test('the email input pattern mirrors the schema on the dot in the domain', () => {
+  // Browsers anchor `pattern` and compile it with the `v` flag.
+  const pattern = new RegExp(`^(?:${EMAIL_INPUT_PATTERN})$`, 'v');
+  for (const email of ['ada@example.com', 'a.b@mail.example.co.uk']) {
+    assert.ok(pattern.test(email), email);
+    assert.ok(quoteSchema.safeParse({ ...valid, email }).success, email);
+  }
+  for (const email of ['ada@localhost', 'ada@example']) {
+    assert.ok(!pattern.test(email), email);
+    assert.ok(!quoteSchema.safeParse({ ...valid, email }).success, email);
+  }
 });

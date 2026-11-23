@@ -14,8 +14,10 @@ import {
 } from '../../lib/content.ts';
 import { BUILD } from '../../lib/env.ts';
 import { type Locale, localizePath, pagePath } from '../../lib/i18n.ts';
+import { MAX_SOLUTIONS } from '../../lib/quote-schema.ts';
 import QuoteForm from '../quote/QuoteForm.astro';
 import QuoteStatus from '../quote/QuoteStatus.astro';
+import { BAND, CONTAINER, DIVIDER } from '../sections/band-class.ts';
 import SectionRenderer from '../sections/SectionRenderer.astro';
 
 interface Props {
@@ -27,9 +29,8 @@ const PRIVACY_SLUG = 'privacy';
 const TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
 /** The form band continues the page's `[NN]` numbering after its sections. */
 const NEXT_INDEX = 1;
-/** Same band rhythm and container as SectionRenderer's bands, after one divider rule. */
-const FORM_BAND = 'border-t border-line py-16 md:py-24 last:pb-0';
-const CONTAINER = 'mx-auto max-w-page px-4 md:px-8';
+/** The form adds `general` to the application choices. */
+const GENERAL_COUNT = 1;
 
 const { locale } = Astro.props;
 
@@ -47,6 +48,11 @@ if (email === undefined) throw new Error('settings.contacts needs an entry with 
 
 const privacyHref = localizePath(pagePath(PRIVACY_SLUG), privacy.locale);
 const solutions = applications.map((app) => ({ value: app.data.slug, label: app.data.name }));
+if (solutions.length + GENERAL_COUNT > MAX_SOLUTIONS) {
+  throw new Error(
+    `The quote form offers ${solutions.length} applications plus "general", more than MAX_SOLUTIONS (${MAX_SOLUTIONS}) in src/lib/quote-schema.ts; raise the limit or remove applications`,
+  );
+}
 ---
 <BaseLayout
   locale={locale}
@@ -62,7 +68,7 @@ const solutions = applications.map((app) => ({ value: app.data.slug, label: app.
   </Fragment>
   <SectionRenderer sections={page.data.sections} locale={locale} pageTitle={page.data.title} />
   <QuoteStatus locale={locale} ui={ui} email={email} />
-  <div class={FORM_BAND}>
+  <div class:list={[BAND, DIVIDER]}>
     <div class={CONTAINER}>
       <QuoteForm
         locale={locale}

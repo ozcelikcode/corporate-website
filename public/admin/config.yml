@@ -204,6 +204,10 @@ collections:
         widget: string
         i18n: true
         required: [en]
+      - name: quoteTimelinePlaceholder
+        widget: string
+        i18n: true
+        required: [en]
       - name: quoteTimelineAsap
         widget: string
         i18n: true

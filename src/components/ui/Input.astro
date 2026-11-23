@@ -10,6 +10,8 @@ interface Props {
   maxlength: number;
   autocomplete: string;
   describedBy?: string;
+  /** Extra constraint on top of the type's own check (the `pattern` attribute). */
+  pattern?: string;
 }
 
 const {
@@ -20,6 +22,7 @@ const {
   maxlength,
   autocomplete,
   describedBy,
+  pattern,
 } = Astro.props;
 ---
 <input
@@ -31,4 +34,5 @@ const {
   maxlength={maxlength}
   autocomplete={autocomplete}
   aria-describedby={describedBy}
+  pattern={pattern}
 />
