@@ -9,9 +9,11 @@ interface Props {
   name: string;
   value: string;
   required?: boolean;
+  /** Initial state (the `checked` attribute). */
+  checked?: boolean;
 }
 
-const { id, name, value, required = false } = Astro.props;
+const { id, name, value, required = false, checked = false } = Astro.props;
 ---
 <div class="flex min-h-11 items-center gap-3">
   <input
@@ -21,6 +23,7 @@ const { id, name, value, required = false } = Astro.props;
     name={name}
     value={value}
     required={required}
+    checked={checked}
   />
   <label
     for={id}

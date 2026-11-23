@@ -15,6 +15,7 @@ import type { Locale } from '../../lib/i18n.ts';
 import type { Section } from '../../lib/sections-schema.ts';
 import Heading from '../ui/Heading.astro';
 import AppGrid from './AppGrid.astro';
+import { BAND, CONTAINER, DIVIDER, FIRST_BAND } from './band-class.ts';
 import Cta from './Cta.astro';
 import Faq from './Faq.astro';
 import FeatureList from './FeatureList.astro';
@@ -28,12 +29,6 @@ interface Props {
   pageTitle?: string | undefined;
 }
 
-const CONTAINER = 'mx-auto max-w-page px-4 md:px-8';
-/** Generous band rhythm; the footer's own top margin follows the last band. */
-const BAND = 'py-16 md:py-24 last:pb-0';
-/** The first band sits closer to the tally strip. */
-const FIRST_BAND = 'pt-12 md:pt-16';
-const DIVIDER = 'border-t border-line';
 /** `[NN]` indexes count from 1. */
 const FIRST_INDEX = 1;
 
