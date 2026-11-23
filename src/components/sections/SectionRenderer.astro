@@ -3,9 +3,10 @@
  * Renders a page's `sections[]` as full-bleed bands, each with the page container inside.
  * - Dividers (border budget): every band after the first opens with one full-width hairline
  *   rule; blocks never draw their own outer borders.
- * - The page's one h1: a hero (always at position 0) takes it, in its own first-screen band. Otherwise, when `pageTitle` is set, a title
- *   band carrying it (display size) comes first; without `pageTitle` there is no h1 here (the
- *   caller renders its own, as the application page does). Every other heading is h2 or below.
+ * - The page's one h1: a hero (always at position 0) takes it, in its own first-screen band
+ *   (`HERO_BAND`). Otherwise, when `pageTitle` is set, a title band carrying it (display size)
+ *   comes first; without `pageTitle` there is no h1 here (the caller renders its own, as the
+ *   application page does). Every other heading is h2 or below.
  * - The default slot sits between the title band and the sections (the 404's test pattern).
  * - `index` is the section's 1-based position (its `[NN]` label); the title band is not counted.
  * - Content hrefs: one `hrefLocalizer` for the page's locale, shared by every block.

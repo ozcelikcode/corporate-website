@@ -6,7 +6,7 @@
 - Repo decision (2026-11-23): GitHub repo is public, so CODEOWNERS-enforced branch protection on `main` is free.
 
 ## Hero and type refinement (2026-11-23, branch `fix/hero-type-admin`)
-- Owner: hero must be one first screen, ASCII bigger and better placed, headings and mission text too big. Done: smaller editorial scale (display max 4rem and ≤ 7.5svh, h2 1.875rem, new h3 1.5rem, statement `text-quote` 2rem pull-quote), hero band fills `--first-screen` from lg, media 5/7 from xl. A parallel agent fixes `/admin` in its own worktree.
+- Owner: hero must be one first screen, ASCII bigger and better placed, headings and mission text too big. Done: smaller editorial scale (display max 4rem and ≤ 7.5svh, h2 1.875rem, new h3 1.5rem, statement `text-quote` 2rem pull-quote), hero band fills `--first-screen` from lg with a 5% optical lift, 6/6 from lg and 5/7 plus a media bleed (≤ 10rem) from `wide` (90rem). A parallel agent fixes `/admin` in its own worktree.
 
 ## Next step
 - Open the PR from `feat/site-v1` to `main`. After merge the owner runs `docs/runbook.md` section 3 (setup) and section 5 (production acceptance and manual checks, including the CMS parity checks in check (a); record outcomes in `techContext.md`).

@@ -56,8 +56,9 @@
   /*
    * Type scale (fluid, editorial): display 2.25 → 4rem, h2 1.5 → 1.875rem, h3 1.25 → 1.5rem.
    * Display also follows the viewport height (`svh` term), so the hero headline leaves room for
-   * the lede, the actions and the image on short laptop screens. `quote` is the mission
-   * statement: a large pull-quote (regular weight), not a headline.
+   * the lede, the actions and the image on short laptop screens; that term keeps a rem part, so
+   * text zoom still scales the headline. `quote` is the mission statement: a large pull-quote
+   * (regular weight), not a headline.
    */
   --text-label: 0.75rem;
   --text-label--line-height: 1.4;
@@ -71,7 +72,7 @@
   --text-h2--line-height: 1.15;
   --text-quote: clamp(1.375rem, 1.1rem + 1.1vw, 2rem);
   --text-quote--line-height: 1.3;
-  --text-display: clamp(2.25rem, min(1.6rem + 2.8vw, 7.5svh), 4rem);
+  --text-display: clamp(2.25rem, min(1.6rem + 2.8vw, 2rem + 3.5svh), 4rem);
   --text-display--line-height: 1.02;
   --tracking-label: 0.12em;
   --tracking-display: -0.02em; /* optical tightening for display-size headlines */
@@ -83,6 +84,8 @@
   /* Space and layout */
   --spacing: 0.25rem;
   --container-page: 90rem;
+  /* Where the viewport reaches --container-page: the hero turns 5/7 and its media may bleed. */
+  --breakpoint-wide: 90rem;
   --container-measure: 60ch; /* lede and short body copy (spec §8 wireframe: "max 60ch") */
   --container-quote: 32ch; /* pull-quote measure (the mission statement) */
 }
@@ -112,6 +115,16 @@
     --tally-bar: calc(var(--spacing) * 11);
     --masthead: calc(var(--header-bar) + var(--border-hairline) + var(--tally-bar));
     --first-screen: calc(100svh - var(--masthead));
+    /*
+     * Hero band: optical centring lifts the content 5% of the band above the true centre (the
+     * end padding exceeds the start padding by twice the lift). On viewports wider than the page
+     * container, the media column bleeds into the outer margin, up to `--hero-bleed-max`.
+     */
+    --hero-pad: calc(var(--spacing) * 6);
+    --hero-lift: calc(var(--first-screen) * 0.05);
+    --hero-pad-end: calc(var(--hero-pad) + var(--hero-lift) * 2);
+    --hero-bleed-max: calc(var(--spacing) * 40);
+    --hero-bleed: clamp(0rem, (100vw - var(--container-page)) / 2, var(--hero-bleed-max));
 
     --z-header: 10;
     --z-popover: 20;
