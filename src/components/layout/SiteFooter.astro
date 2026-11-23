@@ -38,6 +38,8 @@ const LINK =
   'inline-block py-1 underline decoration-line-strong underline-offset-4 hover:decoration-ink';
 const GLYPH_GAP = 'ms-2';
 const ROW = 'py-1.5';
+/** Same box as a nav row and the logo link, so every column's first row shares one line. */
+const FIRST_ROW = 'flex min-h-11 items-center';
 
 const { homeHref, logo, logoAlt, legalName, address, links, contacts, socials, labels } =
   Astro.props;
@@ -74,8 +76,8 @@ const socialIndex = contactIndex + 1;
         </ul>
       </nav>
 
-      <div class="flex flex-col gap-4">
-        <Label text={labels.contact} index={contactIndex} />
+      <div class="flex flex-col gap-2">
+        <div class={FIRST_ROW}><Label text={labels.contact} index={contactIndex} /></div>
         <address class="not-italic">
           <ul class="flex flex-col">
             {
@@ -92,8 +94,8 @@ const socialIndex = contactIndex + 1;
         </address>
       </div>
 
-      <div class="flex flex-col gap-4">
-        <Label text={labels.social} index={socialIndex} />
+      <div class="flex flex-col gap-2">
+        <div class={FIRST_ROW}><Label text={labels.social} index={socialIndex} /></div>
         <ul class="flex flex-col">
           {
             socials.map(({ label, href }) => (

@@ -16,7 +16,7 @@ interface Props {
 
 const { level, text, label, index } = Astro.props;
 ---
-<hgroup class="flex flex-col items-start gap-4">
+<hgroup class="flex flex-col items-start gap-2">
   <Heading level={level} text={text} />
   <Label text={label} index={index} strap />
 </hgroup>
