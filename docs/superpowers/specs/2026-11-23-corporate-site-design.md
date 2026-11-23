@@ -221,13 +221,13 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
 |---|---|
 | Color (OKLCH) | `canvas`, `surface`, `ink`, `ink-muted`, `line`, `line-strong`, `critical`; `accent` = `var(--accent-seed)` (the only value injected from settings, on `<html>`); `accent-dim` and `accent-wash` derived via `color-mix(in oklab, …)` (oklab: oklch hue path runs through green) |
 | Bars | `bars-white … bars-blue`: the seven SMPTE 75% bars (`rgb(75% 75% 75%)` …). A fixed broadcast standard, not brand colour: the documented exception to the accent-only rule, used only by `BarsStrip` and `NoSignal` (decorative, `aria-hidden` / one `role="img"`) |
-| Type | `--font-sans`, `--font-mono`; `--text-label`, `-body`, `-lede`, `-h2`, `-display` (fluid `clamp`); `--tracking-label` |
+| Type | `--font-sans`, `--font-mono`; fluid `clamp` scale (owner feedback 2026-11-23: refined editorial sizes): `--text-label` 0.75rem, `-body` 1 → 1.125rem, `-lede` 1.125 → 1.375rem, `-h3` 1.25 → 1.5rem, `-h2` 1.5 → 1.875rem, `-quote` 1.375 → 2rem (the mission statement, a regular-weight pull-quote at a 32ch measure), `-display` 2.25 → 4rem, also capped at 7.5svh so the hero fits short laptop screens; `--tracking-label`, `--tracking-display`. One size per heading level: h1 display, h2 h2, h3 h3 |
 | Space | `--spacing: 0.25rem` (4px base) |
 | Line | `--border-hairline: 1px` |
 | Radius / shadow | `--radius-*: initial; --shadow-*: initial` (no such utilities exist) |
 | Z-index | `--z-header`, `--z-popover` |
 | Motion | `--duration-fast` 120ms, `--duration-base` 240ms, `--ease-signal` |
-| Layout | `--container-page`, 12-column grid |
+| Layout | `--container-page`, `--container-measure` 60ch, `--container-quote` 32ch, 12-column grid; masthead heights `--header-bar`, `--tally-bar`, `--masthead`, and `--first-screen` (100svh minus the masthead) for the hero |
 
 **Typography:**
 - **Schibsted Grotesk** (display/body): a variable grotesk drawn for a newspaper group, so it has press heritage, sharp, and is unused by templates.
@@ -268,8 +268,8 @@ A VU meter was considered and dropped: a second perpetual animation beside the r
 
 | Block | Visual |
 |---|---|
-| `hero` | Spaced split (no cell borders): label, two-tone headline, lede, ≤2 actions left; ASCII render right in `TitleSafe` with scanlines. The image must be a PNG, JPEG or WebP raster (the CMS field accepts only those; any other type fails the build naming the file) |
-| `statement` | Full-width mission sentence in display type, mono label in the gutter |
+| `hero` | The first screen: from `lg` the band is at least `--first-screen` tall and centres its content, so headline, lede, actions and image fit below the header and tally strip (phones stack and scroll, headline and lede above the fold). Spaced split (no cell borders): label, two-tone headline, lede, ≤2 actions left; ASCII render right in `TitleSafe` with scanlines, 6/6 at `lg` and 5/7 (wider media) from `xl`, both columns centred. The image must be a PNG, JPEG or WebP raster (the CMS field accepts only those; any other type fails the build naming the file) |
+| `statement` | Mission sentence as a large pull-quote (`text-quote`, regular weight, ≤32ch), mono label in the gutter |
 | `app-grid` | Spaced `surface` tiles (no borders): index, status tally, lower-third name, tagline, frameless duotone cover, → (internal link) |
 | `feature-list` | Rundown: numbered rows, title, body, mono `HH:MM:SS` duration column; spacing between rows, no rules |
 | `rich-text` | `Prose` column ≤68ch, mono h3+ |

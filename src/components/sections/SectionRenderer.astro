@@ -3,7 +3,7 @@
  * Renders a page's `sections[]` as full-bleed bands, each with the page container inside.
  * - Dividers (border budget): every band after the first opens with one full-width hairline
  *   rule; blocks never draw their own outer borders.
- * - The page's one h1: a hero at position 0 takes it. Otherwise, when `pageTitle` is set, a title
+ * - The page's one h1: a hero (always at position 0) takes it, in its own first-screen band. Otherwise, when `pageTitle` is set, a title
  *   band carrying it (display size) comes first; without `pageTitle` there is no h1 here (the
  *   caller renders its own, as the application page does). Every other heading is h2 or below.
  * - The default slot sits between the title band and the sections (the 404's test pattern).
@@ -17,7 +17,7 @@ import type { Locale } from '../../lib/i18n.ts';
 import type { Section } from '../../lib/sections-schema.ts';
 import Heading from '../ui/Heading.astro';
 import AppGrid from './AppGrid.astro';
-import { BAND, CONTAINER, DIVIDER, FIRST_BAND } from './band-class.ts';
+import { BAND, CONTAINER, DIVIDER, FIRST_BAND, HERO_BAND } from './band-class.ts';
 import Cta from './Cta.astro';
 import Faq from './Faq.astro';
 import FeatureList from './FeatureList.astro';
@@ -56,7 +56,11 @@ const localize = await hrefLocalizer(locale);
     const isFirstBand = i + bandOffset === 0;
     const common = { index: i + FIRST_INDEX, locale, localize };
     return (
-      <section class:list={[BAND, isFirstBand ? FIRST_BAND : DIVIDER]}>
+      <section
+        class:list={
+          section.type === 'hero' ? HERO_BAND : [BAND, isFirstBand ? FIRST_BAND : DIVIDER]
+        }
+      >
         <div class={CONTAINER}>
           {(() => {
             switch (section.type) {

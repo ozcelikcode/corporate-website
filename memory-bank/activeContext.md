@@ -5,6 +5,9 @@
 - Finished on `feat/site-v1`: all 12 plan tasks plus 7a and 7b (toolchain, tokens/fonts, content + i18n, UI atoms, layout shell + SEO head, ASCII pipeline + live signal, Sveltia admin, design refinement, section blocks, routes/SEO, quote page, quote Worker, runbook). Whole-branch review done ("Ready after fixes"); its single fix wave is applied (TR quote links + cross-locale link guard, blank CMS values, reserved slugs, hero raster check, dead code and duplicates, docs sync). 13 pages, 196 tests, gate and guards green. I1 fix on top (render-time href localization, M1–M3): 214 tests.
 - Repo decision (2026-11-23): GitHub repo is public, so CODEOWNERS-enforced branch protection on `main` is free.
 
+## Hero and type refinement (2026-11-23, branch `fix/hero-type-admin`)
+- Owner: hero must be one first screen, ASCII bigger and better placed, headings and mission text too big. Done: smaller editorial scale (display max 4rem and ≤ 7.5svh, h2 1.875rem, new h3 1.5rem, statement `text-quote` 2rem pull-quote), hero band fills `--first-screen` from lg, media 5/7 from xl. A parallel agent fixes `/admin` in its own worktree.
+
 ## Next step
 - Open the PR from `feat/site-v1` to `main`. After merge the owner runs `docs/runbook.md` section 3 (setup) and section 5 (production acceptance and manual checks, including the CMS parity checks in check (a); record outcomes in `techContext.md`).
 

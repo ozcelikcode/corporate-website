@@ -30,7 +30,7 @@ const { live, timecode, channel, program, preview, format, hold, holdHint } = As
 ---
 <div class="bg-surface">
   <div class="mx-auto flex max-w-page items-center gap-6 px-4 label-mono md:gap-8 md:px-8">
-    <div class="flex h-11 min-w-0 flex-1 items-center gap-6 overflow-x-clip md:gap-8" aria-hidden="true">
+    <div class="flex h-(--tally-bar) min-w-0 flex-1 items-center gap-6 overflow-x-clip md:gap-8" aria-hidden="true">
       <Tally text={live} />
       <Timecode prefix={timecode} />
       <span class="hidden text-ink-muted sm:inline">{channel}</span>
