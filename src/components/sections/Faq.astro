@@ -1,0 +1,45 @@
+---
+/**
+ * Questions as native `<details>` rows (no JS): the indexed label as the section heading in a
+ * three-column gutter, the rows across the other nine. Rows are `surface` strips set apart by
+ * spacing, never by rules. The summary's "+" turns into "−" (and lights in accent) when the row
+ * is open; the sign is decorative, the disclosure state comes from `<details>` itself. Answers
+ * are Markdown.
+ */
+import { renderMarkdown } from '../../lib/markdown.ts';
+import GridFrame from '../ui/GridFrame.astro';
+import Label from '../ui/Label.astro';
+import Prose from '../ui/Prose.astro';
+import type { BlockProps } from './block-props.ts';
+
+type Props = BlockProps<'faq'>;
+
+const { section, index, headingLevel } = Astro.props;
+const HeadingTag = `h${headingLevel}` as const;
+const items = await Promise.all(
+  section.items.map(async (item) => ({ q: item.q, html: await renderMarkdown(item.a) })),
+);
+---
+<GridFrame columns={12}>
+  <HeadingTag class="lg:col-span-3">
+    <Label as="span" text={section.label} index={index} />
+  </HeadingTag>
+  <div class="flex flex-col gap-2 lg:col-span-9">
+    {
+      items.map(({ q, html }) => (
+        <details class="group bg-surface">
+          <summary class="flex min-h-11 cursor-pointer list-none items-baseline justify-between gap-6 px-6 py-5 text-lede font-semibold [&::-webkit-details-marker]:hidden">
+            {q}
+            <span class="font-mono text-ink-muted group-open:text-accent" aria-hidden="true">
+              <span class="group-open:hidden">+</span>
+              <span class="hidden group-open:inline">−</span>
+            </span>
+          </summary>
+          <div class="px-6 pb-6 text-ink-muted">
+            <Prose html={html} />
+          </div>
+        </details>
+      ))
+    }
+  </div>
+</GridFrame>

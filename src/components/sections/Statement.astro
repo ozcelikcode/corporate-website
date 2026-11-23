@@ -1,0 +1,22 @@
+---
+/**
+ * Mission statement: the indexed label in a three-column gutter, the sentence in display type
+ * (ink) across the other nine. Regular weight, so it reads as a quiet statement next to the
+ * semibold headlines. Stacked below `lg`. A plain label, no lower third.
+ */
+import GridFrame from '../ui/GridFrame.astro';
+import Label from '../ui/Label.astro';
+import type { BlockProps } from './block-props.ts';
+
+type Props = BlockProps<'statement'>;
+
+const { section, index } = Astro.props;
+---
+<GridFrame columns={12}>
+  <div class="lg:col-span-3">
+    <Label text={section.label} index={index} />
+  </div>
+  <p class="text-display font-normal tracking-display text-ink wrap-break-word lg:col-span-9">
+    {section.text}
+  </p>
+</GridFrame>

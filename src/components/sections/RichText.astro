@@ -1,0 +1,18 @@
+---
+/**
+ * Long-form Markdown in the `Prose` column (≤ 68ch, mono h3+). From `lg` it starts on the
+ * fourth of twelve columns, in line with the statement and FAQ text.
+ */
+import { renderMarkdown } from '../../lib/markdown.ts';
+import GridFrame from '../ui/GridFrame.astro';
+import Prose from '../ui/Prose.astro';
+import type { BlockProps } from './block-props.ts';
+
+type Props = BlockProps<'rich-text'>;
+
+const { section } = Astro.props;
+const html = await renderMarkdown(section.body);
+---
+<GridFrame columns={12}>
+  <div class="lg:col-span-9 lg:col-start-4"><Prose html={html} /></div>
+</GridFrame>

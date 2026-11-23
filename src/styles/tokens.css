@@ -29,13 +29,16 @@
   --color-accent-dim: color-mix(in oklab, var(--accent-seed) 55%, var(--color-canvas));
   --color-accent-wash: color-mix(in oklab, var(--accent-seed) 12%, var(--color-canvas));
 
-  /* ASCII tones, darkest to brightest */
-  --color-tone-0: color-mix(in oklab, var(--color-ink-muted) 30%, var(--color-canvas));
-  --color-tone-1: color-mix(in oklab, var(--color-ink-muted) 60%, var(--color-canvas));
-  --color-tone-2: var(--color-ink-muted);
-  --color-tone-3: var(--color-ink);
-  --color-tone-4: var(--color-accent-dim);
-  --color-tone-5: var(--color-accent);
+  /*
+   * ASCII tones, darkest to brightest: a duotone ramp canvas → accent → ink, so luminance rises
+   * with every step for any valid accent (>= 3:1 on canvas, below ink) and the image reads true.
+   */
+  --color-tone-0: color-mix(in oklab, var(--accent-seed) 25%, var(--color-canvas));
+  --color-tone-1: var(--color-accent-dim);
+  --color-tone-2: color-mix(in oklab, var(--accent-seed) 80%, var(--color-canvas));
+  --color-tone-3: var(--color-accent);
+  --color-tone-4: color-mix(in oklab, var(--accent-seed) 50%, var(--color-ink));
+  --color-tone-5: var(--color-ink);
 
   /*
    * SMPTE 75% colour bars, left to right (fixed broadcast standard, not brand colours).

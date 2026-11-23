@@ -1,0 +1,27 @@
+---
+/**
+ * Closing call to action: one `surface` band (no border) with the accent ON AIR tally, the
+ * heading, optional text and a single primary action, set to the band's end from `lg`.
+ */
+import { getUiDictionary } from '../../lib/content.ts';
+import { t } from '../../lib/i18n.ts';
+import Button from '../ui/Button.astro';
+import Heading from '../ui/Heading.astro';
+import Tally from '../ui/Tally.astro';
+import type { BlockProps } from './block-props.ts';
+
+type Props = BlockProps<'cta'>;
+
+const { section, locale, headingLevel } = Astro.props;
+const onAir = t(await getUiDictionary(), locale, 'tallyOnAir');
+---
+<div class="grid grid-cols-1 gap-8 bg-surface p-6 md:p-12 lg:grid-cols-12 lg:items-end lg:gap-12">
+  <div class="flex flex-col items-start gap-6 lg:col-span-8">
+    <Tally text={onAir} tone="accent" />
+    <Heading level={headingLevel} text={section.heading} />
+    {section.text !== undefined && <p class="max-w-[60ch] text-lede text-ink-muted">{section.text}</p>}
+  </div>
+  <div class="lg:col-span-4 lg:justify-self-end">
+    <Button href={section.action.href}>{section.action.label}</Button>
+  </div>
+</div>

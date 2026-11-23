@@ -53,23 +53,6 @@
   }
 }
 
-/*
- * Hairline cell matrix, budget-limited (see spec §8 "Border budget"): the gap shows the line
- * colour, so neighbouring cells share one line. Content grids use GridFrame's spaced variant.
- */
-@utility grid-hairline {
-  display: grid;
-  gap: var(--border-hairline);
-  background-color: var(--color-line);
-  border: var(--border-hairline) solid var(--color-line);
-}
-
-@utility cell {
-  position: relative;
-  background-color: var(--color-canvas);
-  padding: --spacing(6);
-}
-
 @utility label-mono {
   font-family: --theme(--font-mono);
   font-size: var(--text-label);
@@ -129,6 +112,11 @@
 
   & > * + * {
     margin-block-start: 1em;
+  }
+
+  /* The column starts flush: a leading heading keeps no top margin. */
+  & > :first-child {
+    margin-block-start: 0;
   }
 
   & h2 {
