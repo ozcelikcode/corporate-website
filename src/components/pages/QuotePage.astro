@@ -2,7 +2,8 @@
 /**
  * The quote page for `locale` (the `quote` entry, else its EN fallback): the page's sections with
  * the title band (SectionRenderer owns the one h1), the `:target` status panels, then the form
- * band. The only client script on the site outside `/admin/` is Turnstile, loaded here.
+ * band. Turnstile loads here (quote pages only); the only other client script outside `/admin/`
+ * is the ASCII motion module, on pages that render `AsciiImage`.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import {

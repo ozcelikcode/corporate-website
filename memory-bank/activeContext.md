@@ -2,17 +2,17 @@
 
 ## Current state (2026-11-23)
 - Design spec: `docs/superpowers/specs/2026-11-23-corporate-site-design.md`. Owner APPROVED it on 2026-11-23.
-- Implemented on `feat/site-v1`: Tasks 1–11 and 7a (toolchain, tokens/fonts, content + i18n, UI atoms, layout shell + SEO head, ASCII pipeline + AsciiImage, Sveltia admin config, design refinement, section blocks + SectionRenderer, routes/SEO/404/robots/sitemap, quote page). Gate green per task, including fix rounds. Merged tree: 13 pages, 114 tests, one h1 per page, no broken links.
+- Finished on `feat/site-v1`: all 12 plan tasks plus 7a and 7b (toolchain, tokens/fonts, content + i18n, UI atoms, layout shell + SEO head, ASCII pipeline + live signal, Sveltia admin, design refinement, section blocks, routes/SEO, quote page, quote Worker, runbook). Whole-branch review done ("Ready after fixes"); its single fix wave is applied (TR quote links + cross-locale link guard, blank CMS values, reserved slugs, hero raster check, dead code and duplicates, docs sync). 13 pages, 196 tests, gate and guards green.
 - Repo decision (2026-11-23): GitHub repo is public, so CODEOWNERS-enforced branch protection on `main` is free.
-- Memory bank and project instructions (`CLAUDE.md`, team-delegation skill) are set up.
 
 ## Next step
-- Whole-branch review, then the PR to `main`. After merge the owner runs `docs/runbook.md` section 3 (setup) and section 5 (production acceptance, manual checks).
+- Open the PR from `feat/site-v1` to `main`. After merge the owner runs `docs/runbook.md` section 3 (setup) and section 5 (production acceptance and manual checks, including the CMS parity checks in check (a); record outcomes in `techContext.md`).
 
 ## Current focus
 - G6 done: Task 8 (routes, SEO, 404s, robots, sitemap, build outputs) and Task 9 (quote page, shared quote schema).
-- G7 done: Task 10 (Worker `/api/quote`, Turnstile, mail, `_headers`, extended `build-outputs.ts`), awaiting review. Task 12 done (runbook, README, local acceptance).
-- Task 7b done (inserted after owner feedback "ASCII effects must be animated" and "the effect and look must evoke broadcasting to anyone"): the ASCII hero is a live broadcast signal (tune-in, transmission rings, hum bar, sync slips, grain); seed image is now a transmitter mast (`transmitter.png`). Client JS constraint amended (one ≤ 2 KB module on pages with `AsciiImage`). Fix round 1: shared 36 s slip cycle (gaps 9/13/14 s), HOLD key in TallyStrip pausing all motion (WCAG 2.2.2), cold-load tune-in skip, build-time `waveOrigin` check, per-row write cache, rings every 2.5 s.
+- G7 done: Task 10 (Worker `/api/quote`, Turnstile, mail, `_headers`, extended `build-outputs.ts`). Task 12 done (runbook, README, local acceptance).
+- Final fix wave done (2026-11-23): see `progress.md` log.
+- Task 7b done (inserted after owner feedback "ASCII effects must be animated" and "the effect and look must evoke broadcasting to anyone"): the ASCII hero is a live broadcast signal (tune-in, transmission rings, hum bar, sync slips, grain); seed image is now a transmitter mast (`transmitter.png`). Client JS constraint amended (one ≤ 2 KB module on pages with `AsciiImage`). Fix round 1: shared 36 s slip cycle (gaps 9/13/14 s), HOLD key in TallyStrip pausing all motion (WCAG 2.2.2), cold-load tune-in skip, per-row write cache, rings every 2.5 s.
 - Plan: `docs/superpowers/plans/2026-11-23-corporate-site.md` (12 tasks, dispatch groups G1–G8, subagent-driven execution).
 
 ## Design direction (owner feedback, 2026-11-23; implemented in Task 7a)
@@ -37,7 +37,7 @@
 - Arrows: internal links →, outbound ↗, both via `Glyph` (settled; the quote key is →).
 
 ## Open items and owner decisions
-- Sveltia step 6 (manual check in Chromium with File System Access, "Work with Local Repository"): pending owner, see runbook. Also unverified: `sortable_fields` and how empty lists are serialised.
+- Sveltia step 6 (manual check in Chromium with File System Access, "Work with Local Repository"): pending owner, see runbook. Also unverified: `sortable_fields`. Empty optional fields are now omitted (`output.omit_empty_optional_fields`) and blank values are absent in the schemas; the CMS parity checks in runbook check (a) confirm it on the real CMS.
 - Font preload: 4 upright files, accepted.
 - Unoptimized imported images (any image imported without `<Image>`/`getImage`) ship the original, EXIF included, to `dist/_astro`. Task 8 resolved the dist side (`pruneUnreferencedImages` removes unoptimized originals from `dist/_astro`). EXIF on uploads is still open: strip on upload, or route all images through the optimizer.
 - Resolved in Task 8: `applicationSectionsSchema` rejects any hero in an application.

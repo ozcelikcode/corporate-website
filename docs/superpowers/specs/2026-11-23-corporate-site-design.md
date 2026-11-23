@@ -85,7 +85,7 @@ EDITOR ──► /admin (Sveltia, static) ──► sveltia-cms-auth Worker (Git
 │     └─ config.yml                  # backend (base_url = auth Worker URL, edited once by hand),
 │                                    #   i18n, collections, media folders
 ├─ src/
-│  ├─ content.config.ts              # all collections: glob loader + astro/zod
+│  ├─ content.config.ts              # all collections: glob loader + schemas from lib/content-schemas.ts
 │  ├─ content/
 │  │  ├─ settings/site.yaml          # singleton, shared across locales
 │  │  ├─ ui/{en,tr}/strings.yaml
@@ -102,7 +102,10 @@ EDITOR ──► /admin (Sveltia, static) ──► sveltia-cms-auth Worker (Git
 │  ├─ lib/
 │  │  ├─ i18n.ts                     # locales, localizePath, alternates, t() with en fallback
 │  │  ├─ content.ts                  # getPage/getApplications/getSettings with locale fallback
+│  │  ├─ content-schemas.ts          # entry schemas of every collection (tested)
 │  │  ├─ sections-schema.ts          # block union (shared by pages + applications)
+│  │  ├─ blank.ts                    # optionalField: a blank CMS value counts as absent
+│  │  ├─ page-slugs.ts               # own-route and forbidden page slugs
 │  │  ├─ markdown.ts                 # memoized Astro markdown processor
 │  │  ├─ seo.ts                      # meta, canonical, hreflang, Organization JSON-LD
 │  │  ├─ ascii.ts                    # sharp → glyph grid + quantized tone runs
@@ -110,10 +113,12 @@ EDITOR ──► /admin (Sveltia, static) ──► sveltia-cms-auth Worker (Git
 │  │  └─ quote-schema.ts             # form schema, enums, limits (site + Worker)
 │  ├─ integrations/build-outputs.ts  # astro:build:done: writes worker/generated/solutions.json;
 │  │                                 #   on non-production builds appends X-Robots-Tag: noindex to dist/_headers
+│  │                                 #   fails on a locale page linking the EN URL of its own translation
 │  ├─ layouts/BaseLayout.astro       # <html>, head, fonts, accent var, skip link, header/footer
 │  ├─ components/
 │  │  ├─ ui/                         # Button, Label, Heading, Tally, Timecode, GridFrame,
-│  │  │                              #   Field, Input, Textarea, Select, Checkbox, AsciiImage, Prose
+│  │  │                              #   Field, Input, Textarea, Select, Checkbox, AsciiImage, Prose,
+│  │  │                              #   DuotoneCover
 │  │  ├─ sections/                   # Hero, Statement, AppGrid, FeatureList, RichText, Cta, Faq,
 │  │  │                              #   SectionRenderer (exhaustive switch on `type`)
 │  │  ├─ layout/                     # SiteHeader, SiteFooter, MobileNav (popover),
@@ -154,12 +159,13 @@ EDITOR ──► /admin (Sveltia, static) ──► sveltia-cms-auth Worker (Git
   - `socials[]`
   - `ogImage`
   - `organization`: {legalName, url, address?}
-- **ui:** keyed strings. TR may be partial and falls back to EN.
+- **ui:** keyed strings. TR may be partial and falls back to EN; a blank TR string counts as missing (EN fallback), never a build failure.
 - **navigation:** `header[]`, `footer[]` of {label, href}.
-- **pages:** `title`, `description`, `ogImage?`, `sections[]`.
+- **pages:** `title`, `description`, `ogImage?`, `sections[]`. Slugs `admin`, `api` and every locale code are forbidden (they would shadow `/admin/`, `/api/` or a locale root); the build fails naming the slug.
+- **Blank optional values:** every optional field (`ogImage`, `organization.address`, `links`, `brochure`, feature-list `duration`, cta `text`) reads a blank value (`""`, whitespace-only or `null`) as absent, so a field cleared in the CMS never fails the build (`optionalField`, `lib/blank.ts`). The CMS also leaves empty optional fields out (`output.omit_empty_optional_fields`) and starts new entries in EN only (`i18n.initial_locales: default`).
 - **applications:**
   - `name`, `slug`, `tagline`, `summary`, `category`
-  - `cover` + `coverAlt`
+  - `cover` + `coverAlt` (the cover is also the page's og:image)
   - `status` (short tally label)
   - `order`
   - `links[]?`
@@ -218,7 +224,7 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
 | Space | `--spacing: 0.25rem` (4px base) |
 | Line | `--border-hairline: 1px` |
 | Radius / shadow | `--radius-*: initial; --shadow-*: initial` (no such utilities exist) |
-| Z-index | `--z-header`, `--z-popover`, `--z-dialog` |
+| Z-index | `--z-header`, `--z-popover` |
 | Motion | `--duration-fast` 120ms, `--duration-base` 240ms, `--ease-signal` |
 | Layout | `--container-page`, 12-column grid |
 
@@ -233,7 +239,7 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
 3. form controls (inputs, selects, textareas, buttons, the menu key);
 4. the `TitleSafe` media frame, used only on the hero media and the ApplicationPage cover.
 
-Everything else (content grids, cards, feature lists, FAQ, CTA) gets its hierarchy from spacing, `surface` vs `canvas` tone and type: no boxed cells. `GridFrame` is spaced only. The "+" crosshairs are retired.
+Everything else (content grids, cards, feature lists, FAQ, CTA, rich-text block quotes) gets its hierarchy from spacing, `surface` vs `canvas` tone and type: no boxed cells. `GridFrame` is spaced only. The "+" crosshairs are retired.
 
 **Broadcast details (CSS only, no client JS, static under reduced motion), used sparingly:**
 
@@ -261,7 +267,7 @@ A VU meter was considered and dropped: a second perpetual animation beside the r
 
 | Block | Visual |
 |---|---|
-| `hero` | Spaced split (no cell borders): label, two-tone headline, lede, ≤2 actions left; ASCII render right in `TitleSafe` with scanlines |
+| `hero` | Spaced split (no cell borders): label, two-tone headline, lede, ≤2 actions left; ASCII render right in `TitleSafe` with scanlines. The image must be a PNG, JPEG or WebP raster (the CMS field accepts only those; any other type fails the build naming the file) |
 | `statement` | Full-width mission sentence in display type, mono label in the gutter |
 | `app-grid` | Spaced `surface` tiles (no borders): index, status tally, lower-third name, tagline, frameless duotone cover, → (internal link) |
 | `feature-list` | Rundown: numbered rows, title, body, mono `HH:MM:SS` duration column; spacing between rows, no rules |
@@ -278,12 +284,12 @@ A VU meter was considered and dropped: a second perpetual animation beside the r
   - Output is a `<pre aria-hidden>` inside a `<figure role="img" aria-label>`, sized with container query units.
   - **Signature moment: a live broadcast signal** (Task 7b; owner: "ASCII effects must be animated", and the effect must evoke broadcasting to anyone). Only under `prefers-reduced-motion: no-preference`; the build-time render is the no-JS and reduced-motion picture. Zero layout shift: rows are full-width inline-blocks, motion is transform, opacity and same-width glyphs only. Each effect maps to a broadcast idea:
     - *Tuning in* (module): when the figure first scrolls into view, the frame is static noise that resolves glyph by glyph into the picture over about 1.2 s (random order, rolling roughly top-down; tones settle with their glyphs). On a cold load, a figure already in view whose first report comes more than 300 ms after navigation start has already painted the still picture, so it skips the tune-in and goes straight to live.
-    - *Transmission* (module): a ring of brightness leaves the transmitter every 2.5 s (`WAVE_CADENCE_MS`) and travels outward (`waveOrigin`, a `data-wave-origin` "x y" on the figure; default top centre, the seed's mast top). Glyphs under a ring step up in tone, a dotted front crosses empty sky, and the signal fades with distance. A little glyph grain (rare ramp-neighbour flicker) rides on top.
+    - *Transmission* (module): a ring of brightness leaves the transmitter every 2.5 s (`WAVE_CADENCE_MS`) and travels outward from `WAVE_ORIGIN` (top centre, the seed's mast top). Glyphs under a ring step up in tone, a dotted front crosses empty sky, and the signal fades with distance. A little glyph grain (rare ramp-neighbour flicker) rides on top.
     - *Hum bar* (CSS): a soft colour-dodge band rolls slowly down the picture, like mains hum on a monitor.
     - *Sync slip* (CSS): both slip bands share one 36 s cycle with slips at 4 s (rows 5–6), 13 s (rows 10–12) and 26 s (rows 5–6), so the gaps are 9, 13 and 14 s (never under 8 s). Each slip tears a band sideways by a fraction of a glyph and dips it for about two frames (a dropout).
     - *Breath* (CSS, no-JS picture only): the brightest tone dims and recovers in coarse steps.
   - **HOLD key** (WCAG 2.2.2 pause, no extra JS): a native checkbox styled as a broadcast key at the end of `TallyStrip`, on every page and breakpoint, outside the strip's `aria-hidden` status segments, 44px tall, labelled by `ui.motionHold` (EN "Hold", TR "Beklet") and described by `ui.motionHoldHint`. Off by default (the site moves). Checked, `global.css` sets `animation-play-state: paused` on everything (timecode, hum bar, slips, breath), its lamp lights, and the ASCII module stops and restores the static markup.
-  - The module (`lib/ascii-motion.ts` pure logic, thin glue in the component) is one Astro-bundled `/_astro/*.js` file (≤ 2 KB gzipped, CSP `script-src 'self'`). It runs only on the visible grid, pauses offscreen and in hidden tabs, never runs under reduced motion (and follows changes to it) or while HOLD is checked, and restores the build-time markup whenever it stops. It caches each row's last markup, so frames never read `innerHTML`. `waveOrigin` is parsed at build too, so a bad value fails the build.
+  - The module (`lib/ascii-motion.ts` pure logic, thin glue in the component) is one Astro-bundled `/_astro/*.js` file (≤ 2 KB gzipped, CSP `script-src 'self'`). It runs only on the visible grid, pauses offscreen and in hidden tabs, never runs under reduced motion (and follows changes to it) or while HOLD is checked, and restores the build-time markup whenever it stops. It caches each row's last markup, so frames never read `innerHTML`.
 - **`TallyStrip`:** `■ LIVE` plus SMPTE timecode `HH:MM:SS:FF`, made with a CSS `@property` counter (no JS), channel, `■ PGM ■ PVW` and the format. Static under reduced motion.
 
 ```
@@ -427,7 +433,7 @@ The form is a plain `<form method="post" action="/api/quote">`:
 - **Limits:** all limits and enums live in `src/lib/quote-schema.ts` and drive both the HTML attributes and the Worker validation.
 - **Solutions allow-list:** the Astro build emits `worker/generated/solutions.json` (every application slug, deduplicated across locales, plus the literal `general`) through `src/integrations/build-outputs.ts` (`astro:build:done`). The Worker imports it and rejects unknown slugs. It is generated, gitignored and has no runtime lookup.
 - **Availability:** the flow works at v1 launch on `*.workers.dev`, because Email Routing lives on the owner's existing zone (§3, §13).
-- **JS:** Turnstile (`data-action="quote"`) is the only JS, loaded on `/quote` only.
+- **JS:** Turnstile (`data-action="quote"`) loads on the quote pages only (`/quote/`, `/tr/quote/`). The only other client JS outside `/admin/` is the ASCII motion module, on pages that render the ASCII hero (§8).
 
 Worker steps:
 1. Accept only `POST /api/quote`; anything else returns 405.
@@ -447,7 +453,7 @@ Deploy order: **auth Worker → GitHub App callback → site.**
 
 1. **Repo:** public (decided 2026-11-23), so branch protection on main enforces 1 CODEOWNERS approval for free. Add `.github/CODEOWNERS`.
 2. **Roles:** Admin = Maintain/Admin + CODEOWNER. Editor = Write.
-3. **Ruleset on `main`:** PR required, 1 CODEOWNERS approval, no force-push, no bypass.
+3. **Ruleset on `main`:** PR required, 1 CODEOWNERS approval, no force-push. Bypass list: the Repository admin and Maintain roles only, so admins can merge their own changes (otherwise nothing the owner writes could ever be published); editors (Write) are not on it and always need 1 Code Owner approval (runbook 3.4).
 4. **Auth Worker (first, by hand):**
    - Deploy the official `sveltia/sveltia-cms-auth` repo as its own Worker. It is not vendored in this repo.
    - Record its URL.

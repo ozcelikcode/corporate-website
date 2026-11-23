@@ -52,7 +52,16 @@ Dev dependencies:
 - Verified from docs: top-level `singletons`; `slug.editable` replaces the deprecated `{{fields._slug}}`; field `pattern` is `[regex, message]`; `required: [en]` with i18n; i18n must be opted in per field (collection-level does not cover `ui`/`navigation` fields). Biome formats the YAML (double quotes).
 - Editor/admin split is enforced by GitHub (CODEOWNERS, branch protection, merge rights), not by the config.
 - Hero `actions` and nav `footer` default to `[]` in the schema, so the CMS may omit empty lists.
-- Unverified: whether Sveltia writes `[]` or omits empty keys, and `sortable_fields: [order, name]` in 0.271.2. Owner step 6 (manual check in Chromium, File System Access, "Work with Local Repository") is pending; see the runbook.
+- Final fix wave, verified against the 0.271.2 type definitions (`https://unpkg.com/@sveltia/cms@0.271.2/types/public.d.ts`) and the docs:
+  - `output.omit_empty_optional_fields: true` (root level): fields with `required: false` and an empty value are left out; list items are never removed (an all-empty item stays `{}`). Docs: https://sveltiacms.app/en/docs/data-output#controlling-data-output
+  - `i18n.initial_locales: default`: a new entry draft has only EN enabled; editors enable TR from the editor's three-dot menu. Replaces the deprecated `save_all_locales`. Docs: https://sveltiacms.app/en/docs/i18n/options#disabling-non-default-locale-content
+  - Image field `accept` (comma-separated MIME types or extensions; filters uploads and the selection dialog, and validates existing selections): hero image `image/png,image/jpeg,image/webp`. Docs: https://sveltiacms.app/en/docs/fields/file (the Image field shares the File field options: https://sveltiacms.app/en/docs/fields/image)
+  - The schemas read blank optional values as absent anyway (`lib/blank.ts`), for files saved by hand or before these options; whether a `required: [en]` field counts as optional for TR output is undocumented, so TR ui blanks are dropped by the schema.
+- Admin CSP `script-src` stays `'self' https://unpkg.com` (not narrowed to the package path): the pinned bundle lazy-imports other unpkg packages at runtime (`@sindresorhus/transliterate` for slugs, `dayjs`, `exifr`, `pdfjs-dist`, `@jsquash/*`, `@sveltia/ui@0.96.3` shiki engine, `@shikijs/*`, `leaflet`, and its own `dist/chunks/`), found by reading the 0.271.2 bundle. A path-limited source would break slug generation and image handling.
+- Unverified: `sortable_fields: [order, name]` in 0.271.2. Owner step 6 (manual check in Chromium, File System Access, "Work with Local Repository") is pending; see the runbook.
+
+## CMS parity checks (runbook 5, owner check (a))
+Record each outcome here after the owner runs them: feature item without duration, application without brochure, CTA without text, new EN page (no TR file), TR ui with cleared fields, SVG/GIF hero upload refused. Status: pending owner. Build-side behaviour for each is covered by tests (`blank.test.ts`, `content-schemas.test.ts`, `sections-schema.test.ts`, `ascii-source.test.ts`, `admin-config.test.ts`) and was probed with real builds (blank `ogImage`, blank TR ui strings, `admin` page slug, SVG hero).
 
 ## External-service rules
 - Free tier only. Nothing paid, nothing self-hosted.

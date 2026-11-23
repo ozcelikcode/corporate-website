@@ -182,7 +182,17 @@ Run these on the production URL once everything above is done.
 
 These could not be automated in the build environment.
 
-- [ ] **(a) CMS end to end (Chromium).** Open `https://<host>/admin/` in Chromium (the "Work with Local Repository" option needs Chromium; the GitHub login itself works in any browser). Log in with GitHub. Edit one page in EN and the same page in TR. As an editor, "Save" then "Ready for review": a PR appears. As an admin, publish it (or merge on GitHub) and confirm the production site updates. Also check: an empty hero actions list saves cleanly, and sorting in the Applications list works (both were unverified in Sveltia 0.271.2). Record anything odd in `memory-bank/techContext.md`.
+- [ ] **(a) CMS end to end (Chromium).** Open `https://<host>/admin/` in Chromium (the "Work with Local Repository" option needs Chromium; the GitHub login itself works in any browser). Log in with GitHub. Edit one page in EN and the same page in TR. As an editor, "Save" then "Ready for review": a PR appears. As an admin, publish it (or merge on GitHub) and confirm the production site updates. Also check: an empty hero actions list saves cleanly, and sorting in the Applications list works (both were unverified in Sveltia 0.271.2).
+
+  CMS parity checks (blank and partial values must never break the site). For each, save as an editor, open the PR and confirm its preview build passes (Workers Builds check green), then look at the saved YAML in the PR diff:
+  1. Save a feature-list item with no duration: the key is absent (or empty) and the row shows no duration.
+  2. Save an application with no brochure: the key is absent (or empty) and the page shows no brochure button.
+  3. Save a CTA section with no text: the CTA renders heading and button only.
+  4. Create a new EN page: the PR adds `src/content/pages/en/<slug>.yaml` only, no half-empty `pages/tr/<slug>.yaml` (new entries start in EN only; TR is turned on from the editor's menu when translated).
+  5. Save the TR interface strings with a few fields cleared: the build passes and those strings show in English on `/tr/`.
+  6. Try to upload an SVG or GIF as the hero image: the field refuses it (PNG, JPEG and WebP only).
+
+  Record the outcome of each (pass, or what the YAML looked like) in `memory-bank/techContext.md` under "CMS parity checks".
 - [ ] **(b) Turnstile in the real Workers runtime.**
   1. Locally: `pnpm build`, then `pnpm preview` (port 8787) with the dummy secret in `.dev.vars`. POST the form with Turnstile's dummy token:
 
@@ -204,12 +214,12 @@ Dates are the build dates, 2026-11-23.
 | TypeScript version | `@astrojs/check@0.9.12` peers `typescript ^5 or ^6`; pinned 6.0.3 (newest 6.x) | 2026-11-23 |
 | Fonts option shape | `fontProviders.local()` with `variants`, verified in Astro 7.4.13; latin and latin-ext files, Turkish glyphs present | 2026-11-23 |
 | i18n fallback | Resolved by manual routing: TR routes only for translated entries; EN fallbacks are `noindex`, no canonical | 2026-11-23 |
-| Sveltia 0.271.2 | Config verified from docs: `editorial_workflow`, `type`-keyed lists, singletons, per-collection media folders. R2 stored as plain URL fields. Owner check (a) still open | 2026-11-23 |
+| Sveltia 0.271.2 | Config verified from docs: `editorial_workflow`, `type`-keyed lists, singletons, per-collection media folders, `output.omit_empty_optional_fields`, `i18n.initial_locales: default`, image `accept`. R2 stored as plain URL fields. Owner check (a), including the CMS parity checks, still open | 2026-11-23 |
 | Worker zod | `astro/zod` bundles in the Worker; no `zod` pin needed | 2026-11-23 |
 | Build image | Not testable locally: confirm on the first Workers Builds run (Node 26.13.1 and pnpm 12; fallback in 3.5) | open |
 | Email | `send_email` without `destination_address` bundles; live delivery not testable locally. Owner check in section 5 | open |
 | CSP vs inline scripts | `dist/` has no inline executable script; `assetsInlineLimit` keeps script chunks external (dist script guard) | 2026-11-23 |
-| ASCII hero | 48-column grid, seed figure about 18 KB (budget 30 KB), animated, static under reduced motion | 2026-11-23 |
+| ASCII hero | 96-column grid plus a 48-column compact grid, seed figure about 18 KB (budget 30 KB), animated, static under reduced motion | 2026-11-23 |
 | Turkish glyphs | Both font families include them | 2026-11-23 |
 | Previews | Open: preview builds use `http://localhost:4321` canonicals (interim). Revisit only if Workers Builds exposes a preview-host variable | open |
 | Generated JSON | `check` after `build` | 2026-11-23 |
@@ -221,6 +231,9 @@ Final local acceptance numbers (build, tests, bundle and page weight) are record
 
 - **Build fails with an accent contrast error:** the `accent` in site settings is below 3:1 on the canvas. Pick a lighter colour; the message names the field.
 - **`pnpm check` fails on a missing `solutions.json`:** run `pnpm build` first.
+- **Build fails with "Links to the wrong language":** a TR page links the English URL of a page that has a TR version (for example `/quote/` instead of `/tr/quote/`). Change the link to the `/tr/` URL the message names.
+- **Build fails with "the slug ... is reserved":** pages cannot be called `admin`, `api`, `en` or `tr` (they would hide the CMS, the quote endpoint or a language). Rename the page.
+- **Build fails with "ASCII source ... must be a PNG, JPEG or WebP raster":** the hero image is an SVG, GIF or AVIF. Upload a PNG, JPEG or WebP instead.
 - **Quote shows `#error-send`:** Email Routing is not enabled, the destination is not verified, or `QUOTE_TO` / `QUOTE_FROM` / `TURNSTILE_SECRET_KEY` are not set. Check the Worker logs (observability is on).
 - **Quote shows `#error-verify` for real visitors:** the Turnstile hostnames do not include the host they use, or the site key and secret are from different widgets.
 - **Production build fails naming `SITE_URL` or `PUBLIC_TURNSTILE_SITE_KEY`:** the variable is missing, empty, or `SITE_URL` is not https. Set it in Workers Builds for the production branch.
