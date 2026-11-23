@@ -5,6 +5,7 @@ import {
   assertSlugMatches,
   localesFor,
   mergeByLocale,
+  NAVIGATION_SLUG,
   parseEntryId,
   type Resolved,
   resolveLocalized,
@@ -19,7 +20,6 @@ export type ApplicationData = CollectionEntry<'applications'>['data'];
 export type NavigationData = CollectionEntry<'navigation'>['data'];
 
 const SETTINGS_ID = 'site';
-const NAVIGATION_SLUG = 'main';
 const UI_SLUG = 'strings';
 
 const englishUiSchema = z.record(z.enum(UI_KEYS), z.string().min(1));
@@ -98,8 +98,9 @@ export async function availableLocales(
 
 /**
  * Maps a content href (written as an EN site path) to the URL a page in `locale` links: the
- * locale's own URL when `locale` builds that page or application, else the EN one. Build it once
- * per page render and reuse it for every link.
+ * locale's own URL when `locale` builds that page or application, else the EN one. Cheap to build
+ * (`getCollection` is cached): BaseLayout, SectionRenderer and ApplicationPage each build their own
+ * per render, every link inside them shares it.
  */
 export async function hrefLocalizer(locale: Locale): Promise<(href: string) => string> {
   const [pages, applications] = await Promise.all([

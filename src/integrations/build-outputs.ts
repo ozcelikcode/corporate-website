@@ -19,6 +19,7 @@ import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/p
 import { basename, dirname, extname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { AstroIntegration } from 'astro';
+import { NAVIGATION_SLUG } from '../lib/entries.ts';
 import { DEFAULT_LOCALE, HOME_SLUG, LOCALES, type Locale } from '../lib/i18n.ts';
 import { NOT_FOUND_SLUG, RESERVED_PAGE_SLUGS } from '../lib/page-slugs.ts';
 import { GENERAL_SOLUTION } from '../lib/quote-schema.ts';
@@ -52,7 +53,8 @@ const HREFLANG_ATTRIBUTE = /\shreflang=/;
 const SITE_PATH = /^(\/(?!\/)[^?#]*)/;
 const CONTENT_DIR = 'src/content';
 const APPLICATIONS_DIR = 'applications';
-const NAVIGATION_SLUG = 'main';
+/** `applications/<slug>/index.html`; `applications/index.html` is the index page. */
+const APPLICATION_PAGE_DEPTH = 3;
 const PATH_SEPARATOR = '/';
 
 async function exists(path: string): Promise<boolean> {
@@ -89,12 +91,15 @@ async function listFiles(directory: string): Promise<string[]> {
  * folder): its entry, the EN twin where the route falls back to EN (quote, 404), and navigation.
  */
 export function contentSources(page: string, locale: Locale): string[] {
-  const [first = '', second] = page.split(PATH_SEPARATOR);
+  const parts = page.split(PATH_SEPARATOR);
+  const [first = '', second = '', third] = parts;
   const navigation = `${CONTENT_DIR}/navigation/${locale}/${NAVIGATION_SLUG}.yaml`;
-  if (first === APPLICATIONS_DIR && second !== undefined) {
+  const isApplication =
+    parts.length === APPLICATION_PAGE_DEPTH && first === APPLICATIONS_DIR && third === INDEX_FILE;
+  if (isApplication) {
     return [`${CONTENT_DIR}/${APPLICATIONS_DIR}/${locale}/${second}.yaml`, navigation];
   }
-  const slug = page === NOT_FOUND_FILE ? NOT_FOUND_SLUG : second === undefined ? HOME_SLUG : first;
+  const slug = page === NOT_FOUND_FILE ? NOT_FOUND_SLUG : parts.length === 1 ? HOME_SLUG : first;
   const entryLocales = RESERVED_PAGE_SLUGS.some((reserved) => reserved === slug)
     ? [locale, DEFAULT_LOCALE]
     : [locale];
@@ -124,7 +129,7 @@ export async function findCrossLocaleLinks(dist: URL): Promise<string[]> {
         const pagePath = relative(localeRoot, page).split(sep).join(PATH_SEPARATOR);
         const sources = contentSources(pagePath, locale).join(', ');
         problems.push(
-          `/${locale}/${pagePath} links to ${href} instead of /${locale}${path} (check ${sources})`,
+          `/${locale}/${pagePath} links to ${href} instead of /${locale}${path} (link written in ${sources})`,
         );
       }
     }
@@ -136,7 +141,7 @@ async function assertLocalizedLinks(dist: URL): Promise<void> {
   const problems = await findCrossLocaleLinks(dist);
   if (problems.length > 0) {
     throw new Error(
-      `Links to the wrong language. Content hrefs are written as EN site paths and localized at render time, so each link below bypassed that; fix it in the content or component named:\n${problems.join('\n')}`,
+      `Links to the wrong language. Content hrefs are localized at render time, so each hit means a renderer skipped the href localizer (hrefLocalizer in src/lib/content.ts): fix that component. The files after each link are where its link text lives:\n${problems.join('\n')}`,
     );
   }
 }

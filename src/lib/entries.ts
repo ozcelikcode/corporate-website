@@ -4,6 +4,8 @@ export type Entry<T> = { id: string; data: T };
 export type Resolved<T> = { data: T; locale: Locale; slug: string };
 
 const ID_SEPARATOR = '/';
+/** The navigation collection holds one entry per locale: `<locale>/main`. */
+export const NAVIGATION_SLUG = 'main';
 
 /** Entry ids are `<locale>/<slug>`, taken from the file path. */
 export function parseEntryId(id: string): { locale: Locale; slug: string } {

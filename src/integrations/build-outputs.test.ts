@@ -134,9 +134,9 @@ test('findCrossLocaleLinks flags a TR page linking the EN URL of a page TR has',
     await writeFile(join(root, 'tr', 'applications', 'x', 'index.html'), '<a href="/quote/">q</a>');
     const navigation = 'src/content/navigation/tr/main.yaml';
     assert.deepEqual(await findCrossLocaleLinks(dist), [
-      `/tr/404.html links to / instead of /tr/ (check src/content/pages/tr/not-found.yaml, src/content/pages/en/not-found.yaml, ${navigation})`,
-      `/tr/applications/x/index.html links to /quote/ instead of /tr/quote/ (check src/content/applications/tr/x.yaml, ${navigation})`,
-      `/tr/index.html links to /quote/#form instead of /tr/quote/ (check src/content/pages/tr/home.yaml, ${navigation})`,
+      `/tr/404.html links to / instead of /tr/ (link written in src/content/pages/tr/not-found.yaml, src/content/pages/en/not-found.yaml, ${navigation})`,
+      `/tr/applications/x/index.html links to /quote/ instead of /tr/quote/ (link written in src/content/applications/tr/x.yaml, ${navigation})`,
+      `/tr/index.html links to /quote/#form instead of /tr/quote/ (link written in src/content/pages/tr/home.yaml, ${navigation})`,
     ]);
   });
 });
@@ -145,6 +145,14 @@ test('contentSources names the entry (and its EN twin where the route falls back
   const navigation = 'src/content/navigation/tr/main.yaml';
   assert.deepEqual(contentSources('about/index.html', 'tr'), [
     'src/content/pages/tr/about.yaml',
+    navigation,
+  ]);
+  assert.deepEqual(contentSources('applications/index.html', 'tr'), [
+    'src/content/pages/tr/applications.yaml',
+    navigation,
+  ]);
+  assert.deepEqual(contentSources('applications/x/index.html', 'tr'), [
+    'src/content/applications/tr/x.yaml',
     navigation,
   ]);
   assert.deepEqual(contentSources('quote/index.html', 'tr'), [
