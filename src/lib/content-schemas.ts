@@ -5,7 +5,7 @@
  */
 import type { SchemaContext } from 'astro:content';
 import { z } from 'astro/zod';
-import { optionalField, withoutBlankValues } from './blank.ts';
+import { listField, optionalField, withoutBlankValues } from './blank.ts';
 import { accentContrast, HEX_PATTERN, MIN_ACCENT_CONTRAST } from './color.ts';
 import { UI_KEYS } from './i18n.ts';
 import {
@@ -56,9 +56,9 @@ export const settingsSchema = ({ image }: SchemaContext) =>
       .refine((items) => items.some((item) => item.kind === 'email'), {
         message: 'settings.contacts needs at least one entry with kind "email"',
       }),
-    socials: z
-      .array(z.strictObject({ label: z.string(), href: z.string().regex(/^https:\/\//) }))
-      .default([]),
+    socials: listField(
+      z.array(z.strictObject({ label: z.string(), href: z.string().regex(/^https:\/\//) })),
+    ),
     ogImage: image(),
     organization: z.strictObject({
       legalName: z.string(),
@@ -75,7 +75,7 @@ export const uiSchema = z.preprocess(
 
 export const navigationSchema = z.strictObject({
   header: z.array(link).min(1),
-  footer: z.array(link).default([]),
+  footer: listField(z.array(link)),
 });
 
 export const pageSchema = (context: SchemaContext) =>

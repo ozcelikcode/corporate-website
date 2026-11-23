@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { z } from 'astro/zod';
-import { isBlank, optionalField, withoutBlankValues } from './blank.ts';
+import { isBlank, listField, optionalField, withoutBlankValues } from './blank.ts';
 
 test('isBlank is true for an empty or whitespace-only string and for null', () => {
   for (const value of ['', '   ', '\n\t', null]) assert.equal(isBlank(value), true, String(value));
@@ -30,4 +30,13 @@ test('withoutBlankValues drops blank entries of a record and leaves other values
   assert.equal(withoutBlankValues('text'), 'text');
   assert.equal(withoutBlankValues(null), null);
   assert.deepEqual(withoutBlankValues(['', 'x']), ['', 'x']);
+});
+
+test('listField reads a missing or null list as empty and still validates a set one', () => {
+  const schema = z.strictObject({ items: listField(z.array(z.string()).max(1)) });
+  assert.deepEqual(schema.parse({}).items, []);
+  assert.deepEqual(schema.parse({ items: null }).items, []);
+  assert.deepEqual(schema.parse({ items: ['a'] }).items, ['a']);
+  assert.equal(schema.safeParse({ items: ['a', 'b'] }).success, false);
+  assert.equal(schema.safeParse({ items: [1] }).success, false);
 });

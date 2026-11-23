@@ -73,6 +73,15 @@ test('app-grid apps defaults to an empty list', () => {
   assert.deepEqual(section?.type === 'app-grid' ? section.apps : undefined, []);
 });
 
+test('null hero actions and null app-grid apps (cleared in the CMS) parse as empty lists', () => {
+  const [hero, grid] = schema.parse([
+    { ...fixtures.hero, actions: null },
+    { ...fixtures['app-grid'], apps: null },
+  ]);
+  assert.deepEqual(hero?.type === 'hero' ? hero.actions : undefined, []);
+  assert.deepEqual(grid?.type === 'app-grid' ? grid.apps : undefined, []);
+});
+
 test('hero without an actions key parses to an empty list', () => {
   const { actions: _omitted, ...withoutActions } = fixtures.hero;
   const [section] = schema.parse([withoutActions]);

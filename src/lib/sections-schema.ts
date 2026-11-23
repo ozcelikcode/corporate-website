@@ -1,6 +1,6 @@
 import type { SchemaContext } from 'astro:content';
 import { z } from 'astro/zod';
-import { optionalField } from './blank.ts';
+import { listField, optionalField } from './blank.ts';
 
 export const SECTION_TYPES = [
   'hero',
@@ -36,7 +36,7 @@ export const sectionsSchema = ({ image }: SchemaContext) =>
           headline: z.string(),
           headlineAccent: z.string(),
           lede: z.string(),
-          actions: z.array(actionSchema).max(MAX_ACTIONS).default([]),
+          actions: listField(z.array(actionSchema).max(MAX_ACTIONS)),
           image: image(),
           imageAlt: z.string(),
         }),
@@ -45,7 +45,7 @@ export const sectionsSchema = ({ image }: SchemaContext) =>
           type: z.literal('app-grid'),
           label,
           heading: z.string(),
-          apps: z.array(z.string()).default([]), // slugs; empty = all, by `order`
+          apps: listField(z.array(z.string())), // slugs; empty = all, by `order`
         }),
         z.strictObject({
           type: z.literal('feature-list'),
