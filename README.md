@@ -20,7 +20,7 @@ A static, brand-agnostic corporate website. Brand name, logo, accent colour and 
 | `pnpm lint` / `pnpm format` | Biome check / fix |
 | `pnpm test` | Unit tests (`node --test`) |
 | `pnpm preview` | Build, then run the site and Worker locally with `wrangler dev` |
-| `pnpm deploy` | Build and deploy (normally done by Workers Builds on `main`) |
+| `pnpm run deploy` | Build and deploy (normally done by Workers Builds on `main`) |
 
 Needs Node 26.13.1 (`.nvmrc`) and pnpm 12.23.0. Local secrets go in `.dev.vars` (gitignored); see the runbook.
 

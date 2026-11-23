@@ -62,11 +62,15 @@ Gate before every merge, in this order: `pnpm build && pnpm check && pnpm lint &
 
 ## 3. One-time setup
 
+**Order:** do 3.7 (Turnstile) and 3.8 (Email Routing) first, because 3.5 and 3.6 need the keys and addresses they produce. Then 3.1 to 3.6, 3.9 if needed, and 3.10.
+
+**Role model:** Editor = submit (Write role; opens PRs that need 1 Code Owner approval). Admin = review + publish (repo owner and Maintain role; on the bypass list, so admins can merge their own changes).
+
 ### 3.1 Auth Worker (`sveltia-cms-auth`)
 
 - [ ] Clone the official repository `sveltia/sveltia-cms-auth` into a separate folder (it is not vendored here). Read its README first: confirm the deploy steps and variable names are still the ones below.
 - [ ] Deploy it as its own Worker: `npx wrangler deploy` from that folder. Note the URL it prints, `https://<auth-worker>.<account-subdomain>.workers.dev`. This is `<auth-worker-url>` below.
-- [ ] Set `ALLOWED_DOMAINS` to the production site host(s), for example `<site-name>.<account-subdomain>.workers.dev` (known before the first site deploy: the site Worker name is `corporate-site` in `wrangler.jsonc`, so `corporate-site.<account-subdomain>.workers.dev`). Add the custom domain later (3.12).
+- [ ] Set `ALLOWED_DOMAINS` to the production site host(s), for example `<site-name>.<account-subdomain>.workers.dev` (known before the first site deploy: the site Worker name is `corporate-site` in `wrangler.jsonc`, so `corporate-site.<account-subdomain>.workers.dev`). Add the custom domain later (3.11).
 
 ### 3.2 GitHub App
 
@@ -85,15 +89,16 @@ npx wrangler secret put GITHUB_CLIENT_SECRET
 
 - [ ] `public/admin/config.yml`: set `backend.repo` to `<owner>/<repo>` and `backend.base_url` to `<auth-worker-url>`.
 - [ ] `public/_headers`: in the `/admin/*` block replace `https://<auth-worker>.workers.dev` in `connect-src` with the auth Worker origin. Check it matches exactly, including the account subdomain.
-- [ ] Commit both on a branch and open a PR (section 3.4 protects `main`; if protection is not on yet you may commit to `main`).
+- [ ] Commit both directly to `main` as an admin (the bypass list in 3.4 allows it). This is the one clear path: admin commits or merges directly; only editors go through review.
 
 ### 3.4 GitHub: CODEOWNERS, branch protection, editors
 
 The repo is public, so these are free.
 
 - [ ] `.github/CODEOWNERS` holds `* @<your-github-handle>`. Check the handle is yours and exists; change it if not. Add more admins on the same line if wanted.
-- [ ] Settings, Rules (or Branches), add a rule for `main`: require a pull request, require 1 approval, require review from Code Owners, block force pushes, no bypass.
-- [ ] Settings, Collaborators: add each editor with the **Write** role. Admins need Maintain or Admin and must be code owners. GitHub, not the CMS, enforces who can publish: editors can only open a PR, code owners merge it.
+- [ ] Settings, Rules, Rulesets, new branch ruleset for `main`: require a pull request, require 1 approval, require review from Code Owners, block force pushes. Add the **bypass list**: Repository admin role and Maintain role (always allow). Without a bypass an admin cannot approve their own PR and nothing could ever be published by the owner.
+- [ ] Settings, Collaborators: add each editor with the **Write** role. Writers are not on the bypass list, so every editor PR needs 1 Code Owner approval.
+- [ ] Resulting model: Editor = submit, Admin = review + publish. GitHub, not the CMS, enforces it.
 
 ### 3.5 Cloudflare: Workers Builds (the site)
 
@@ -101,7 +106,8 @@ The repo is public, so these are free.
 - [ ] Worker name `corporate-site` (must match `wrangler.jsonc`).
 - [ ] Build command `pnpm build`; deploy command `npx wrangler deploy`; production branch `main`; preview builds on for pull request branches.
 - [ ] Build variables (production, used on `main` only): `SITE_URL` = `https://<your-final-host>` (no trailing slash; use the `workers.dev` URL until a custom domain exists) and `PUBLIC_TURNSTILE_SITE_KEY` = the production site key from 3.7. A production build fails with a message naming the variable if either is missing or `SITE_URL` is not https.
-- [ ] Do not set these variables for preview builds: previews deliberately use the Turnstile test key, `noindex` and `http://localhost:4321` canonicals. They are for visual review only; CMS login and quote submission are not expected to work there.
+- [ ] Previews ignore both variables on purpose (`resolveBuildMode` only reads them when the branch is `main`): they use the Turnstile test key, `noindex` and `http://localhost:4321` canonicals. Previews are uploaded with the non-production deploy command `npx wrangler versions upload`; set it as the non-production branch deploy command if the dashboard asks. They are for visual review only; CMS login and quote submission are not expected to work there.
+- [ ] Expect the first Workers Build to fail until both variables exist (production builds refuse to run without them); set them, then retry the build.
 - [ ] If the build fails on the Node or pnpm version, set the build variable `NODE_VERSION` to `24` as the fallback and record it in `memory-bank/techContext.md`.
 
 ### 3.6 Secrets for the Worker
@@ -163,7 +169,7 @@ The accent colour must keep at least 3:1 contrast on the dark canvas; the build 
 Run these on the production URL once everything above is done.
 
 - [ ] Lighthouse, mobile, production URL: Performance 95 or more (target 100), Accessibility 100, Best Practices 100, SEO 100. Command: `npx lighthouse https://<your-final-host>/ --view`.
-- [ ] Scripts: no `<script>` in `dist/` outside the quote pages and `/admin/`, except the ASCII motion module on pages with `AsciiImage`, plus `application/ld+json` data. Run the dist script guard from the plan header (it prints nothing when clean). The hero ASCII figure is under 30 KB.
+- [ ] Scripts: no `<script>` in `dist/` outside the quote pages and `/admin/`, except the ASCII motion module on pages with `AsciiImage`, plus `application/ld+json` data. After `pnpm build`, this prints nothing when clean: `grep -rhoE '<script[^>]*>' dist --include='*.html' --exclude-dir=admin | grep -v 'application/ld+json' | grep -v 'challenges.cloudflare.com/turnstile' | grep -vE '^<script type="module" src="/_astro/[^"]+\.js">$'`. The hero ASCII figure is under 30 KB.
 - [ ] Headers: `curl -sI https://<host>/` shows the Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy and Strict-Transport-Security headers. `curl -sI https://<host>/admin/` shows the admin CSP. `curl -sI https://<host>/_astro/<any file>` shows `Cache-Control: public, max-age=31536000, immutable`. securityheaders.com grade A or better.
 - [ ] Quote form, with JavaScript: submit; the page shows `#sent` and a mail arrives in `QUOTE_TO` with a Reply-To of the visitor.
 - [ ] Quote form, without JavaScript: the page shows `#error-verify` with the email fallback.
@@ -176,7 +182,7 @@ Run these on the production URL once everything above is done.
 
 These could not be automated in the build environment.
 
-- [ ] **(a) CMS end to end (Chromium).** Open `https://<host>/admin/` in Chromium (File System Access is Chromium-only). Log in with GitHub. Edit one page in EN and the same page in TR. As an editor, "Save" then "Ready for review": a PR appears. As an admin, publish it (or merge on GitHub) and confirm the production site updates. Also check: an empty hero actions list saves cleanly, and sorting in the Applications list works (both were unverified in Sveltia 0.271.2). Record anything odd in `memory-bank/techContext.md`.
+- [ ] **(a) CMS end to end (Chromium).** Open `https://<host>/admin/` in Chromium (the "Work with Local Repository" option needs Chromium; the GitHub login itself works in any browser). Log in with GitHub. Edit one page in EN and the same page in TR. As an editor, "Save" then "Ready for review": a PR appears. As an admin, publish it (or merge on GitHub) and confirm the production site updates. Also check: an empty hero actions list saves cleanly, and sorting in the Applications list works (both were unverified in Sveltia 0.271.2). Record anything odd in `memory-bank/techContext.md`.
 - [ ] **(b) Turnstile in the real Workers runtime.**
   1. Locally: `pnpm build`, then `pnpm preview` (port 8787) with the dummy secret in `.dev.vars`. POST the form with Turnstile's dummy token:
 
@@ -185,7 +191,7 @@ These could not be automated in the build environment.
        --data 'name=Ann&email=a@b.co&company=Co&role=&country=&solutions=general&timeline=asap&message=hello&consent=on&locale=en&cf-turnstile-response=XXXX.DUMMY.TOKEN.XXXX'
      ```
 
-     Expected: `303` to `/quote/#error-verify`. The Worker log shows `{ code: 'verify', step: 'hostname' }`, because Turnstile's test secret always answers with the hostname `example.com`; this proves the live siteverify call is reached and the hostname check works. With `cf-turnstile-response=bad` the log shows `step: 'token'`. (A full success cannot be produced with test keys; use the next item.) Send empty `role=` and `country=` as shown: the schema needs the fields present, as browsers always send them.
+     Expected: `303` to `/quote/#error-verify`. The Worker log shows `{ code: 'verify', step: 'hostname' }`, because Turnstile's test secret always answers with the hostname `example.com`; this proves the live siteverify call is reached and the hostname check works. Any other non-empty fake token (for example `cf-turnstile-response=bad`) behaves the same and logs `step: 'hostname'`; `step: 'token'` appears only for an empty, missing or over-limit token (no siteverify call is made). (A full success cannot be produced with test keys; use the next item.) Send empty `role=` and `country=` as shown: the schema needs the fields present, as browsers always send them.
   2. Production: submit the real form once. Expected: `#sent` and a mail in your inbox.
 - [ ] **(c) HOLD key.** On `/`, with motion on, the ASCII hero animates. Press the `HOLD` key in the strip at the top (also reachable with the Tab key and Space): all motion stops and the static ASCII picture shows; press again to resume.
 
