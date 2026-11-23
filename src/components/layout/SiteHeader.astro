@@ -3,19 +3,19 @@
  * Sticky top bar: logo (home link, named by `logoAlt`; the logo is a wordmark), inline nav
  * from `lg`, language toggle, the quote key from `md` and the MobileNav button below `lg`.
  * The quote key is never hidden: below `md` it lives in the menu sheet. An exact match carries
- * `aria-current="page"`; a section match (a non-root href that prefixes the current path) gets
- * only the visual state. Both draw an accent bar on the header rule (a graphic, so 3:1 is enough).
+ * `aria-current="page"`; a section match (`isSectionActive`: the page lies below a non-root href,
+ * on whole segments) gets only the visual state. Both draw an accent bar on the header rule
+ * (a graphic, so 3:1 is enough).
  */
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import type { Locale } from '../../lib/i18n.ts';
+import { isCurrentPage, isSectionActive } from '../../lib/nav-state.ts';
 import Button from '../ui/Button.astro';
 import LanguageToggle from './LanguageToggle.astro';
 import MobileNav from './MobileNav.astro';
 
 type Link = { label: string; href: string };
-
-const ROOT_PATH = '/';
 
 interface Props {
   locale: Locale;
@@ -48,10 +48,10 @@ const {
   labels,
 } = Astro.props;
 
+/** Computed once here and handed to MobileNav, so both navs share one highlight rule. */
 const navItems = links.map((link) => {
-  const current = link.href === currentPath;
-  const inSection = !current && link.href !== ROOT_PATH && currentPath.startsWith(link.href);
-  return { ...link, current, active: current || inSection };
+  const current = isCurrentPage(currentPath, link.href);
+  return { ...link, current, active: current || isSectionActive(currentPath, link.href) };
 });
 ---
 <header class="sticky top-0 z-(--z-header) border-b border-line bg-canvas">
