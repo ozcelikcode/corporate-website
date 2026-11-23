@@ -14,16 +14,15 @@
 - 2026-11-23: Task 7a design refinement done: border budget, spaced GridFrame, TitleSafe, LowerThird, BarsStrip, NoSignal, TallyStrip PGM/PVW, rundown `duration`.
 - 2026-11-23: Task 7 done: 7 section blocks, SectionRenderer (dividers, exhaustive switch, single h1), `renderMarkdown`, `padIndex`.
 - Tasks 1–7, 11 and 7a done (2026-11-23).
+- 2026-11-23: Task 12 done: `docs/runbook.md` and `README.md`. All 12 tasks (plus 7a, 7b) implemented on `feat/site-v1`.
 - 2026-11-23: Tasks 8 (routes, TR wrappers, 404s, robots, sitemap, JSON-LD, build outputs) and 9 (quote page, shared quote schema) done and merged.
 
 - 2026-11-23: Task 7b ASCII motion done (live broadcast signal, transmitter-mast seed, client JS constraint amended).
 
 ## Next
-- G8: Task 12 (runbook and acceptance). Owner: set Worker secrets and `<auth-worker>` in `_headers` before launch.
-- Owner: Sveltia step 6 manual check (runbook).
-- Add `.github/CODEOWNERS`.
-- Resolve the "Left to the builder" verifications from the spec (section 14).
-- Verify: Lighthouse, headers scan, quote flow (JS, no JS, bad token), axe on every template.
+- Whole-branch review, then the PR to `main`.
+- Owner: run `docs/runbook.md` section 3 (setup) and section 5 (production acceptance and manual checks: CMS end to end, Turnstile on production, HOLD key, Lighthouse, axe).
+- Open verifications: Workers Builds Node 26 / pnpm 12, live email delivery, preview-host variable (see runbook section 6).
 
 ## Blocked
 - Quote email delivery: blocked until a domain is on the Cloudflare account with Email Routing enabled; until then the endpoint redirects to the error state.
@@ -57,3 +56,4 @@
 - 2026-11-23: Task 10 implemented: Worker (`quote`, `turnstile`, `mail`, `headers`, `index`), `public/_headers` (spec §11), `build-outputs` extended (allow-list JSON, noindex). 146 tests; dry-run bundle 792 KiB; local smoke test OK.
 - 2026-11-23: Task 7b implemented: `ascii-glyphs.ts` (sharp-free constants), `ascii-motion.ts` (20 tests: noise, reveal schedule, ring distance, wave trail/boost, live frame, origin), row spans in `asciiMarkup`, AsciiImage CSS motion (hum bar, sync slip, breath) and module (tune-in, rings, grain), `assetsInlineLimit` so the module ships as `/_astro/*.js`. Seed hero redrawn as a transmitter mast (owner direction). JS 1.7 KB gzipped; figure 18.1 KB; CLS 0 (full-width rows fixed a measured 0.04); checked at 1440 and 360 under the real CSP (`wrangler dev`). 172 tests.
 - 2026-11-23: Task 7b fix round 1: one 36 s slip cycle (gaps 9/13/14 s); HOLD key (native checkbox in TallyStrip, `motionHold`/`motionHoldHint` EN+TR+CMS, pauses every animation via `global.css`, stops the ASCII module; on all 13 pages, dist-guarded); cold load skips tune-in after 300 ms; `waveOrigin` parsed at build; row write cache; `WAVE_CADENCE_MS` 2500; seed renamed `transmitter.png`. 175 tests; JS 1.8 KB gzipped; HOLD and CLS 0 checked at 1440 and 360.
+- 2026-11-23: Task 12 local acceptance (all pass unless noted): build, check, lint, test (175/175) exit 0; guard greps clean (gradient hits are the allowed scanlines and hum bar); dist script guard clean; one h1 on all 13 pages; 352 internal links over `dist/` (incl. fragments), 0 broken; `wrangler deploy --dry-run` upload 791 KiB (gzip 124 KiB, limit 3 MiB); `dist/` 1140 KB, 80 files; `/` transfer about 124 KB (HTML 7.3, CSS 7.8, JS 1.8 gzipped, 4 preloaded woff2 fonts 107 KB; cover images lazy); production build with `WORKERS_CI_BRANCH=main` fails without `SITE_URL`/key and with http, passes with both (https canonical, test key absent, no `localhost`, no noindex); `wrangler dev` headers on `/`, `/admin/`, `/_astro/*` correct; quote: GET 405, cross-origin `#error-invalid`, no token and bad token `#error-verify`; no horizontal scroll at 360 px on 9 pages. Lighthouse not run (no Chrome on this machine; manual command in runbook). Turnstile test secret answers hostname `example.com`, so dummy-token success cannot be produced: the Worker lands on `#error-verify` (`step: hostname`), proving live siteverify; real success is an owner check on production.
