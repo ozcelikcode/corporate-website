@@ -90,13 +90,19 @@ singletons:
           - name: url
             label: Website URL
             widget: string
-            pattern: ['^https?:\/\/\S+$', "Enter a full URL such as https://example.com"]
+            pattern: ['^https:\/\/\S+$', "Enter a full https URL such as https://example.com"]
           - { name: address, label: Address, widget: string, required: false }
 
+# Folder collections: `format: yaml` alone would write `.yml`, and the default (Markdown with
+# front matter, `.md`) would find none of our files, so both keys are set. Entries live at
+# <folder>/<locale>/<slug>.yaml (i18n structure multiple_folders); the slug is the file name.
+# https://unpkg.com/@sveltia/cms@0.271.2/types/public.d.ts (`extension`, `format`, `folder`)
 collections:
   - name: ui
     label: Interface strings
     folder: src/content/ui
+    format: yaml
+    extension: yaml
     create: false
     delete: false
     summary: Interface strings
@@ -302,6 +308,8 @@ collections:
   - name: navigation
     label: Navigation
     folder: src/content/navigation
+    format: yaml
+    extension: yaml
     create: false
     delete: false
     summary: Main navigation
@@ -342,6 +350,8 @@ collections:
   - name: pages
     label: Pages
     folder: src/content/pages
+    format: yaml
+    extension: yaml
     slug:
       editable: [create]
     # Relative to the entry (src/content/<collection>/<locale>/<file>.yaml); public_folder
@@ -474,6 +484,8 @@ collections:
   - name: applications
     label: Applications
     folder: src/content/applications
+    format: yaml
+    extension: yaml
     slug: "{{fields.slug}}"
     identifier_field: name
     sortable_fields: [order, name]
