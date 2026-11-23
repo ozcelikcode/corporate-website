@@ -1,41 +1,125 @@
 # Corporate Site
 
-A static, brand-agnostic corporate website. Brand name, logo, accent colour and contacts come from CMS settings, so the same code serves any tenant. English at `/`, optional Turkish at `/tr/`. A hero image is rendered as an animated ASCII broadcast signal (static under reduced motion, with a HOLD key to pause it).
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Node](https://img.shields.io/badge/node-26.13.1-339933.svg)
+![Astro](https://img.shields.io/badge/astro-7-ff5d01.svg)
 
-## Stack
+A static, brand-agnostic corporate website for broadcast and media technology companies. Brand name, logo, accent colour and contacts come from CMS settings, so the same code serves any company. Content lives in the repository and is edited through a Git-based CMS.
 
-- Astro 7 (static output), Tailwind 4, TypeScript 6 (strict), Biome
-- Cloudflare Workers Static Assets, one Worker for `POST /api/quote` (Turnstile, Email Routing `send_email`)
-- Sveltia CMS at `/admin/` (GitHub backend, editorial workflow), login through a separate `sveltia-cms-auth` Worker
-- Content is typed YAML in `src/content`, validated with Zod at build time
-- Free tier only; no database, no visitor accounts
+![Home page, desktop](docs/screenshots/home-desktop.png)
 
-## Scripts
+## Who it is for
 
-| Command | Purpose |
+- Companies that build software or services for broadcasters, newsrooms and media teams and need a calm, credible website.
+- Editors who manage pages, applications and translations without touching code.
+- Owners who want a free-tier setup: no database, no servers, no visitor accounts.
+
+## Features
+
+- **Two languages.** English at `/`, optional Turkish at `/tr/`. Untranslated entries fall back to English.
+- **Block-based pages.** Pages and applications compose seven typed blocks: `hero`, `statement`, `app-grid`, `feature-list`, `rich-text`, `cta`, `faq`.
+- **ASCII hero.** The hero image is converted to an animated ASCII broadcast signal at build time. A HOLD key pauses it, and it stays static under reduced motion.
+- **Git-based CMS.** Sveltia CMS at `/admin/`. Editors save to a branch and pull request; an admin reviews the YAML diff and merges.
+- **Quote form.** Posts to a Cloudflare Worker that verifies Turnstile and sends the request by Email Routing.
+- **Security headers.** Strict CSP and related headers served from `public/_headers`.
+- **Near-zero JavaScript.** Native forms, `<dialog>`, Popover API and `<details>` come before scripts.
+- **Accessible.** Semantic markup, visible focus, keyboard-operable controls.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/application.png" alt="Application page"><br><sub>Application page</sub></td>
+    <td width="50%"><img src="docs/screenshots/quote.png" alt="Quote form"><br><sub>Quote form</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/home-tr.png" alt="Home page in Turkish"><br><sub>Turkish home page (<code>/tr/</code>)</sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/home-mobile.png" alt="Home page, mobile" width="240"><br><sub>Mobile</sub></td>
+  </tr>
+</table>
+
+## Tech stack
+
+| Technology | Purpose |
 |---|---|
-| `pnpm dev` | Astro dev server |
-| `pnpm build` | Static build into `dist/` |
-| `pnpm check` | Type check (run after a build) |
-| `pnpm lint` / `pnpm format` | Biome check / fix |
-| `pnpm test` | Unit tests (`node --test`) |
-| `pnpm preview` | Build, then run the site and Worker locally with `wrangler dev` |
-| `pnpm run deploy` | Build and deploy (normally done by Workers Builds on `main`) |
+| [Astro](https://astro.build) 7 | Static site generation, file-based routing |
+| TypeScript 6 (strict) + Zod | Typed content schemas validated at build time |
+| Tailwind CSS 4 | Styling with design tokens |
+| [Sveltia CMS](https://github.com/sveltia/sveltia-cms) | Editing UI at `/admin/`, GitHub backend, editorial workflow |
+| Cloudflare Workers Static Assets | Hosting of the built site |
+| Cloudflare Worker | `POST /api/quote` endpoint |
+| Cloudflare Turnstile | Bot protection for the quote form |
+| Cloudflare Email Routing | Delivers quote requests to the owner |
+| Cloudflare R2 | Optional storage for large files |
+| Biome | Lint and format |
+| Node 26 / pnpm 12 | Runtime and package manager |
 
-Needs Node 26.13.1 (`.nvmrc`) and pnpm 12.23.0. Local secrets go in `.dev.vars` (gitignored); see the runbook.
+## Project structure
 
-## Editing content
+```
+src/
+  content/       Typed YAML: pages, applications, navigation, ui strings, settings (EN/TR)
+  components/
+    ui/          Small primitives (Button, Field, Tally, AsciiImage, ...)
+    sections/    The seven blocks and the section renderer
+    layout/      Header, footer, mobile nav, language toggle, SEO head
+    pages/       Page templates (generic, application, quote, 404)
+  lib/           Content loading, i18n, ASCII pipeline, schemas, helpers (with unit tests)
+  pages/         Routes: EN at the root, Turkish under tr/, admin, 404, robots
+  styles/        Global styles and tokens
+worker/          Cloudflare Worker for the quote endpoint
+public/          Static files: _headers, favicon, CMS assets
+docs/            Runbook, design spec, implementation plan, screenshots
+memory-bank/     Project notes: brief, patterns, tech context, progress
+```
 
-Open `/admin/` in Chromium, sign in with GitHub and edit pages, applications, navigation, UI strings or site settings in EN and TR. Saving opens a pull request; a code owner merges it and the site rebuilds. Details in the runbook, section 4.
+## Getting started
+
+Prerequisites: Node 26.13.1 (see `.nvmrc`) and pnpm 12.23.0.
+
+```sh
+pnpm install
+pnpm dev        # Astro dev server
+pnpm build      # static build into dist/
+pnpm preview    # build, then run the site and Worker locally with wrangler dev
+```
+
+Quality checks:
+
+```sh
+pnpm test       # unit tests (node --test)
+pnpm check      # type check (run after a build)
+pnpm lint       # Biome check
+pnpm format     # Biome check with fixes
+```
+
+`pnpm run deploy` builds and deploys with Wrangler; in normal use Workers Builds does this on every push to `main`. Local secrets go in `.dev.vars` (gitignored); see the runbook.
+
+## Content editing
+
+Open `/admin/` and sign in with GitHub (any modern browser; only the optional "Work with Local Repository" mode needs Chromium). Edit pages, applications, navigation, UI strings or site settings in English and Turkish.
+
+| Role | Can do |
+|---|---|
+| Editor (GitHub Write access) | Edit content. Each save becomes a branch and pull request. |
+| Admin (Maintain/Admin, code owner) | Review the YAML diff and a local build, then merge to `main`. |
+
+The site rebuilds after the merge. See section 4 of the [runbook](docs/runbook.md#4-editing-flow).
+
+## Deployment
+
+The site is deployed by Cloudflare Workers Builds from the `main` branch: it runs the build and serves `dist/` as static assets, with one Worker handling `/api/*`. The CMS login runs through a separate `sveltia-cms-auth` Worker and a GitHub App. Secrets (`TURNSTILE_SECRET_KEY`, `QUOTE_TO`, `QUOTE_FROM`) are set in Cloudflare and never committed.
+
+Follow the [runbook](docs/runbook.md) for one-time setup and complete its [security checklist](docs/runbook.md#security-checklist-before-the-first-editor) before inviting the first editor.
 
 ## Documentation
 
-- [Deploy and setup runbook](docs/runbook.md)
 - [Design spec](docs/superpowers/specs/2026-11-23-corporate-site-design.md)
 - [Implementation plan](docs/superpowers/plans/2026-11-23-corporate-site.md)
-- [Memory bank](memory-bank/) (project brief, tech context, patterns, active context, progress)
-- Project rules: [CLAUDE.md](CLAUDE.md)
+- [Deploy and setup runbook](docs/runbook.md)
+- [Memory bank](memory-bank/) (project brief, patterns, tech context, progress)
+- [CLAUDE.md](CLAUDE.md) (conventions for AI-assisted work)
 
 ## License
 
-See [LICENSE](LICENSE).
+[MIT](LICENSE)
