@@ -7,7 +7,7 @@
 ├─ docs/superpowers/specs/        # spec + plans
 ├─ .github/CODEOWNERS
 ├─ astro.config.ts wrangler.jsonc biome.json tsconfig.json package.json .nvmrc
-├─ public/  _headers  favicon.svg  admin/{index.html,config.yml}
+├─ public/  _headers  favicon.svg  admin/config.yml  (admin page: src/pages/admin/index.astro)
 ├─ src/
 │  ├─ content.config.ts           # all collections (glob loader + lib/content-schemas.ts)
 │  ├─ content/  settings/ ui/{en,tr}/ navigation/{en,tr}/ pages/{en,tr}/ applications/{en,tr}/

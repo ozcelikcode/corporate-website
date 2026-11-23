@@ -45,10 +45,10 @@ Dev dependencies:
 - Build vars (dashboard): `SITE_URL`, `PUBLIC_TURNSTILE_SITE_KEY` (via `astro:env`).
 
 ## CMS
-- Sveltia CMS (pinned exactly, loaded from a pinned bundle with SRI in `public/admin/index.html`; pre-1.0, tested at 0.271.2).
+- Sveltia CMS (pinned exactly, loaded from a pinned bundle with SRI in `src/pages/admin/index.astro`; pre-1.0, tested at 0.271.2).
 - Auth: `sveltia-cms-auth` on a free Worker, GitHub App OAuth. Vars: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `ALLOWED_DOMAINS`.
 - `publish_mode: editorial_workflow`; i18n `multiple_folders` en/tr (default en, layout `<folder>/<locale>/<slug>.yaml`); settings as singleton; `media_folder: src/assets/uploads`.
-- Files: `public/admin/index.html` (`noindex`, pinned `@sveltia/cms@0.271.2` with SRI and `crossorigin="anonymous"`) and `public/admin/config.yml` (github backend with placeholder `repo`/`base_url`, replaced in the runbook). Collections: `settings` singleton, `ui`, `navigation` (create/delete off), `pages`, `applications`; one shared `&sections` anchor (7 block types, `typeKey: type`). `src/lib/admin-config.test.ts` checks the config.
+- Files: `src/pages/admin/index.astro` (standalone Astro page with an `is:inline` script, not in `public/`: the dev server maps `/admin/` only to a route, so `public/admin/index.html` gave 404 at `/admin/` in `astro dev`; `noindex`, pinned `@sveltia/cms@0.271.2` with SRI and `crossorigin="anonymous"`) and `public/admin/config.yml` (github backend with placeholder `repo`/`base_url`, replaced in the runbook). Collections: `settings` singleton, `ui`, `navigation` (create/delete off), `pages`, `applications`; one shared `&sections` anchor (7 block types, `typeKey: type`). `src/lib/admin-config.test.ts` checks the config.
 - Verified from docs: top-level `singletons`; `slug.editable` replaces the deprecated `{{fields._slug}}`; field `pattern` is `[regex, message]`; `required: [en]` with i18n; i18n must be opted in per field (collection-level does not cover `ui`/`navigation` fields). Biome formats the YAML (double quotes).
 - Editor/admin split is enforced by GitHub (CODEOWNERS, branch protection, merge rights), not by the config.
 - Hero `actions` and nav `footer` default to `[]` in the schema, so the CMS may omit empty lists.

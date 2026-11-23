@@ -681,7 +681,7 @@ build-outputs.test.ts
 Model: Sonnet 5.5 · Group G4 (∥ T5, T6) · Spec §5, §13 steps 6–7, §14 (Sveltia), §15 item 22
 
 **Files:**
-- Create: `public/admin/index.html`, `public/admin/config.yml`
+- Create: `src/pages/admin/index.astro` (moved from `public/admin/index.html` in fix(admin)), `public/admin/config.yml`
 - Test: `src/lib/admin-config.test.ts`
 
 **Interfaces:**
