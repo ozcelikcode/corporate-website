@@ -3,7 +3,7 @@ export const TURNSTILE_TEST_SITE_KEY = '1x00000000000000000000AA';
 // Interim: previews are noindex and visual-review only, so localhost canonicals do no harm.
 export const PREVIEW_SITE_URL = 'http://localhost:4321';
 
-const HTTPS_PREFIX = 'https://';
+const HTTPS_PROTOCOL = 'https:';
 const TRAILING_SLASHES = /\/+$/;
 
 export type BuildEnv = Readonly<
@@ -34,8 +34,8 @@ export function resolveBuildMode(env: BuildEnv): BuildMode {
     };
   }
   const siteUrl = requireVar(env.SITE_URL, 'SITE_URL');
-  if (!siteUrl.startsWith(HTTPS_PREFIX)) {
-    throw new Error(`SITE_URL must start with ${HTTPS_PREFIX}`);
+  if (!URL.canParse(siteUrl) || new URL(siteUrl).protocol !== HTTPS_PROTOCOL) {
+    throw new Error('SITE_URL must be an https URL with a host');
   }
   return {
     isProduction: true,

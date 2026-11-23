@@ -47,3 +47,36 @@ test('main without site key throws', () =>
     () => resolveBuildMode({ WORKERS_CI_BRANCH: 'main', SITE_URL: 'https://example.com' }),
     /PUBLIC_TURNSTILE_SITE_KEY/,
   ));
+
+test('main with empty SITE_URL throws', () =>
+  assert.throws(
+    () =>
+      resolveBuildMode({
+        WORKERS_CI_BRANCH: 'main',
+        SITE_URL: '',
+        PUBLIC_TURNSTILE_SITE_KEY: 'k',
+      }),
+    /SITE_URL/,
+  ));
+
+test('main with empty site key throws', () =>
+  assert.throws(
+    () =>
+      resolveBuildMode({
+        WORKERS_CI_BRANCH: 'main',
+        SITE_URL: 'https://example.com',
+        PUBLIC_TURNSTILE_SITE_KEY: '',
+      }),
+    /PUBLIC_TURNSTILE_SITE_KEY/,
+  ));
+
+test('main with SITE_URL lacking a host throws', () =>
+  assert.throws(
+    () =>
+      resolveBuildMode({
+        WORKERS_CI_BRANCH: 'main',
+        SITE_URL: 'https://',
+        PUBLIC_TURNSTILE_SITE_KEY: 'k',
+      }),
+    /SITE_URL/,
+  ));
