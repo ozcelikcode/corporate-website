@@ -72,6 +72,8 @@
   position: relative;
 
   &::before {
+    content: "+";
+    /* biome-ignore lint/suspicious/noDuplicateProperties: plain fallback for browsers without alt text */
     content: "+" / "";
     position: absolute;
     inset-block-start: calc(var(--border-hairline) / -2);
@@ -128,16 +130,12 @@
     margin-block-start: 2em;
     font-size: var(--text-h2);
     line-height: var(--text-h2--line-height);
-    font-weight: 600;
+    font-weight: --theme(--font-weight-semibold);
   }
 
   & :where(h3, h4, h5, h6) {
+    @apply label-mono;
     margin-block-start: 2.5em;
-    font-family: --theme(--font-mono);
-    font-size: var(--text-label);
-    line-height: var(--text-label--line-height);
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
     color: var(--color-ink-muted);
   }
 
@@ -175,7 +173,7 @@
   }
 
   & strong {
-    font-weight: 600;
+    font-weight: --theme(--font-weight-semibold);
   }
 
   & code {
