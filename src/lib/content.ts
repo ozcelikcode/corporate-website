@@ -10,6 +10,7 @@ import {
   resolveLocalized,
 } from './entries.ts';
 import { DEFAULT_LOCALE, type Locale, UI_KEYS, type UiDictionary } from './i18n.ts';
+import { localizedPathSet, localizeHref } from './localize-href.ts';
 import { assertPageSlug } from './page-slugs.ts';
 
 export type SiteSettings = CollectionEntry<'settings'>['data'];
@@ -93,4 +94,21 @@ export async function availableLocales(
   return collection === 'pages'
     ? localesFor(await getCollection('pages'), slug)
     : localesFor(await getCollection('applications'), slug);
+}
+
+/**
+ * Maps a content href (written as an EN site path) to the URL a page in `locale` links: the
+ * locale's own URL when `locale` builds that page or application, else the EN one. Build it once
+ * per page render and reuse it for every link.
+ */
+export async function hrefLocalizer(locale: Locale): Promise<(href: string) => string> {
+  const [pages, applications] = await Promise.all([
+    listTranslatedPages(locale),
+    listTranslatedApplications(locale),
+  ]);
+  const localized = localizedPathSet(
+    pages.map((page) => page.slug),
+    applications.map((application) => application.slug),
+  );
+  return (href) => localizeHref(href, locale, localized);
 }

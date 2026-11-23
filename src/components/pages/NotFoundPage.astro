@@ -7,6 +7,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getPage, getUiDictionary } from '../../lib/content.ts';
 import { type Locale, t } from '../../lib/i18n.ts';
+import { NOT_FOUND_SLUG } from '../../lib/page-slugs.ts';
 import SectionRenderer from '../sections/SectionRenderer.astro';
 import NoSignal from '../ui/NoSignal.astro';
 
@@ -14,7 +15,6 @@ interface Props {
   locale: Locale;
 }
 
-const NOT_FOUND_SLUG = 'not-found';
 const NOT_FOUND_PATH = '/404/';
 
 const { locale } = Astro.props;

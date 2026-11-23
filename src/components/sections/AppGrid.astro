@@ -4,11 +4,12 @@
  * Each tile is one link: `[NN]` and the status tally on top, the frameless `DuotoneCover`, the
  * name as a lower third (strap = category), the tagline and → at the foot. Inside the link the
  * cover is decorative (`alt=""`), so the link's name stays the tile text; `coverAlt` describes
- * it on the application page. Links go to the application's own locale (EN when untranslated).
+ * it on the application page. Links go through `localize`: the page locale's URL when the
+ * application is translated, else the EN one.
  */
 import { listApplications } from '../../lib/content.ts';
 import { selectApps } from '../../lib/entries.ts';
-import { applicationPath, localizePath } from '../../lib/i18n.ts';
+import { applicationPath } from '../../lib/i18n.ts';
 import DuotoneCover from '../ui/DuotoneCover.astro';
 import Glyph from '../ui/Glyph.astro';
 import GridFrame from '../ui/GridFrame.astro';
@@ -27,7 +28,7 @@ const NUDGE = 'transition-transform group-hover:translate-x-1 group-focus-visibl
 /** Tile indexes count from 1. */
 const FIRST_INDEX = 1;
 
-const { section, index, locale, headingLevel } = Astro.props;
+const { section, index, locale, headingLevel, localize } = Astro.props;
 const apps = selectApps(await listApplications(locale), section.apps);
 ---
 <div class="flex flex-col gap-12 md:gap-16">
@@ -37,7 +38,7 @@ const apps = selectApps(await listApplications(locale), section.apps);
       apps.map((app, i) => (
         <li class="bg-surface">
           <a
-            href={localizePath(applicationPath(app.slug), app.locale)}
+            href={localize(applicationPath(app.slug))}
             class="group flex h-full flex-col gap-6 p-6"
           >
             <div class="flex items-center justify-between gap-4">

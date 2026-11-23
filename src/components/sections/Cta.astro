@@ -13,7 +13,7 @@ import type { BlockProps } from './block-props.ts';
 
 type Props = BlockProps<'cta'>;
 
-const { section, locale, headingLevel } = Astro.props;
+const { section, locale, headingLevel, localize } = Astro.props;
 const onAir = t(await getUiDictionary(), locale, 'tallyOnAir');
 ---
 <div class="grid grid-cols-1 gap-8 bg-surface p-6 md:p-12 lg:grid-cols-12 lg:items-end lg:gap-12">
@@ -23,6 +23,6 @@ const onAir = t(await getUiDictionary(), locale, 'tallyOnAir');
     {section.text !== undefined && <p class={LEDE_CLASS}>{section.text}</p>}
   </div>
   <div class="lg:col-span-4 lg:justify-self-end">
-    <Button href={section.action.href}>{section.action.label}</Button>
+    <Button href={localize(section.action.href)}>{section.action.label}</Button>
   </div>
 </div>

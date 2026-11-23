@@ -8,9 +8,11 @@
  *   caller renders its own, as the application page does). Every other heading is h2 or below.
  * - The default slot sits between the title band and the sections (the 404's test pattern).
  * - `index` is the section's 1-based position (its `[NN]` label); the title band is not counted.
+ * - Content hrefs: one `hrefLocalizer` for the page's locale, shared by every block.
  * The switch is exhaustive: a new section type fails `astro check` until it is handled here.
  */
 import { assertNever } from '../../lib/assert-never.ts';
+import { hrefLocalizer } from '../../lib/content.ts';
 import type { Locale } from '../../lib/i18n.ts';
 import type { Section } from '../../lib/sections-schema.ts';
 import Heading from '../ui/Heading.astro';
@@ -37,6 +39,7 @@ const heroLeads = sections[0]?.type === 'hero';
 const titleBand = heroLeads ? undefined : pageTitle;
 /** Position of the first section among the bands: 1 when a title band precedes it. */
 const bandOffset = titleBand === undefined ? 0 : 1;
+const localize = await hrefLocalizer(locale);
 ---
 {
   titleBand !== undefined && (
@@ -51,7 +54,7 @@ const bandOffset = titleBand === undefined ? 0 : 1;
 {
   sections.map((section, i) => {
     const isFirstBand = i + bandOffset === 0;
-    const common = { index: i + FIRST_INDEX, locale };
+    const common = { index: i + FIRST_INDEX, locale, localize };
     return (
       <section class:list={[BAND, isFirstBand ? FIRST_BAND : DIVIDER]}>
         <div class={CONTAINER}>

@@ -5,8 +5,12 @@
 import { parseEntryId } from './entries.ts';
 import { LOCALES } from './i18n.ts';
 
+/** The quote page's entry; every locale builds its route (`/quote/`, `/tr/quote/`). */
+export const QUOTE_SLUG = 'quote';
+/** The 404's entry; it has no URL of its own. */
+export const NOT_FOUND_SLUG = 'not-found';
 /** Pages with their own route or role: `quote` has its own page, `not-found` feeds the 404. */
-export const RESERVED_PAGE_SLUGS = ['quote', 'not-found'] as const;
+export const RESERVED_PAGE_SLUGS = [QUOTE_SLUG, NOT_FOUND_SLUG] as const;
 
 /** No page may take these: they would shadow the CMS, the quote Worker or a locale prefix. */
 export const FORBIDDEN_PAGE_SLUGS: readonly string[] = ['admin', 'api', ...LOCALES];

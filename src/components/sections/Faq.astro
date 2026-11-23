@@ -17,12 +17,12 @@ type Props = BlockProps<'faq'>;
 /** Answer id prefixes count items from 1. */
 const FIRST_ITEM = 1;
 
-const { section, index, headingLevel } = Astro.props;
+const { section, index, headingLevel, localize } = Astro.props;
 const HeadingTag = `h${headingLevel}` as const;
 const items = await Promise.all(
   section.items.map(async (item, i) => ({
     q: item.q,
-    html: await renderMarkdown(item.a, `${sectionIdPrefix(index)}-${i + FIRST_ITEM}`),
+    html: await renderMarkdown(item.a, `${sectionIdPrefix(index)}-${i + FIRST_ITEM}`, localize),
   })),
 );
 ---

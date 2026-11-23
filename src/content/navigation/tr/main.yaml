@@ -1,4 +1,4 @@
-# Pages without a Turkish version link to their English URL.
+# Links use English site paths; Turkish pages link the /tr/ URL of every page that has one.
 header:
   - label: Uygulamalar
     href: /applications/

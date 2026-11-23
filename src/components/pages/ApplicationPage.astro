@@ -7,7 +7,12 @@
  * `DuotoneCover` as the app-grid tiles, and the page shares it as its social image (og:image).
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { availableLocales, getUiDictionary, listApplications } from '../../lib/content.ts';
+import {
+  availableLocales,
+  getUiDictionary,
+  hrefLocalizer,
+  listApplications,
+} from '../../lib/content.ts';
 import { applicationPath, type Locale, t, type UiKey } from '../../lib/i18n.ts';
 import { CONTAINER } from '../sections/band-class.ts';
 import SectionRenderer from '../sections/SectionRenderer.astro';
@@ -32,10 +37,11 @@ const HEADER_BAND = 'pt-12 pb-16 md:pt-16 md:pb-24';
 
 const { locale, slug } = Astro.props;
 
-const [applications, locales, dict] = await Promise.all([
+const [applications, locales, dict, localize] = await Promise.all([
   listApplications(locale),
   availableLocales('applications', slug),
   getUiDictionary(),
+  hrefLocalizer(locale),
 ]);
 const application = applications.find((candidate) => candidate.slug === slug);
 if (application === undefined) throw new Error(`Missing application "${slug}"`);
@@ -69,7 +75,7 @@ const hasActions = data.brochure !== undefined || (data.links?.length ?? 0) > 0;
                   </Button>
                 )}
                 {(data.links ?? []).map((link) => (
-                  <Button href={link.href} intent="secondary">
+                  <Button href={localize(link.href)} intent="secondary">
                     {link.label}
                   </Button>
                 ))}

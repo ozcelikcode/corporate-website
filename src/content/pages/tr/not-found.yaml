@@ -6,4 +6,4 @@ sections:
     text: Adres yanlış yazılmış olabilir veya sayfa taşınmış olabilir.
     action:
       label: Ana sayfaya dön
-      href: /tr/
+      href: /

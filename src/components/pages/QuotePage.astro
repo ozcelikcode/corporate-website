@@ -15,6 +15,7 @@ import {
 } from '../../lib/content.ts';
 import { BUILD } from '../../lib/env.ts';
 import { type Locale, localizePath, pagePath } from '../../lib/i18n.ts';
+import { QUOTE_SLUG } from '../../lib/page-slugs.ts';
 import { MAX_SOLUTIONS } from '../../lib/quote-schema.ts';
 import QuoteForm from '../quote/QuoteForm.astro';
 import QuoteStatus from '../quote/QuoteStatus.astro';
@@ -25,7 +26,6 @@ interface Props {
   locale: Locale;
 }
 
-const QUOTE_SLUG = 'quote';
 const PRIVACY_SLUG = 'privacy';
 const TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
 /** The form band continues the page's `[NN]` numbering after its sections. */

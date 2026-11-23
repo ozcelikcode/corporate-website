@@ -17,7 +17,7 @@ import type { BlockProps } from './block-props.ts';
 
 type Props = BlockProps<'hero'>;
 
-const { section, index, headingLevel } = Astro.props;
+const { section, index, headingLevel, localize } = Astro.props;
 ---
 <GridFrame columns={12}>
   <div class="flex flex-col items-start gap-8 lg:col-span-6 lg:self-center">
@@ -33,7 +33,7 @@ const { section, index, headingLevel } = Astro.props;
       section.actions.length > 0 && (
         <div class="flex flex-wrap gap-4">
           {section.actions.map((action, i) => (
-            <Button href={action.href} intent={i === 0 ? 'primary' : 'secondary'}>
+            <Button href={localize(action.href)} intent={i === 0 ? 'primary' : 'secondary'}>
               {action.label}
             </Button>
           ))}

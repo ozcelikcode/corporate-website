@@ -1,4 +1,4 @@
-# Translated pages (home, quote) are linked under /tr/; untranslated ones use their English URL.
+# Links use English site paths; Turkish pages link the /tr/ URL of every page that has one.
 title: Canlı haber ve yayın için yazılım
 description: Canlı yapımı sakin, doğru ve yayında tutan haber merkezi, playout ve arşiv yazılımları.
 sections:
@@ -9,7 +9,7 @@ sections:
     lede: Brand, tek bir kaçırılmış cue'yu bile göze alamayan yayıncılar ve medya ekipleri için haber merkezi, playout ve arşiv araçları geliştirir.
     actions:
       - label: Teklif iste
-        href: /tr/quote/
+        href: /quote/
       - label: Uygulamaları gör
         href: /applications/
     image: ../../../assets/uploads/transmitter.png
@@ -42,4 +42,4 @@ sections:
     text: Tesisinizi anlatın, iki iş günü içinde bir kurulum öneralım.
     action:
       label: Teklif iste
-      href: /tr/quote/
+      href: /quote/
