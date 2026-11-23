@@ -27,12 +27,16 @@ sections:
     items:
       - title: Yük altında öngörülebilir
         body: Her ekran sabit bir süre bütçesi içinde yanıt verir; son dakika haberinde operatör beklemez.
+        duration: "00:01:30"
       - title: Açık biçimler
         body: Akışlar, grafikler ve medya belgelenmiş standartlarla girip çıkar; bağımlılık yaratmaz.
+        duration: "00:00:45"
       - title: Denetime hazır
         body: Akış veya oynatma listesindeki her değişiklik kim, ne ve ne zaman bilgisiyle kaydedilir.
+        duration: "00:02:15"
       - title: Mühendisler destekler
         body: Kodu yazan kişilerle konuşursunuz; yayın saatlerinizde adı belli bir irtibat kişiniz olur.
+        duration: "00:01:10"
   - type: cta
     heading: Yeni bir kontrol odası mı kuruyorsunuz, yenilemeyi mi düşünüyorsunuz?
     text: Tesisinizi anlatın, iki iş günü içinde bir kurulum öneralım.

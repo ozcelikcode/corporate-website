@@ -128,7 +128,19 @@ collections:
         widget: string
         i18n: true
         required: [en]
+      - name: tallyProgram
+        widget: string
+        i18n: true
+        required: [en]
+      - name: tallyPreview
+        widget: string
+        i18n: true
+        required: [en]
       - name: tallyOnAir
+        widget: string
+        i18n: true
+        required: [en]
+      - name: noSignal
         widget: string
         i18n: true
         required: [en]
@@ -387,6 +399,12 @@ collections:
                 fields:
                   - { name: title, label: Title, widget: string }
                   - { name: body, label: Body, widget: text }
+                  - name: duration
+                    label: Duration
+                    widget: string
+                    required: false
+                    hint: Rundown slot length shown beside the row, for display only.
+                    pattern: ['^\d{2}:[0-5]\d:[0-5]\d$', "Use HH:MM:SS such as 00:00:30"]
           - name: rich-text
             label: Rich text
             fields:

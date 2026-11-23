@@ -26,12 +26,16 @@ sections:
     items:
       - title: Predictable under load
         body: Every screen answers in a fixed time budget, so an operator never waits during a breaking story.
+        duration: "00:01:30"
       - title: Open formats
         body: Rundowns, graphics and media move in and out through documented standards, with no lock-in.
+        duration: "00:00:45"
       - title: Audit-ready
         body: Each change to a rundown or playlist is logged with who, what and when, ready for compliance review.
+        duration: "00:02:15"
       - title: Supported by engineers
         body: You speak to the people who wrote the code, with a named contact during your on-air hours.
+        duration: "00:01:10"
   - type: cta
     heading: Planning a new control room or a refresh?
     text: Tell us about your facility and we will recommend a setup within two working days.

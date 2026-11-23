@@ -14,10 +14,13 @@ sections:
     items:
       - title: Full-text and transcript search
         body: Search what was said, not just what was tagged, across years of footage.
+        duration: "00:01:00"
       - title: Rights and expiry
         body: Usage rights travel with each asset, with warnings before restricted material goes to air.
+        duration: "00:00:40"
       - title: Direct to edit
         body: Send a selected range to the editing system or the rundown in one step.
+        duration: "00:01:25"
   - type: cta
     heading: Curious how it would index your archive?
     action:

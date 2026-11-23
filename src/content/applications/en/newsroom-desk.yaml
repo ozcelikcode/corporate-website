@@ -18,10 +18,13 @@ sections:
     items:
       - title: Live rundowns
         body: Reorder, time and lock stories while the show is running. Every operator sees the same state.
+        duration: "00:01:00"
       - title: Script editing
         body: Write against a running clock with read-time estimates and tracked changes.
+        duration: "00:00:40"
       - title: Wire and feed intake
         body: Pull agency copy and social feeds into one inbox, filtered by desk and topic.
+        duration: "00:01:25"
   - type: cta
     heading: See Newsroom Desk with your own workflow
     action:

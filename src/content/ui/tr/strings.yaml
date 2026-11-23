@@ -8,7 +8,10 @@ navQuote: Teklif iste
 tallyLive: CANLI
 tallyTimecode: TC
 tallyChannel: KANAL 01
+tallyProgram: PGM
+tallyPreview: PVW
 tallyOnAir: YAYINDA
+noSignal: SİNYAL YOK
 appOpen: Aç
 appBrochure: Broşürü indir
 appLinks: Kaynaklar

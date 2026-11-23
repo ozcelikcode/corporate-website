@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import {
   applicationPath,
@@ -48,4 +49,27 @@ test('isLocale narrows only known locales', () => {
   assert.equal(isLocale('de'), false);
   assert.equal(isLocale('tr'), true);
   assert.equal(isLocale(undefined), false);
+});
+
+/** Top-level keys of a flat `key: value` YAML file (the ui seed files hold nothing else). */
+const yamlKeys = (locale: string) =>
+  readFileSync(new URL(`../content/ui/${locale}/strings.yaml`, import.meta.url), 'utf8')
+    .match(/^[A-Za-z]+(?=:)/gm)
+    ?.sort() ?? [];
+
+test('EN ui strings carry exactly UI_KEYS', () => {
+  assert.deepEqual(yamlKeys('en'), [...UI_KEYS].sort());
+});
+
+test('TR ui strings use only UI_KEYS', () => {
+  const known = new Set<string>(UI_KEYS);
+  assert.deepEqual(
+    yamlKeys('tr').filter((key) => !known.has(key)),
+    [],
+  );
+});
+
+test('UI_KEYS has the broadcast tally and slate keys', () => {
+  for (const key of ['tallyProgram', 'tallyPreview', 'noSignal'])
+    assert.ok((UI_KEYS as readonly string[]).includes(key), key);
 });

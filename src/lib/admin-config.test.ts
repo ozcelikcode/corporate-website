@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { HEX_PATTERN } from './color.ts';
 import { UI_KEYS } from './i18n.ts';
-import { SECTION_TYPES } from './sections-schema.ts';
+import { DURATION_PATTERN, SECTION_TYPES } from './sections-schema.ts';
 
 const config = readFileSync(new URL('../../public/admin/config.yml', import.meta.url), 'utf8');
 const html = readFileSync(new URL('../../public/admin/index.html', import.meta.url), 'utf8');
@@ -24,6 +24,7 @@ test('config.yml carries the workflow, i18n, media and accent settings', () => {
     'media_folder: src/assets/uploads',
     'typeKey: type',
     HEX_PATTERN.source,
+    DURATION_PATTERN.source,
   ])
     assert.ok(config.includes(setting), setting);
 });

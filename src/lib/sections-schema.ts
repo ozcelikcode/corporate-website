@@ -20,6 +20,8 @@ export const actionSchema = z.strictObject({
   href: z.string().regex(/^(\/(?![\/\\])|https:\/\/)/),
 });
 const md = z.string(); // Markdown, rendered by lib/markdown.ts
+/** Rundown slot length `HH:MM:SS`, display only (never summed or parsed as time). */
+export const DURATION_PATTERN = /^\d{2}:[0-5]\d:[0-5]\d$/;
 
 export type Action = z.infer<typeof actionSchema>;
 
@@ -48,7 +50,13 @@ export const sectionsSchema = ({ image }: SchemaContext) =>
         label,
         heading: z.string(),
         items: z
-          .array(z.strictObject({ title: z.string(), body: z.string() }))
+          .array(
+            z.strictObject({
+              title: z.string(),
+              body: z.string(),
+              duration: z.string().regex(DURATION_PATTERN).optional(),
+            }),
+          )
           .min(1)
           .max(MAX_ITEMS),
       }),

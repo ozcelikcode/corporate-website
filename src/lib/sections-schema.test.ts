@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { z } from 'astro/zod';
-import { LABEL_MAX, SECTION_TYPES, sectionsSchema } from './sections-schema.ts';
+import { DURATION_PATTERN, LABEL_MAX, SECTION_TYPES, sectionsSchema } from './sections-schema.ts';
 
 // The real `image()` helper needs the Astro content runtime; a string stands in for it.
 const schema = sectionsSchema({ image: () => z.string() } as never);
@@ -90,4 +90,19 @@ test('rejects protocol-relative hrefs and accepts site-relative ones', () => {
 
 test('rejects an unknown key on a section', () => {
   assert.equal(parse({ ...fixtures.statement, extra: 'typo' }).success, false);
+});
+
+test('feature-list item duration is optional HH:MM:SS display timecode', () => {
+  const list = fixtures['feature-list'];
+  const withDuration = (duration: unknown) =>
+    parse({ ...list, items: [{ title: 'T', body: 'B', duration }] }).success;
+  assert.equal(parse(list).success, true);
+  for (const ok of ['00:00:30', '01:59:59', '99:00:00']) assert.equal(withDuration(ok), true, ok);
+  for (const bad of ['0:30', '00:30', '00:60:00', '00:00:60', '00:00:30:00', 'x', ''])
+    assert.equal(withDuration(bad), false, bad);
+});
+
+test('DURATION_PATTERN is anchored', () => {
+  assert.equal(DURATION_PATTERN.test(' 00:00:30'), false);
+  assert.equal(DURATION_PATTERN.test('00:00:30 '), false);
 });
