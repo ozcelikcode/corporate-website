@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url';
 import { DEFAULT_LOCALE, LOCALES } from '../lib/i18n.ts';
 import {
   appendNoindex,
+  contentSources,
   findCrossLocaleLinks,
   pruneUnreferencedImages,
   relocateLocale404,
@@ -129,11 +130,28 @@ test('findCrossLocaleLinks flags a TR page linking the EN URL of a page TR has',
     );
     await writeFile(join(root, 'tr', '404.html'), '<a href="/">home</a>');
     await mkdir(join(root, 'tr', '404'), { recursive: true });
+    await mkdir(join(root, 'tr', 'applications', 'x'), { recursive: true });
+    await writeFile(join(root, 'tr', 'applications', 'x', 'index.html'), '<a href="/quote/">q</a>');
+    const navigation = 'src/content/navigation/tr/main.yaml';
     assert.deepEqual(await findCrossLocaleLinks(dist), [
-      '/tr/404.html links to / instead of /tr/',
-      '/tr/index.html links to /quote/#form instead of /tr/quote/',
+      `/tr/404.html links to / instead of /tr/ (check src/content/pages/tr/not-found.yaml, src/content/pages/en/not-found.yaml, ${navigation})`,
+      `/tr/applications/x/index.html links to /quote/ instead of /tr/quote/ (check src/content/applications/tr/x.yaml, ${navigation})`,
+      `/tr/index.html links to /quote/#form instead of /tr/quote/ (check src/content/pages/tr/home.yaml, ${navigation})`,
     ]);
   });
+});
+
+test('contentSources names the entry (and its EN twin where the route falls back) plus navigation', () => {
+  const navigation = 'src/content/navigation/tr/main.yaml';
+  assert.deepEqual(contentSources('about/index.html', 'tr'), [
+    'src/content/pages/tr/about.yaml',
+    navigation,
+  ]);
+  assert.deepEqual(contentSources('quote/index.html', 'tr'), [
+    'src/content/pages/tr/quote.yaml',
+    'src/content/pages/en/quote.yaml',
+    navigation,
+  ]);
 });
 
 test('findCrossLocaleLinks passes a dist without locale pages', async () => {

@@ -6,8 +6,10 @@
  *   `general`), generated from the built pages, so there is no runtime lookup.
  * - `appendNoindex`: non-production builds add `X-Robots-Tag: noindex` to `dist/_headers`.
  * - `findCrossLocaleLinks`: a page of a non-default locale must not link to the EN URL of a page
- *   that exists in its own locale (TR content linking `/quote/` while `/tr/quote/` is built). The
- *   language toggle is exempt: its links carry `hreflang`. The build fails and names each link.
+ *   that exists in its own locale (a TR page linking `/quote/` while `/tr/quote/` is built).
+ *   Content hrefs are localized at render time (`hrefLocalizer`), so this is a safety net for a
+ *   link that skipped it. The language toggle is exempt: its links carry `hreflang`. The build
+ *   fails and names each link with the content files that can hold it.
  * - `pruneUnreferencedImages`: a content image that never goes through `<Image>`, `<Picture>` or
  *   `getImage` (the ASCII source) is emitted as an original, EXIF included. Optimized images are
  *   referenced by the built pages, so any raster file in `_astro` that no page, stylesheet or
@@ -17,7 +19,8 @@ import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/p
 import { basename, dirname, extname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { AstroIntegration } from 'astro';
-import { DEFAULT_LOCALE, LOCALES } from '../lib/i18n.ts';
+import { DEFAULT_LOCALE, HOME_SLUG, LOCALES, type Locale } from '../lib/i18n.ts';
+import { NOT_FOUND_SLUG, RESERVED_PAGE_SLUGS } from '../lib/page-slugs.ts';
 import { GENERAL_SOLUTION } from '../lib/quote-schema.ts';
 
 export const GENERATED_SOLUTIONS_PATH = 'worker/generated/solutions.json';
@@ -37,11 +40,20 @@ const ASSETS_DIR = '_astro';
 const RASTER_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif']);
 const REFERENCING_EXTENSIONS = new Set(['.html', '.css', '.xml', '.txt', '.json', '.js']);
 const HTML_EXTENSION = '.html';
+/**
+ * Anchors as Astro serializes them: every attribute value double-quoted, so `HREF_ATTRIBUTE` only
+ * reads `href="…"` (a single-quoted or unquoted href would be missed). Anchors carrying
+ * `hreflang` (the language toggle) are exempt.
+ */
 const ANCHOR_TAG = /<a\s[^>]*>/g;
 const HREF_ATTRIBUTE = /\shref="([^"]*)"/;
 const HREFLANG_ATTRIBUTE = /\shreflang=/;
 /** A site path: one leading slash, not `//host`; query and fragment are cut off. */
 const SITE_PATH = /^(\/(?!\/)[^?#]*)/;
+const CONTENT_DIR = 'src/content';
+const APPLICATIONS_DIR = 'applications';
+const NAVIGATION_SLUG = 'main';
+const PATH_SEPARATOR = '/';
 
 async function exists(path: string): Promise<boolean> {
   return stat(path).then(
@@ -72,6 +84,26 @@ async function listFiles(directory: string): Promise<string[]> {
     .map((entry) => join(entry.parentPath, entry.name));
 }
 
+/**
+ * Content files that can hold the links of the page at `page` (relative to the locale's dist
+ * folder): its entry, the EN twin where the route falls back to EN (quote, 404), and navigation.
+ */
+export function contentSources(page: string, locale: Locale): string[] {
+  const [first = '', second] = page.split(PATH_SEPARATOR);
+  const navigation = `${CONTENT_DIR}/navigation/${locale}/${NAVIGATION_SLUG}.yaml`;
+  if (first === APPLICATIONS_DIR && second !== undefined) {
+    return [`${CONTENT_DIR}/${APPLICATIONS_DIR}/${locale}/${second}.yaml`, navigation];
+  }
+  const slug = page === NOT_FOUND_FILE ? NOT_FOUND_SLUG : second === undefined ? HOME_SLUG : first;
+  const entryLocales = RESERVED_PAGE_SLUGS.some((reserved) => reserved === slug)
+    ? [locale, DEFAULT_LOCALE]
+    : [locale];
+  return [
+    ...entryLocales.map((entryLocale) => `${CONTENT_DIR}/pages/${entryLocale}/${slug}.yaml`),
+    navigation,
+  ];
+}
+
 /** Site paths of a locale's page that should carry the locale prefix; messages name page and link. */
 export async function findCrossLocaleLinks(dist: URL): Promise<string[]> {
   const root = fileURLToPath(dist);
@@ -89,8 +121,11 @@ export async function findCrossLocaleLinks(dist: URL): Promise<string[]> {
         if (href === undefined || path === undefined || path.startsWith(`/${locale}/`)) continue;
         const twin = join(localeRoot, path);
         if (!(await exists(join(twin, INDEX_FILE)))) continue;
-        const pagePath = `/${relative(root, page).split(sep).join('/')}`;
-        problems.push(`${pagePath} links to ${href} instead of /${locale}${path}`);
+        const pagePath = relative(localeRoot, page).split(sep).join(PATH_SEPARATOR);
+        const sources = contentSources(pagePath, locale).join(', ');
+        problems.push(
+          `/${locale}/${pagePath} links to ${href} instead of /${locale}${path} (check ${sources})`,
+        );
       }
     }
   }
@@ -100,7 +135,9 @@ export async function findCrossLocaleLinks(dist: URL): Promise<string[]> {
 async function assertLocalizedLinks(dist: URL): Promise<void> {
   const problems = await findCrossLocaleLinks(dist);
   if (problems.length > 0) {
-    throw new Error(`Links to the wrong language (use the localized URL):\n${problems.join('\n')}`);
+    throw new Error(
+      `Links to the wrong language. Content hrefs are written as EN site paths and localized at render time, so each link below bypassed that; fix it in the content or component named:\n${problems.join('\n')}`,
+    );
   }
 }
 
