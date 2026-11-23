@@ -29,7 +29,7 @@
 ## Content model
 - YAML, one folder per locale; entry ids `<locale>/<slug>`; `home` maps to `/`.
 - `settings` singleton: brandName, logo+logoAlt, accent (`#rrggbb`, contrast >= 3:1), contacts[], socials[], ogImage, organization.
-- `ui`: keyed strings (TR may be partial, falls back to EN). `navigation`: header[], footer[] of {label, href}.
+- `ui`: keyed strings (TR may be partial, falls back to EN). `navigation`: header[], footer[] (default `[]`) of {label, href}. Hero `actions` defaults to `[]` (max 2).
 - `pages`: title, description, ogImage?, sections[]. `applications`: name, slug, tagline, summary, category, cover+coverAlt, status, order, links[]?, brochure? (R2 URL), sections[].
 - Section block union in `src/lib/sections-schema.ts` (discriminated on `type`): `hero`, `statement`, `app-grid`, `feature-list`, `rich-text`, `cta`, `faq`. Shared by pages and applications. `SectionRenderer` uses an exhaustive switch.
 - All schemas are `z.strictObject` (unknown keys fail the build).
@@ -64,7 +64,7 @@
 
 ## Visual language
 Do:
-- One shared 1px hairline grid, never doubled; "+" crosshairs at intersections.
+- Hairlines in moderation, as set out in "Design direction" below.
 - Uppercase tracked mono labels with index, e.g. `[02] APPLICATIONS`.
 - One two-tone headline per page.
 - Typographic glyphs (→ ↗ + ●) instead of icons.
@@ -90,6 +90,42 @@ Don't:
 - `Glyph {name: '→'|'↗', class?}`: inline SVG at label size, `aria-hidden`. Always use it, never arrow text.
 - Never `ring-*` or `animate-*`; focus uses `outline`.
 - cva variant maps are named constants typed against Props (`Record<NonNullable<Props['x']>, ...>`), so a missing variant fails `astro check`.
+
+## Layout (Task 5, fix rounds 1–2)
+- `BaseLayout {locale, contentLocale, neutralPath, title, description, ogImage?, availableLocales, noindex?, jsonLd?}`. `locale` = UI language, `contentLocale` = entry language. Named slot `head`; default slot inside `<main id="main" tabindex="-1">`.
+- Fallback (`contentLocale !== locale`): slot wrapped in `<div lang={contentLocale}>`, canonical = EN URL, `robots noindex`, no hreflang. The `noindex` prop gives `robots noindex` and no hreflang too.
+- Title = `formatTitle(title, brandName)` (`Page · Brand`). og:image = `getImage` 1200×630 png, absolute via `Astro.site` (build throws if `site` is unset). `OG_LOCALE` lives in `SeoHead`.
+- `lib/seo.ts`: `hreflangLinks` in `LOCALES` order, then `x-default` (EN). `organizationJsonLd` escapes `<` as `<`; callers pass the result as `jsonLd` (`application/ld+json`, a data block).
+- Header: sticky `z-(--z-header)`. The logo is a wordmark only; `settings.logoAlt` names the home link and no brand text is printed beside it. Inline nav ≥ lg. Quote key ≥ md in the bar (before Menu); below md it sits in the sheet. MobileNav (`popover` `#site-menu`) below lg, opacity fade only. Nav hrefs are used verbatim from `navigation`.
+- Nav state lives in `lib/nav-state.ts` (pure): `isCurrentPage` → `aria-current="page"`; `isSectionActive` → visual-only `data-active` (whole path segments, never the root, locale prefix included). SiteHeader computes `navItems` once and passes `current`/`active` to MobileNav.
+- Menu rows use an inset focus ring (negative `--border-focus` offset).
+- TallyStrip: `aria-hidden`, hairline segments, no crosshairs (the sticky header would cover them); channel ≥ sm, format ≥ md.
+- Footer: `GridFrame columns={4} crosshairs`; indexed nav; Contact and Follow continue the numbering (`[05]`, `[06]`); contacts in `<address>`; ↗ on https links via Glyph; rights line `© BUILD_YEAR legalName footerRights`.
+
+## ASCII (Task 6, fix round 1)
+- Constants in `lib/ascii.ts`: `ASCII_RAMP = ' .:-=+*#%@'`, `TONE_COUNT = 6`, `CHAR_ASPECT = 0.5`, `ASCII_COLUMNS = 96`, `ASCII_COLUMNS_COMPACT = 48`.
+- Tones: glyph `min(9, floor(l*10/256))`, tone `min(5, floor(l*6/256))` → `--color-tone-0…5`. Bright = dense glyph. Same-tone runs become one `<span class="tN">`; all-space runs are bare text; trailing blanks are trimmed.
+- Pipeline (sharp): `autoOrient` → `resize fill` → `flatten` on black → `normalise` → `toColourspace('b-w')` → `raw`. Flatten is for correct translucency: sharp 0.35.5's `b-w` already drops alpha silently. Memoized per `file@cols`; a rejected render is evicted.
+- Two grids per figure: 96 columns and 48 compact. `@container (inline-size < 30rem)` on the figure swaps them (container queries cannot use `var()`, so 30rem is a literal). Both `<pre>` are aria-hidden; the figure keeps `role="img"` and `aria-label`.
+- `AsciiImage` (`ui/`): `--ascii-advance: 0.7` (Martian Mono, measured), font size `100cqi / cols / advance`, line height `advance / CHAR_ASPECT`. Markup comes from `lib/ascii-markup.ts` (`asciiMarkup`) via `set:html`, so spans carry no scoped attributes.
+- Budget: `ASCII_HTML_BUDGET = 30 * 1024` per figure; `assertAsciiBudget` fails the build. Seed figure is 16.5 KB.
+- Upload source: `resolveUploadPath` lists `src/assets/uploads` on disk and matches the emitted file name (build `<stem>.<hash>.<ext>`, dev `<stem>.<ext>?…`). Never `import.meta.glob` (importing ships the original) and never `fsPath`. Upload names must be unique across subfolders; ambiguity throws.
+- Shimmer: alpha-only mask band, 600% size, 45/50/55 band, 78% floor, 9 s linear. Declared only under `prefers-reduced-motion: no-preference`.
+- Hero media cell: give the figure a definite track (`minmax(0, 1fr)` / `min-w-0`); `scanlines` goes on the media cell only.
+- Seed `test-card.png` is a generated card (seven grey bars, ringed disc with crosshair, amber inner ring, 10-step wedge) that matches `imageAlt`.
+
+## Design direction (owner feedback, 2026-11-23)
+- Borders in moderation: hairlines only on header/footer edges, section dividers, form controls and the hero media frame. Content grids use spacing and surface tone, not boxed cells.
+- Broadcast details, used sparingly:
+  - Tally plus PGM/PVW labels.
+  - Title-safe corner brackets on media, instead of crosshairs everywhere.
+  - Lower-third headings and card titles.
+  - Rundown-style feature list with timecode durations.
+  - SMPTE colour-bar micro strip as a section divider (check it against the accent-only rule).
+  - "NO SIGNAL" test-pattern 404.
+  - Optional VU meter.
+- This supersedes the earlier "one shared hairline grid, '+' crosshairs at intersections" rule. The footer's `crosshairs` and other crosshair use are reviewed in Task 7a.
+- Build order: Task 7a (design refinement) before Task 7 (G5 section blocks).
 
 ## Coding standards
 - No `any`; strict TypeScript.

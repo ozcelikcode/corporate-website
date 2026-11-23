@@ -33,7 +33,7 @@ Dev dependencies:
 - Files: `src/assets/fonts/schibsted-grotesk/{latin,latin-ext}-wght-{normal,italic}.woff2` and `src/assets/fonts/martian-mono/{latin,latin-ext}-wght-normal.woff2`, each folder with `OFL.txt`.
 - Source: Fontsource CDN, variable builds pinned at 5.3.0: `https://cdn.jsdelivr.net/fontsource/fonts/schibsted-grotesk:vf@5.3.0/<subset>-wght-<style>.woff2` and `.../martian-mono:vf@5.3.0/<subset>-wght-normal.woff2` (verified `wOF2` magic). `OFL.txt` from google/fonts `ofl/schibstedgrotesk/OFL.txt` and `ofl/martianmono/OFL.txt` (SIL OFL 1.1). `unicode-range` values copied from `@fontsource-variable/*@5.3.0` CSS into named constants in `astro.config.ts`.
 - Option shape (Astro 7.4.13, read from `node_modules/astro/dist/assets/fonts`): `{ provider: fontProviders.local(), name, cssVariable, fallbacks, options: { variants: [{ src: [path], weight: '400 900', style, unicodeRange }] } }`. Weights: Schibsted `400 900` (normal + italic), Martian `100 800` (the vf instance has `wght` only; `wdth` is fixed). Fallbacks: `system-ui, sans-serif` / `ui-monospace, monospace` (Astro adds metric-matched Arial/Courier fallbacks).
-- Usage: `<Font cssVariable="--font-grotesk" preload />` (+ `--font-martian`) from `astro:assets`; it emits inline `<style>` @font-face blocks and preload links. Plain `preload` preloads all 6 files; Task 5 should narrow it (e.g. `preload={[{ style: 'normal' }]}`).
+- Usage: `<Font cssVariable="--font-grotesk" preload />` (+ `--font-martian`) from `astro:assets`; it emits inline `<style>` @font-face blocks and preload links. `preload={[{ style: 'normal' }]}` preloads 4 upright files (latin + latin-ext of both families). Accepted: the local provider sets no subset, so latin-ext cannot be filtered out.
 
 ## Cloudflare services (free tier only)
 - Workers Static Assets: serves `dist/`; `run_worker_first: ["/api/*"]`; `not_found_handling: "404-page"`. Static requests never invoke the Worker.
@@ -47,7 +47,12 @@ Dev dependencies:
 ## CMS
 - Sveltia CMS (pinned exactly, loaded from a pinned bundle with SRI in `public/admin/index.html`; pre-1.0, tested at 0.271.2).
 - Auth: `sveltia-cms-auth` on a free Worker, GitHub App OAuth. Vars: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `ALLOWED_DOMAINS`.
-- `publish_mode: editorial_workflow`; i18n `multiple_folders` en/tr; settings as singleton; `media_folder: src/assets/uploads`.
+- `publish_mode: editorial_workflow`; i18n `multiple_folders` en/tr (default en, layout `<folder>/<locale>/<slug>.yaml`); settings as singleton; `media_folder: src/assets/uploads`.
+- Files: `public/admin/index.html` (`noindex`, pinned `@sveltia/cms@0.271.2` with SRI and `crossorigin="anonymous"`) and `public/admin/config.yml` (github backend with placeholder `repo`/`base_url`, replaced in the runbook). Collections: `settings` singleton, `ui`, `navigation` (create/delete off), `pages`, `applications`; one shared `&sections` anchor (7 block types, `typeKey: type`). `src/lib/admin-config.test.ts` checks the config.
+- Verified from docs: top-level `singletons`; `slug.editable` replaces the deprecated `{{fields._slug}}`; field `pattern` is `[regex, message]`; `required: [en]` with i18n; i18n must be opted in per field (collection-level does not cover `ui`/`navigation` fields). Biome formats the YAML (double quotes).
+- Editor/admin split is enforced by GitHub (CODEOWNERS, branch protection, merge rights), not by the config.
+- Hero `actions` and nav `footer` default to `[]` in the schema, so the CMS may omit empty lists.
+- Unverified: whether Sveltia writes `[]` or omits empty keys, and `sortable_fields: [order, name]` in 0.271.2. Owner step 6 (manual check in Chromium, File System Access, "Work with Local Repository") is pending; see the runbook.
 
 ## External-service rules
 - Free tier only. Nothing paid, nothing self-hosted.
@@ -56,7 +61,7 @@ Dev dependencies:
 - Worker may use `console.error({ code, step })` only (no PII).
 
 ## Open verifications (builder)
-Astro i18n fallback on dynamic static routes; Sveltia feature support (editorial workflow, singletons, R2); `astro/zod` bundling in the Worker (else add `zod ^4.6.7`); Workers Builds Node/pnpm support; `send_email` on free plan; no inline `<script>` in `dist/` (CSP).
+Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fields`, empty-list serialisation and owner step 6; `astro/zod` bundling in the Worker (else add `zod ^4.6.7`); Workers Builds Node/pnpm support; `send_email` on free plan; no inline `<script>` in `dist/` (CSP).
 
 ## Test conventions
 - `node --test` with `node:assert/strict`; `*.test.ts` next to its unit; relative imports end in `.ts`; tested modules never import `astro:*` at runtime.
@@ -70,3 +75,4 @@ Astro i18n fallback on dynamic static routes; Sveltia feature support (editorial
 ## Tooling notes
 - pnpm 12 blocks install scripts: `pnpm-workspace.yaml` has `allowBuilds` for esbuild and workerd, and `minimumReleaseAgeExclude` for `@cloudflare/workers-types@5.20261123.1`.
 - Biome 2.6: `linter.rules.preset: "recommended"`; Markdown formatter/linter disabled (docs are not reformatted); `.superpowers` and `.code-review-graph` excluded.
+- Root `.gitignore` ignores `.superpowers/` (SDD briefs, reports and review diffs stay local).
