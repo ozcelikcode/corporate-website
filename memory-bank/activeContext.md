@@ -2,13 +2,13 @@
 
 ## Current state (2026-11-23)
 - Design spec written: `docs/superpowers/specs/2026-11-23-corporate-site-design.md`.
-- Status: owner APPROVED the spec on 2026-11-23. No implementation code exists yet.
+- Status: owner APPROVED the spec on 2026-11-23. Task 1 (toolchain scaffold) implemented on `feat/site-v1`.
 - Repo decision (2026-11-23): GitHub repo is public, so CODEOWNERS-enforced branch protection on `main` is free.
 - Memory bank and project instructions (`CLAUDE.md`, team-delegation skill) are set up.
 
 ## Next step
 - Implementation plan written: `docs/superpowers/plans/2026-11-23-corporate-site.md` (12 tasks, 8 dispatch groups G1–G8, subagent-driven execution).
-- Owner reviews the plan, then start G1 (Task 1: toolchain scaffold).
+- G2: Task 2 (tokens and fonts).
 
 ## Key decisions so far
 - Own UI kit of about 12 Astro primitives with `class-variance-authority`; no shadcn/React islands.

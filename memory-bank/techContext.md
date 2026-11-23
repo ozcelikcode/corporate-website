@@ -21,12 +21,12 @@ Dev dependencies:
 - @cloudflare/workers-types `5.20261123.1`
 
 ### Why TypeScript 6.0.3, not 7.0.2
-`@astrojs/check@0.9.12` peers `typescript ^5 || ^6`, so 7.x is unsupported. Builder may bump to the newest 6.x.
+`@astrojs/check@0.9.12` peers `typescript ^5 || ^6`, so 7.x is unsupported. Checked 2026-11-23: 6.0.3 is the newest 6.x. `@types/node` not needed: `pnpm check` passes without it.
 
 ## Build and output
 - Astro `output: 'static'`; no Cloudflare adapter (avoids an SSR Worker in front of static pages).
 - `trailingSlash: 'always'`, paired with `html_handling: auto-trailing-slash`.
-- Scripts: `dev`, `build`, `preview` (build + `wrangler dev`), `check` (`astro check` + `tsc -p worker --noEmit`), `lint`, `format` (Biome), `deploy`.
+- Scripts: `test` (`node --test "src/**/*.test.ts" "worker/**/*.test.ts"`), `dev`, `build`, `preview` (build + `wrangler dev`), `check` (`astro check` + `tsc -p worker --noEmit`), `lint`, `format` (Biome), `deploy`.
 - Fonts via Astro fonts API, `fontProviders.local()`: Schibsted Grotesk + Martian Mono (OFL, `latin` + `latin-ext`).
 
 ## Cloudflare services (free tier only)
@@ -51,3 +51,16 @@ Dev dependencies:
 
 ## Open verifications (builder)
 Fonts API option shape; Astro i18n fallback on dynamic static routes; Sveltia feature support (editorial workflow, singletons, R2); `astro/zod` bundling in the Worker (else add `zod ^4.6.7`); Workers Builds Node/pnpm support; `send_email` on free plan; no inline `<script>` in `dist/` (CSP).
+
+## Test conventions
+- `node --test` with `node:assert/strict`; `*.test.ts` next to its unit; relative imports end in `.ts`; tested modules never import `astro:*` at runtime.
+- Test files are excluded from both tsconfigs; Biome still lints them.
+
+## Build-mode rules (`src/lib/build-mode.ts`)
+- Production only when `WORKERS_CI_BRANCH === 'main'`: then `SITE_URL` (https, trailing slash stripped) and `PUBLIC_TURNSTILE_SITE_KEY` are required (empty counts as missing) or the build throws.
+- Any other branch or a local build ignores both vars: `siteUrl` = `PREVIEW_SITE_URL` (`http://localhost:4321`, interim, open §14 "Previews" item), Turnstile test key `1x00000000000000000000AA`.
+- `astro.config.ts` feeds `site` from it; `src/lib/env.ts` exposes `BUILD` from `astro:env`.
+
+## Tooling notes
+- pnpm 12 blocks install scripts: `pnpm-workspace.yaml` has `allowBuilds` for esbuild and workerd, and `minimumReleaseAgeExclude` for `@cloudflare/workers-types@5.20261123.1`.
+- Biome 2.6: `linter.rules.preset: "recommended"`; Markdown formatter/linter disabled (docs are not reformatted); `.superpowers` and `.code-review-graph` excluded.

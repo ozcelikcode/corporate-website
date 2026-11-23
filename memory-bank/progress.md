@@ -6,10 +6,10 @@
 - 2026-11-23: Root `CLAUDE.md` and project skill `team-delegation` created.
 - 2026-11-23: Owner approved the design spec. Repo made public (CODEOWNERS enforcement on `main` now possible).
 - 2026-11-23: Implementation plan written (`docs/superpowers/plans/2026-11-23-corporate-site.md`, 12 tasks, groups G1–G8).
+- 2026-11-23: Task 1 toolchain scaffold done (configs, build-mode + 6 tests, worker stub, scaffold page).
 
 ## Next
-- Owner reviews the implementation plan, then G1 (Task 1 toolchain scaffold).
-- Scaffold the project: package.json, tsconfig, Biome, Astro config, wrangler config, `.nvmrc`.
+- G2: Task 2 tokens and fonts.
 - Build tokens, global styles, i18n and content libs, content collections.
 - Build UI primitives, section blocks, layout components, pages, TR wrappers.
 - Build the Worker (`/api/quote`), Turnstile verification, mail builder.
@@ -32,3 +32,4 @@
 
 ## Log
 - 2026-11-23: Project started; spec, memory bank and delegation skill created. No code yet.
+- 2026-11-23: Task 1 implemented; gate (build, check, lint, test) green.
