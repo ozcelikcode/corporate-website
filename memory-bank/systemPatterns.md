@@ -85,8 +85,8 @@ Don't:
 - `Timecode {prefix}`: `@property` integer counters with `steps()`. Constants reach CSS as `--tc-*` custom properties via one root `style` object. Animates only under `prefers-reduced-motion: no-preference`; `aria-hidden`.
 - `GridFrame {as?, columns?: 1|2|3|4|12, variant?: 'spaced'|'hairline'}`: `spaced` (default) = `gap-x-8 gap-y-12 lg:gap-x-12`, no lines, free children (tone cards set `bg-surface p-6`). `hairline` (budget-limited) = `grid-hairline`, children are `cell`s, and for 2/3/4 columns the last cell fills its row (cva `compoundVariants`). For 12 columns the children's `lg:col-span-*` must sum to 12 per row.
 - `Label` `strap` → `lower-third` utility; content is wrapped in one inner span so the flex gap never splits `[NN]` from the text. `index?: number | undefined`.
-- `LowerThird {level: 2|3, text, label, index?}`: `<hgroup>` with `Heading` above and the strap `Label` below. Section headings (`app-grid`, `feature-list`) and app card titles only.
-- `TitleSafe {scanlines?}`: media frame. Hairline border in `line` plus four `aria-hidden` corner spans (`data-corner` = block-inline, logical props) at `--title-safe-inset: 5%` (top/bottom % resolve against height, so the marks follow the frame), arm `--spacing * 5`, hairline stroke in `ink-muted`, `z-index: 1` over the scanlines.
+- `LowerThird {level: 2|3, text, label, index?}`: `<hgroup>` (`gap-2`, one lockup) with `Heading` above and the strap `Label` below. Section headings (`app-grid`, `feature-list`) and app card titles only.
+- `TitleSafe {scanlines?}`: media frame, only for the hero media and the ApplicationPage cover (app-grid tile covers are frameless). `container-type: inline-size`; the slot sits in `.title-safe-picture` padded by `--title-safe-inset: 5cqi` (title-safe margin, one length for both axes); four `aria-hidden` corner spans (`data-corner` = block-inline, logical props) at `--title-safe-mark-inset` (half the margin), so the marks never cross the media. Arm `--spacing * 5`, hairline stroke in `ink-muted`, `z-index: 1` over the scanlines.
 - `BarsStrip {class?}`: `h-1 w-42` flex row of the 7 bars, `aria-hidden`. Footer only.
 - `NoSignal {text}`: `role="img" aria-label={text}`, 16:9 7-column bars, centred canvas slate with a muted `Tally`. For the 404 (Task 8).
 - Tailwind v4 does not order stacked arbitrary variants by breakpoint: keep breakpoint rules disjoint (`md:max-lg:`).
@@ -108,7 +108,7 @@ Don't:
 - Menu rows use an inset focus ring (negative `--border-focus` offset).
 - TallyStrip: `aria-hidden` `surface` band, no rules (segments split by `gap-6 md:gap-8`), `px-4 md:px-8` to align with the header. `■ LIVE`, timecode; channel ≥ sm; `■ PGM` (accent) `■ PVW` (muted) and format ≥ md. Props `program`/`preview` from `tallyProgram`/`tallyPreview`.
 - MobileNav sheet: top bar keeps the header rule; rows have no dividers (height and hover/active `surface` tone).
-- Footer: full-bleed `border-t border-line`; `BarsStrip` at the content edge pulled up by `-mt-(--border-hairline)` so it lies on the rule; then spaced `GridFrame columns={4}`; indexed nav; Contact and Follow continue the numbering (`[05]`, `[06]`); contacts in `<address>`; ↗ on https links via Glyph; rights line `© BUILD_YEAR legalName footerRights`.
+- Footer: full-bleed `border-t border-line`; `BarsStrip` at the content edge pulled up by `-mt-(--border-hairline)` so it lies on the rule; then spaced `GridFrame columns={4}`; every column's first row is a `min-h-11 flex items-center` box (logo link, nav row, Contact/Follow label wrappers), so the first rows share one line; indexed nav; Contact and Follow continue the numbering (`[05]`, `[06]`); contacts in `<address>`; ↗ on https links via Glyph; rights line `© BUILD_YEAR legalName footerRights`.
 
 ## ASCII (Task 6, fix round 1)
 - Constants in `lib/ascii.ts`: `ASCII_RAMP = ' .:-=+*#%@'`, `TONE_COUNT = 6`, `CHAR_ASPECT = 0.5`, `ASCII_COLUMNS = 96`, `ASCII_COLUMNS_COMPACT = 48`.
@@ -124,7 +124,7 @@ Don't:
 
 ## Design direction (owner feedback 2026-11-23, implemented in Task 7a)
 - Border budget: hairlines only on (1) header bottom / footer top edges, (2) section dividers (`SectionRenderer` owns one `border-t border-line` rule per section after the first), (3) form controls (incl. buttons and the menu key), (4) the `TitleSafe` media frame. Content grids, cards, feature lists, FAQ, CTA: spacing + `surface` vs `canvas` tone, no boxed cells. Crosshairs retired.
-- Broadcast details, used sparingly: TallyStrip PGM/PVW; title-safe marks on media only; lower thirds on section headings and app card titles only; rundown `feature-list` with `duration`; one SMPTE bars strip (footer rule); `NoSignal` on the 404. VU meter dropped (clutter, a second perpetual animation next to the timecode).
+- Broadcast details, used sparingly: TallyStrip PGM/PVW; title-safe marks only on the hero media and the ApplicationPage cover; lower thirds on section headings and app card titles only; rundown `feature-list` with `duration`; one SMPTE bars strip (footer rule); `NoSignal` on the 404. VU meter dropped (clutter, a second perpetual animation next to the timecode).
 - Scaffold-only exceptions (deleted in Task 8): colour swatches keep a `line-strong` border; one hairline GridFrame specimen. Prose keeps its blockquote rule and `hr` (typographic, inside rich text).
 - Seed `test-card.png` kept (grey bars): the ASCII render is luminance-only, so SMPTE colour bars would look the same.
 

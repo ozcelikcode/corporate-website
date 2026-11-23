@@ -416,7 +416,7 @@ Block specs (§8 table and border budget, made concrete; no block draws boxed ce
   - Left: `Label`, two-tone `Heading` (`headline` + `headlineAccent`, display size), lede (≤ 60ch, ink-muted), ≤ 2 `Button`s (first primary).
   - Right: `<TitleSafe scanlines>` around `AsciiImage` (`image`, `imageAlt`). The hairline frame and title-safe marks are the hero's only lines; scanlines appear only here.
 - `Statement`: spaced `GridFrame` with `columns={12}`: `Label` in a `lg:col-span-3` gutter, display text in ink in `lg:col-span-9`; stacked on mobile. Plain indexed label, no lower third.
-- `AppGrid`: `LowerThird` section heading (`heading`, strap = `label` with the section index), then a spaced `GridFrame` with `columns={3}` (ramp 1 / md 2 / lg 3; spaced grids need no last-row fill) of `surface` tiles (padding, no border), showing `selectApps(listApplications(locale), apps)`. Each tile is one link: `[0N]` index, status `Tally`, the name as a `LowerThird` (level 3, strap = category), tagline, a duotone cover in `TitleSafe` (no scanlines) and `→` (internal link, via `Glyph`).
+- `AppGrid`: `LowerThird` section heading (`heading`, strap = `label` with the section index), then a spaced `GridFrame` with `columns={3}` (ramp 1 / md 2 / lg 3; spaced grids need no last-row fill) of `surface` tiles (padding, no border), showing `selectApps(listApplications(locale), apps)`. Each tile is one link: `[0N]` index, status `Tally`, the name as a `LowerThird` (level 3, strap = category), tagline, a frameless duotone cover (no `TitleSafe`: the frame is only for the hero media and the ApplicationPage cover) and `→` (internal link, via `Glyph`).
   - Cover: `<Picture formats={['avif','webp']}>`, greyscale, with an accent `mix-blend-mode` layer and no gradient.
   - Link href: `localizePath(applicationPath(slug), resolved.locale)`.
 - `FeatureList` (rundown): `LowerThird` section heading, then an `<ol>` of rows: mono running number `01` …, title, body (ink-muted) and a mono `duration` column (`HH:MM:SS`, ink-muted, end-aligned; left out for a row without `duration`). Rows are set apart by spacing, never by rules; below `md` the number and duration share one line above the title.
@@ -433,7 +433,7 @@ node -e "const h=require('fs').readFileSync('dist/index.html','utf8');const m=h.
 ```
 - [ ] **Step 5: Visual acceptance.** VA1–VA8, plus:
   - The hero matches the §8 wireframe at 1440px, and the ASCII stays legible and scales with its container at 360/768/1440.
-  - Scanlines appear on the hero only; title-safe marks only on media frames.
+  - Scanlines appear on the hero only; title-safe marks only on the hero media (and, in Task 8, the ApplicationPage cover), sitting in the frame's margin, never over the ASCII.
   - Borders only within the budget. Border audit in the console: every element with a computed border width is a header/footer edge, a section divider, a control or a `TitleSafe` frame/mark.
   - App tiles are `surface` tone without borders, the whole tile is one link with a focus ring, and its name is a lower third.
   - Rundown rows show the mono duration column when `duration` is set.

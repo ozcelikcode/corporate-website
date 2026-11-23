@@ -231,7 +231,7 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
 1. the header's bottom edge and the footer's top edge;
 2. section dividers (one rule between major sections; it may carry a label);
 3. form controls (inputs, selects, textareas, buttons, the menu key);
-4. the hero / application media frame (`TitleSafe`).
+4. the `TitleSafe` media frame, used only on the hero media and the ApplicationPage cover.
 
 Everything else (content grids, cards, feature lists, FAQ, CTA) gets its hierarchy from spacing, `surface` vs `canvas` tone and type: no boxed cells. `GridFrame` is `spaced` by default; its `hairline` cell matrix is budget-limited. The "+" crosshairs are retired.
 
@@ -240,7 +240,7 @@ Everything else (content grids, cards, feature lists, FAQ, CTA) gets its hierarc
 | Detail | Where | Notes |
 |---|---|---|
 | Tally + PGM/PVW | `TallyStrip` | `surface` band under the header, segments split by spacing. LIVE and PGM lamps accent, PVW muted; labels from `ui` (`tallyProgram`, `tallyPreview`) |
-| Title-safe corner brackets | media frames only (hero ASCII, application cover) | `TitleSafe`: hairline frame + four L-shaped marks at the title-safe area (5% in from each edge), drawn over the picture like a monitor overlay |
+| Title-safe corner brackets | exactly two media frames: the hero ASCII and the ApplicationPage cover (app-grid tile covers stay frameless) | `TitleSafe`: hairline frame; the picture is inset by the title-safe margin (`--title-safe-inset`, 5% of the frame width), and four L-shaped marks sit inside that margin, so they never cross the media |
 | Lower third | section headings (`app-grid`, `feature-list`) and application card titles | `LowerThird`: heading above, mono label strap below (translucent ink band, accent key on its leading edge), in an `<hgroup>` |
 | Rundown rows | `feature-list` | numbered rows, title, body and a mono duration column `HH:MM:SS` from the item's optional `duration` (display only) |
 | SMPTE colour-bar micro strip | one signature divider: laid on the footer's top rule at the content edge | `BarsStrip`, `bars-*` tokens, `aria-hidden` |
@@ -263,7 +263,7 @@ A VU meter was considered and dropped: a second perpetual animation beside the r
 |---|---|
 | `hero` | Spaced split (no cell borders): label, two-tone headline, lede, ≤2 actions left; ASCII render right in `TitleSafe` with scanlines |
 | `statement` | Full-width mission sentence in display type, mono label in the gutter |
-| `app-grid` | Spaced `surface` tiles (no borders): index, status tally, lower-third name, tagline, duotone cover in `TitleSafe`, ↗ |
+| `app-grid` | Spaced `surface` tiles (no borders): index, status tally, lower-third name, tagline, frameless duotone cover, → (internal link) |
 | `feature-list` | Rundown: numbered rows, title, body, mono `HH:MM:SS` duration column; spacing between rows, no rules |
 | `rich-text` | `Prose` column ≤68ch, mono h3+ |
 | `cta` | One `surface` band (no border): heading, single action, accent "ON AIR" tally |

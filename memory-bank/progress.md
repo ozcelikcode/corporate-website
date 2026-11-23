@@ -46,3 +46,4 @@
 - 2026-11-23: Task 6 implemented: build-time ASCII renderer (`ascii.ts`, `ascii-source.ts`, `ascii-markup.ts`) and `AsciiImage`. Fix round 1: 48-column compact grid, normalise, 30 KB budget, disk-based upload lookup (no leaked originals), new seed card. Seed figure 16.5 KB.
 - 2026-11-23: Task 11 implemented: Sveltia admin at `public/admin` (editorial workflow, en/tr folders, settings singleton) with a config test. Fix round 1: nav `footer` and hero `actions` default to `[]`. Owner step 6 pending.
 - 2026-11-23: Task 7a implemented: 3 ui keys (`tallyProgram`, `tallyPreview`, `noSignal`), feature-list `duration` (schema, seed, CMS), ui seed parity test; gate green (78 tests); border audit, 360/768/1440 checked in the browser.
+- 2026-11-23: Task 7a fix round 1: TitleSafe inner inset (marks in the margin), TitleSafe limited to hero + ApplicationPage cover, footer first rows aligned, LowerThird `gap-2`, spec app-grid uses →.
