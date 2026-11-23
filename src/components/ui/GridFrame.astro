@@ -16,32 +16,31 @@ interface Props {
   crosshairs?: boolean;
 }
 
-const frame = cva('grid-hairline', {
-  variants: {
-    columns: {
-      1: '',
-      2: 'md:grid-cols-2 md:[&>:last-child:nth-child(odd)]:col-span-full',
-      3: [
-        'md:grid-cols-2 lg:grid-cols-3',
-        'md:max-lg:[&>:last-child:nth-child(odd)]:col-span-full',
-        'lg:[&>:last-child:nth-child(3n+1)]:col-span-full',
-        'lg:[&>:last-child:nth-child(3n+2)]:col-span-2',
-      ],
-      4: [
-        'md:grid-cols-2 lg:grid-cols-4',
-        'md:max-lg:[&>:last-child:nth-child(odd)]:col-span-full',
-        'lg:[&>:last-child:nth-child(4n+1)]:col-span-full',
-        'lg:[&>:last-child:nth-child(4n+2)]:col-span-3',
-        'lg:[&>:last-child:nth-child(4n+3)]:col-span-2',
-      ],
-      12: 'lg:grid-cols-12',
-    },
-    crosshairs: {
-      true: '[&>*]:crosshair',
-      false: '',
-    },
-  },
-});
+const COLUMNS = {
+  1: '',
+  2: 'md:grid-cols-2 md:[&>:last-child:nth-child(odd)]:col-span-full',
+  3: [
+    'md:grid-cols-2 lg:grid-cols-3',
+    'md:max-lg:[&>:last-child:nth-child(odd)]:col-span-full',
+    'lg:[&>:last-child:nth-child(3n+1)]:col-span-full',
+    'lg:[&>:last-child:nth-child(3n+2)]:col-span-2',
+  ],
+  4: [
+    'md:grid-cols-2 lg:grid-cols-4',
+    'md:max-lg:[&>:last-child:nth-child(odd)]:col-span-full',
+    'lg:[&>:last-child:nth-child(4n+1)]:col-span-full',
+    'lg:[&>:last-child:nth-child(4n+2)]:col-span-3',
+    'lg:[&>:last-child:nth-child(4n+3)]:col-span-2',
+  ],
+  12: 'lg:grid-cols-12',
+} satisfies Record<NonNullable<Props['columns']>, string | string[]>;
+
+const CROSSHAIRS = {
+  true: '[&>*]:crosshair',
+  false: '',
+} as const satisfies Record<`${NonNullable<Props['crosshairs']>}`, string>;
+
+const frame = cva('grid-hairline', { variants: { columns: COLUMNS, crosshairs: CROSSHAIRS } });
 
 const { as: Tag = 'div', columns = 1, crosshairs = false } = Astro.props;
 ---

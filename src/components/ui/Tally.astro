@@ -11,15 +11,13 @@ interface Props {
   dot?: boolean;
 }
 
-const lamp = cva('size-2 shrink-0', {
-  variants: {
-    tone: {
-      accent: 'bg-accent',
-      muted: 'bg-ink-muted',
-      critical: 'bg-critical',
-    },
-  },
-});
+const TONE = {
+  accent: 'bg-accent',
+  muted: 'bg-ink-muted',
+  critical: 'bg-critical',
+} as const satisfies Record<NonNullable<Props['tone']>, string>;
+
+const lamp = cva('size-2 shrink-0', { variants: { tone: TONE } });
 
 const { text, tone = 'accent', dot = true } = Astro.props;
 ---

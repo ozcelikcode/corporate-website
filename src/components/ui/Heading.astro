@@ -12,16 +12,14 @@ interface Props {
   size?: 'display' | 'h2';
 }
 
-const heading = cva('font-semibold wrap-break-word', {
-  variants: {
-    size: {
-      display: 'text-display tracking-tight',
-      h2: 'text-h2',
-    },
-  },
-});
+const SIZE = {
+  display: 'text-display tracking-display',
+  h2: 'text-h2',
+} as const satisfies Record<NonNullable<Props['size']>, string>;
 
-const TAGS = { 1: 'h1', 2: 'h2', 3: 'h3' } as const;
+const heading = cva('font-semibold wrap-break-word', { variants: { size: SIZE } });
+
+const TAGS = { 1: 'h1', 2: 'h2', 3: 'h3' } as const satisfies Record<Props['level'], string>;
 
 const { level, text, accent, size = level === 1 ? 'display' : 'h2' } = Astro.props;
 const Tag = TAGS[level];

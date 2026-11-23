@@ -1,7 +1,7 @@
 ---
 /**
  * Native checkbox tinted with the accent through `accent-color`. The label content goes in the
- * default slot, so it can hold a link.
+ * default slot, so it can hold a link. The row and label are `min-h-11` (the 44 CSS px target).
  */
 
 interface Props {
@@ -13,7 +13,7 @@ interface Props {
 
 const { id, name, value, required = false } = Astro.props;
 ---
-<div class="flex items-start gap-3">
+<div class="flex min-h-11 items-center gap-3">
   <input
     class="m-0 size-6 shrink-0 accent-accent"
     type="checkbox"
@@ -22,5 +22,9 @@ const { id, name, value, required = false } = Astro.props;
     value={value}
     required={required}
   />
-  <label for={id} class="min-h-6 [&_a]:underline [&_a]:decoration-line-strong [&_a]:underline-offset-4 [&_a:hover]:decoration-ink"><slot /></label>
+  <label
+    for={id}
+    class="flex min-h-11 items-center [&_a]:underline [&_a]:decoration-line-strong [&_a]:underline-offset-4 [&_a:hover]:decoration-ink"
+    ><slot /></label
+  >
 </div>

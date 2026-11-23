@@ -6,6 +6,7 @@ import Checkbox from '../components/ui/Checkbox.astro';
 import Field from '../components/ui/Field.astro';
 import GridFrame from '../components/ui/GridFrame.astro';
 import Heading from '../components/ui/Heading.astro';
+import { hintId } from '../components/ui/hint-id.ts';
 import Input from '../components/ui/Input.astro';
 import Label from '../components/ui/Label.astro';
 import Prose from '../components/ui/Prose.astro';
@@ -113,7 +114,7 @@ const indexes = (count: number) => Array.from({ length: count }, (_, i) => i + 1
             <div class="flex flex-wrap gap-4">
               <Button href="#forms-title" size="sm">Quote</Button>
               <Button href="https://example.com/" size="sm" intent="secondary">Site</Button>
-              <Button size="sm" intent="secondary" glyph="↗">Forced ↗</Button>
+              <Button size="sm" intent="secondary" glyph="↗">Forced external</Button>
               <Button size="sm" glyph={null}>Plain</Button>
             </div>
           </div>
@@ -225,7 +226,7 @@ const indexes = (count: number) => Array.from({ length: count }, (_, i) => i + 1
                   type="email"
                   maxlength={254}
                   autocomplete="email"
-                  describedBy="demo-email-hint"
+                  describedBy={hintId('demo-email')}
                 />
               </Field>
             </div>
@@ -241,7 +242,7 @@ const indexes = (count: number) => Array.from({ length: count }, (_, i) => i + 1
                   name="message"
                   required
                   maxlength={2000}
-                  describedBy="demo-message-hint"
+                  describedBy={hintId('demo-message')}
                 />
               </Field>
             </div>

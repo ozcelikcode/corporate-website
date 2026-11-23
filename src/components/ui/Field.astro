@@ -1,8 +1,9 @@
 ---
 /**
- * Label, control (default slot) and optional hint. The hint id is `${id}-hint`; pass it to the
- * control's `describedBy`.
+ * Label, control (default slot) and optional hint. The hint id comes from `hintId(id)`; pass the
+ * same value to the control's `describedBy`.
  */
+import { hintId } from './hint-id.ts';
 
 interface Props {
   id: string;
@@ -19,5 +20,5 @@ const { id, label, hint, optionalLabel } = Astro.props;
     {optionalLabel !== undefined && <span class="text-ink-muted">{optionalLabel}</span>}
   </label>
   <slot />
-  {hint !== undefined && <p id={`${id}-hint`} class="font-mono text-label text-ink-muted">{hint}</p>}
+  {hint !== undefined && <p id={hintId(id)} class="font-mono text-label text-ink-muted">{hint}</p>}
 </div>
