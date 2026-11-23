@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="40" viewBox="0 0 160 40" role="img" aria-label="Brand">
+  <title>Brand</title>
+  <rect x="2" y="2" width="36" height="36" fill="none" stroke="#f2f3f5" stroke-width="2"/>
+  <path d="M2 38 L38 2" stroke="#ffb000" stroke-width="2"/>
+  <rect x="14" y="14" width="12" height="12" fill="#f2f3f5"/>
+  <text x="52" y="27" font-family="system-ui, sans-serif" font-size="22" font-weight="700" letter-spacing="1" fill="#f2f3f5">Brand</text>
+</svg>

@@ -1,0 +1,17 @@
+# Pages without a Turkish version link to their English URL.
+header:
+  - label: Uygulamalar
+    href: /applications/
+  - label: Hakkımızda
+    href: /about/
+  - label: İletişim
+    href: /contact/
+footer:
+  - label: Uygulamalar
+    href: /applications/
+  - label: Hakkımızda
+    href: /about/
+  - label: İletişim
+    href: /contact/
+  - label: Gizlilik
+    href: /privacy/

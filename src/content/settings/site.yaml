@@ -1,0 +1,24 @@
+brandName: Brand
+logo: ../../assets/uploads/logo.svg
+logoAlt: Brand logo
+accent: "#ffb000"
+contacts:
+  - kind: email
+    value: hello@example.com
+    href: mailto:hello@example.com
+  - kind: phone
+    value: +1 555 010 0199
+    href: tel:+15550100199
+  - kind: address
+    value: 100 Example Street, Example City
+    href: https://example.com/contact/
+socials:
+  - label: LinkedIn
+    href: https://www.linkedin.com/company/example
+  - label: YouTube
+    href: https://www.youtube.com/@example
+ogImage: ../../assets/uploads/og-default.png
+organization:
+  legalName: Brand Ltd.
+  url: https://example.com
+  address: 100 Example Street, Example City
