@@ -1,0 +1,55 @@
+---
+/**
+ * Document title, description, canonical, hreflang alternates, Open Graph / Twitter card and
+ * optional JSON-LD. Every URL arrives absolute; this component only prints tags.
+ * `jsonLd` must already be escaped for a script element (`organizationJsonLd` does that).
+ */
+import type { Locale } from '../../lib/i18n.ts';
+import type { Alternate } from '../../lib/seo.ts';
+
+interface Props {
+  title: string;
+  description: string;
+  canonical: string;
+  alternates: readonly Alternate[];
+  siteName: string;
+  locale: Locale;
+  image: { url: string; width: number; height: number };
+  noindex: boolean;
+  jsonLd?: string | undefined;
+}
+
+/** Open Graph wants territory-qualified locales. */
+const OG_LOCALE = { en: 'en_US', tr: 'tr_TR' } as const satisfies Record<Locale, string>;
+const OG_TYPE = 'website';
+const TWITTER_CARD = 'summary_large_image';
+const ROBOTS_NOINDEX = 'noindex';
+
+const { title, description, canonical, alternates, siteName, locale, image, noindex, jsonLd } =
+  Astro.props;
+
+const alternateOgLocales = alternates.flatMap(({ hreflang }) =>
+  hreflang !== 'x-default' && hreflang !== locale ? [OG_LOCALE[hreflang]] : [],
+);
+---
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+{noindex && <meta name="robots" content={ROBOTS_NOINDEX} />}
+{alternates.map(({ hreflang, href }) => <link rel="alternate" hreflang={hreflang} href={href} />)}
+
+<meta property="og:type" content={OG_TYPE} />
+<meta property="og:site_name" content={siteName} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:locale" content={OG_LOCALE[locale]} />
+{alternateOgLocales.map((ogLocale) => <meta property="og:locale:alternate" content={ogLocale} />)}
+<meta property="og:image" content={image.url} />
+<meta property="og:image:width" content={String(image.width)} />
+<meta property="og:image:height" content={String(image.height)} />
+<meta name="twitter:card" content={TWITTER_CARD} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={image.url} />
+{jsonLd !== undefined && <script type="application/ld+json" is:inline set:html={jsonLd} />}

@@ -1,0 +1,31 @@
+---
+/**
+ * Broadcast status row under the header: `● LIVE │ TC 00:00:00:00 │ CH 01 ··· 1080i50`.
+ * Segments are split by hairlines (no crosshairs: the sticky header would cover their top half).
+ * Pure decoration, so the whole strip is hidden from assistive tech. Channel and format
+ * drop out on narrow screens so the row never wraps or scrolls. The format keeps its case
+ * (`1080i50`: the `i` means interlaced).
+ */
+import Tally from '../ui/Tally.astro';
+import Timecode from '../ui/Timecode.astro';
+
+interface Props {
+  live: string;
+  timecode: string;
+  channel: string;
+  format: string;
+}
+
+const SEGMENT = 'items-center px-4 md:px-6';
+const DIVIDED = 'border-s border-line';
+
+const { live, timecode, channel, format } = Astro.props;
+---
+<div class="border-b border-line" aria-hidden="true">
+  <div class="mx-auto flex h-10 max-w-page overflow-x-clip label-mono md:px-2">
+    <span class:list={[SEGMENT, 'flex']}><Tally text={live} /></span>
+    <span class:list={[SEGMENT, DIVIDED, 'flex']}><Timecode prefix={timecode} /></span>
+    <span class:list={[SEGMENT, DIVIDED, 'hidden text-ink-muted sm:flex']}>{channel}</span>
+    <span class:list={[SEGMENT, DIVIDED, 'ms-auto hidden text-ink-muted normal-case md:flex']}>{format}</span>
+  </div>
+</div>

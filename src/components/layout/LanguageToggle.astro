@@ -1,0 +1,48 @@
+---
+/**
+ * `EN / TR` switch. Codes come from `LOCALES`, uppercased. The current locale is plain text
+ * with `aria-current`; every other one links to its twin of this page (or that locale's home).
+ */
+import { LOCALES, type Locale, toggleTarget } from '../../lib/i18n.ts';
+
+interface Props {
+  locale: Locale;
+  neutralPath: string;
+  availableLocales: readonly Locale[];
+  label: string;
+}
+
+/** Typographic divider between codes; decorative. */
+const SEPARATOR = '/';
+
+const { locale, neutralPath, availableLocales, label } = Astro.props;
+---
+<nav aria-label={label}>
+  <ul class="flex items-center label-mono">
+    {
+      LOCALES.map((code, index) => (
+        <li class="flex items-center">
+          {index > 0 && (
+            <span class="text-line-strong" aria-hidden="true">
+              {SEPARATOR}
+            </span>
+          )}
+          {code === locale ? (
+            <span class="flex min-h-11 min-w-11 items-center justify-center text-ink" aria-current="true">
+              {code.toUpperCase()}
+            </span>
+          ) : (
+            <a
+              class="flex min-h-11 min-w-11 items-center justify-center text-ink-muted hover:text-ink"
+              href={toggleTarget(neutralPath, locale, availableLocales)}
+              hreflang={code}
+              lang={code}
+            >
+              {code.toUpperCase()}
+            </a>
+          )}
+        </li>
+      ))
+    }
+  </ul>
+</nav>

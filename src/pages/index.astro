@@ -1,6 +1,6 @@
 ---
-// Temporary atom showcase (Tasks 1–7); replaced by real routes in Task 8. Literal copy allowed here only.
-import { Font } from 'astro:assets';
+// Temporary atom showcase (Tasks 1–7) inside the real layout with the EN `home` entry's SEO data;
+// replaced by real routes in Task 8. Literal copy allowed here only.
 import Button from '../components/ui/Button.astro';
 import Checkbox from '../components/ui/Checkbox.astro';
 import Field from '../components/ui/Field.astro';
@@ -14,7 +14,12 @@ import Select from '../components/ui/Select.astro';
 import Tally from '../components/ui/Tally.astro';
 import Textarea from '../components/ui/Textarea.astro';
 import Timecode from '../components/ui/Timecode.astro';
-import '../styles/global.css';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { availableLocales, getPage } from '../lib/content.ts';
+
+const HOME_SLUG = 'home';
+const home = await getPage('en', HOME_SLUG);
+const homeLocales = await availableLocales('pages', HOME_SLUG);
 
 const COLOURS = [
   { name: 'canvas', swatch: 'bg-canvas' },
@@ -69,17 +74,16 @@ const PROSE_HTML = `
 
 const indexes = (count: number) => Array.from({ length: count }, (_, i) => i + 1);
 ---
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>Scaffold · atoms</title>
-    <Font cssVariable="--font-grotesk" preload />
-    <Font cssVariable="--font-martian" preload />
-  </head>
-  <body>
-    <main class="mx-auto max-w-page px-4 py-12 md:px-8">
+<BaseLayout
+  locale="en"
+  contentLocale={home.locale}
+  neutralPath="/"
+  title={home.data.title}
+  description={home.data.description}
+  ogImage={home.data.ogImage}
+  availableLocales={homeLocales}
+>
+    <div class="mx-auto max-w-page px-4 py-12 md:px-8">
       <GridFrame as="section" crosshairs>
         <div class="cell flex flex-wrap items-center gap-x-8 gap-y-2">
           <Tally text="Live" />
@@ -274,6 +278,5 @@ const indexes = (count: number) => Array.from({ length: count }, (_, i) => i + 1
           }
         </GridFrame>
       </section>
-    </main>
-  </body>
-</html>
+    </div>
+</BaseLayout>
