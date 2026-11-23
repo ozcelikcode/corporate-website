@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import type { ImageMetadata } from 'astro';
 import { resolveUploadPath } from './ascii-source.ts';
 
-const SEED = join(process.cwd(), 'src', 'assets', 'uploads', 'test-card.png');
+const SEED = join(process.cwd(), 'src', 'assets', 'uploads', 'transmitter.png');
 const SEED_WIDTH = 1280;
 const SEED_HEIGHT = 720;
 
@@ -13,7 +13,7 @@ function image(src: string): ImageMetadata {
 }
 
 test('resolveUploadPath maps a built asset name back to the upload', () => {
-  assert.equal(resolveUploadPath(image('/_astro/test-card.D30-05J7.png')), SEED);
+  assert.equal(resolveUploadPath(image('/_astro/transmitter.D30-05J7.png')), SEED);
 });
 
 test('resolveUploadPath maps a dev URL back to the upload', () => {
@@ -25,8 +25,8 @@ test('resolveUploadPath maps a dev URL back to the upload', () => {
 
 test('resolveUploadPath rejects names that only share a prefix', () => {
   assert.throws(
-    () => resolveUploadPath(image('/_astro/test-card.extra.D30-05J7.png')),
-    /test-card\.extra/,
+    () => resolveUploadPath(image('/_astro/transmitter.extra.D30-05J7.png')),
+    /transmitter\.extra/,
   );
   assert.throws(() => resolveUploadPath(image('/_astro/test.D30-05J7.png')), /not an image under/);
 });

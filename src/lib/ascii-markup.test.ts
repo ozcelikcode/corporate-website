@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { ASCII_COLUMNS, ASCII_COLUMNS_COMPACT, renderAscii, toAsciiGrid } from './ascii.ts';
 import { ASCII_HTML_BUDGET, asciiMarkup, assertAsciiBudget, runsHtml } from './ascii-markup.ts';
 
-const SEED = fileURLToPath(new URL('../assets/uploads/test-card.png', import.meta.url));
+const SEED = fileURLToPath(new URL('../assets/uploads/transmitter.png', import.meta.url));
 
 test('asciiMarkup wraps toned runs in spans and leaves blank runs bare', () => {
   const grid = toAsciiGrid(Uint8Array.from([0, 255, 0, 0]), 4, 1);

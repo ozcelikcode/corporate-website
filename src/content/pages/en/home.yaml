@@ -11,7 +11,7 @@ sections:
         href: /quote/
       - label: See applications
         href: /applications/
-    image: ../../../assets/uploads/test-card.png
+    image: ../../../assets/uploads/transmitter.png
     imageAlt: A transmitter mast sending signal waves out from its top
   - type: statement
     label: Mission

@@ -1,11 +1,16 @@
 ---
 /**
- * Broadcast status band under the header: `■ LIVE   TC 00:00:00:00   CH 01   ■ PGM ■ PVW ··· 1080i50`.
- * A `surface` band, no rules: segments are split by spacing only (the header's bottom rule above
- * is the one line). PGM is the on-air tally (accent lamp), PVW the standby one (muted lamp).
- * Pure decoration, so the whole band is hidden from assistive tech. Channel, then PGM/PVW and the
- * format drop out on narrow screens so the row never wraps or scrolls. The format keeps its case
- * (`1080i50`: the `i` means interlaced).
+ * Broadcast status band under the header: `■ LIVE   TC 00:00:00:00   CH 01   ■ PGM ■ PVW ··· 1080i50
+ * [■ HOLD]`. A `surface` band, no rules: segments are split by spacing only (the header's bottom
+ * rule above is the one line). PGM is the on-air tally (accent lamp), PVW the standby one (muted
+ * lamp). The status segments are decoration, hidden from assistive tech; channel, then PGM/PVW and
+ * the format drop out on narrow screens, and the status clips before it could push the key. The
+ * format keeps its case (`1080i50`: the `i` means interlaced).
+ *
+ * The HOLD key is the site's motion pause (WCAG 2.2.2), on every page and breakpoint: a native
+ * checkbox, so it needs no JS. `[data-motion-hold]:checked` pauses every animation in
+ * `global.css`, and the AsciiImage script listens to it to stop its loop. Its lamp lights while
+ * held. Off by default: the site moves unless the visitor holds it.
  */
 import Tally from '../ui/Tally.astro';
 import Timecode from '../ui/Timecode.astro';
@@ -17,21 +22,43 @@ interface Props {
   program: string;
   preview: string;
   format: string;
+  hold: string;
+  holdHint: string;
 }
 
-const { live, timecode, channel, program, preview, format } = Astro.props;
+const { live, timecode, channel, program, preview, format, hold, holdHint } = Astro.props;
 ---
-<div class="bg-surface" aria-hidden="true">
-  <div
-    class="mx-auto flex h-10 max-w-page items-center gap-6 overflow-x-clip px-4 label-mono md:gap-8 md:px-8"
-  >
-    <Tally text={live} />
-    <Timecode prefix={timecode} />
-    <span class="hidden text-ink-muted sm:inline">{channel}</span>
-    <span class="hidden items-center gap-4 md:flex">
-      <Tally text={program} />
-      <Tally text={preview} tone="muted" />
-    </span>
-    <span class="ms-auto hidden text-ink-muted normal-case md:inline">{format}</span>
+<div class="bg-surface">
+  <div class="mx-auto flex max-w-page items-center gap-6 px-4 label-mono md:gap-8 md:px-8">
+    <div class="flex h-11 min-w-0 flex-1 items-center gap-6 overflow-x-clip md:gap-8" aria-hidden="true">
+      <Tally text={live} />
+      <Timecode prefix={timecode} />
+      <span class="hidden text-ink-muted sm:inline">{channel}</span>
+      <span class="hidden items-center gap-4 md:flex">
+        <Tally text={program} />
+        <Tally text={preview} tone="muted" />
+      </span>
+      <span class="ms-auto hidden text-ink-muted normal-case md:inline">{format}</span>
+    </div>
+    <label
+      class="hold-key flex min-h-11 shrink-0 cursor-pointer items-center gap-2 border border-line-strong px-3 text-ink"
+    >
+      <input class="sr-only" type="checkbox" data-motion-hold aria-describedby="motion-hold-hint" />
+      <span class="hold-lamp size-2 shrink-0 bg-ink-muted" aria-hidden="true"></span>
+      {hold}
+      <span id="motion-hold-hint" class="sr-only">{holdHint}</span>
+    </label>
   </div>
 </div>
+
+<style>
+  /* The native checkbox is visually hidden, so the key draws its focus ring (inset: the band is the key's height). */
+  .hold-key:has(:focus-visible) {
+    outline: var(--border-focus) solid var(--color-accent);
+    outline-offset: calc(var(--border-focus) * -1);
+  }
+
+  .hold-key:has(:checked) .hold-lamp {
+    background-color: var(--color-accent);
+  }
+</style>

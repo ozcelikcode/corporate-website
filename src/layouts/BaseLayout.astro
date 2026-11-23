@@ -132,6 +132,8 @@ const currentPath = Astro.url.pathname;
       program={ui('tallyProgram')}
       preview={ui('tallyPreview')}
       format={ui('tallyFormat')}
+      hold={ui('motionHold')}
+      holdHint={ui('motionHoldHint')}
     />
     <main id="main" tabindex="-1" class="focus:outline-none">
       {isFallback ? <div lang={contentLocale}><slot /></div> : <slot />}

@@ -4,6 +4,7 @@ import type { AsciiRun } from './ascii.ts';
 import { ASCII_RAMP } from './ascii-glyphs.ts';
 import {
   acquisitionRuns,
+  canAnimate,
   liveRuns,
   NOISE_TONE,
   noiseGlyph,
@@ -12,7 +13,10 @@ import {
   rampNeighbour,
   revealThresholds,
   ringDistance,
+  skipsTuneIn,
+  TUNE_IN_WINDOW_MS,
   toneFromClass,
+  WAVE_CADENCE_MS,
   WAVE_GAIN,
   WAVE_ORIGIN,
   WAVE_REACH,
@@ -218,4 +222,25 @@ test('parseOrigin reads "x y" fractions and defaults to the wave origin', () => 
   for (const bad of ['', '0.5', '0.5 1.5', 'a b', '0.1 0.2 0.3']) {
     assert.throws(() => parseOrigin(bad), /wave origin/);
   }
+});
+
+test('a new ring leaves the origin every WAVE_CADENCE_MS, at spacing / speed', () => {
+  assert.ok(Math.abs((WAVE_SPACING / WAVE_SPEED) * MS_PER_S - WAVE_CADENCE_MS) < 1e-9);
+  const near = 0.1;
+  const first = waveTrail(near, arrival(near));
+  const next = waveTrail(near, arrival(near) + WAVE_CADENCE_MS);
+  assert.ok(Math.abs(first - next) < 1e-9);
+});
+
+test('skipsTuneIn only when the figure was in view at its first report, after the window', () => {
+  assert.equal(skipsTuneIn(true, TUNE_IN_WINDOW_MS / 2), false);
+  assert.equal(skipsTuneIn(true, TUNE_IN_WINDOW_MS * 3), true);
+  assert.equal(skipsTuneIn(false, TUNE_IN_WINDOW_MS * 3), false);
+});
+
+test('canAnimate needs motion welcome, a visible tab and no hold', () => {
+  assert.equal(canAnimate({ reduced: false, hidden: false, held: false }), true);
+  assert.equal(canAnimate({ reduced: true, hidden: false, held: false }), false);
+  assert.equal(canAnimate({ reduced: false, hidden: true, held: false }), false);
+  assert.equal(canAnimate({ reduced: false, hidden: false, held: true }), false);
 });

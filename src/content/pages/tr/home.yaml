@@ -12,7 +12,7 @@ sections:
         href: /quote/
       - label: Uygulamaları gör
         href: /applications/
-    image: ../../../assets/uploads/test-card.png
+    image: ../../../assets/uploads/transmitter.png
     imageAlt: Tepesinden sinyal dalgaları yayan bir verici direği
   - type: statement
     label: Misyon

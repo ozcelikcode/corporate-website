@@ -7,18 +7,19 @@
  * scoped-style attributes: smaller HTML. The build fails if the markup is over budget.
  *
  * Live signal, only under `prefers-reduced-motion: no-preference` (the build-time render is the
- * no-JS and reduced-motion picture). CSS: a hum bar rolls down, rows now and then slip sync (a
- * sideways tear with a dropout dip), and without JS the brightest tone breathes. The module
- * script (`ascii-motion.ts` logic) tunes in: static resolves into the picture when it first
- * scrolls into view; then rings of brightness travel out from the transmitter (`waveOrigin`,
- * default top centre), with a little glyph grain. Nothing changes the grid's box: transforms,
- * opacity and same-width glyphs only.
+ * no-JS and reduced-motion picture). CSS: a hum bar rolls down, rows slip sync three times per
+ * 36 s cycle (a sideways tear with a dropout dip, 9/13/14 s apart), and without JS the brightest
+ * tone breathes. The module script (`ascii-motion.ts` logic) tunes in: static resolves into the
+ * picture when it first scrolls into view (a figure already in view on a late first report goes
+ * straight to live); then a ring of brightness leaves the transmitter (`waveOrigin`, default top
+ * centre) every 2.5 s, with a little glyph grain. The TallyStrip HOLD key pauses all of it.
+ * Nothing changes the grid's box: transforms, opacity and same-width glyphs only.
  */
 import type { ImageMetadata } from 'astro';
 import { ASCII_COLUMNS, ASCII_COLUMNS_COMPACT, renderAscii } from '../../lib/ascii.ts';
 import { CHAR_ASPECT } from '../../lib/ascii-glyphs.ts';
 import { asciiMarkup, assertAsciiBudget } from '../../lib/ascii-markup.ts';
-import type { Origin } from '../../lib/ascii-motion.ts';
+import { type Origin, parseOrigin } from '../../lib/ascii-motion.ts';
 import { resolveUploadPath } from '../../lib/ascii-source.ts';
 
 interface Props {
@@ -31,6 +32,9 @@ interface Props {
 }
 
 const { image, alt, cols = ASCII_COLUMNS, waveOrigin } = Astro.props;
+// The script parses this again in the browser; parsing here fails the build on a bad origin.
+const waveOriginData = waveOrigin && `${waveOrigin.x} ${waveOrigin.y}`;
+parseOrigin(waveOriginData);
 const source = resolveUploadPath(image);
 const [wide, compact] = await Promise.all([
   renderAscii(source, cols),
@@ -44,7 +48,7 @@ assertAsciiBudget([wideHtml, compactHtml], source);
   role="img"
   aria-label={alt}
   data-ascii
-  data-wave-origin={waveOrigin && `${waveOrigin.x} ${waveOrigin.y}`}
+  data-wave-origin={waveOriginData}
   style={{ '--ascii-aspect': CHAR_ASPECT }}
 >
   <pre
@@ -80,15 +84,14 @@ assertAsciiBudget([wideHtml, compactHtml], source);
     /* Dodge divides by (1 - glow): a dim, opaque glow lifts bright glyphs and leaves the canvas. */
     --ascii-roll-glow: color-mix(in oklab, var(--color-ink) 28%, black);
     /*
-     * Sync slip: two bands of rows tear sideways by a fraction of a glyph and dip (a dropout)
-     * for two frames, then snap back. The periods share no rhythm, so a slip comes every 8 to
-     * 20 s at uneven gaps.
+     * Sync slip: a band of rows tears sideways by a fraction of a glyph and dips (a dropout) for
+     * about two frames, then snaps back. Both bands share one cycle: slips at 4 s (rows 5–6),
+     * 13 s (rows 10–12) and 26 s (rows 5–6), so the gaps are 9, 13 and 14 s. The keyframe
+     * percentages below are those times over the 36 s cycle; change them together.
      */
-    --ascii-track-shift: 0.45ch;
-    --ascii-track-dip: 0.55;
-    --ascii-track-a: 13.1s;
-    --ascii-track-b: 19.7s;
-    --ascii-track-delay-b: -6.3s;
+    --ascii-slip-cycle: 36s;
+    --ascii-slip-shift: 0.45ch;
+    --ascii-slip-dip: 0.55;
     /*
      * Breath (no-JS picture only; with JS the rings carry the light): the brightest tone dims
      * and recovers in coarse steps, so it repaints a few times a second, not every frame.
@@ -180,12 +183,11 @@ assertAsciiBudget([wideHtml, compactHtml], source);
     }
 
     pre > :global(span:nth-child(n + 5):nth-child(-n + 6)) {
-      animation: ascii-track var(--ascii-track-a) step-end infinite;
+      animation: ascii-slip-upper var(--ascii-slip-cycle) step-end infinite;
     }
 
     pre > :global(span:nth-child(n + 10):nth-child(-n + 12)) {
-      animation: ascii-track var(--ascii-track-b) step-end var(--ascii-track-delay-b) infinite
-        reverse;
+      animation: ascii-slip-lower var(--ascii-slip-cycle) step-end infinite;
     }
 
     [data-ascii]:not([data-live]) pre :global(.t5) {
@@ -203,19 +205,42 @@ assertAsciiBudget([wideHtml, compactHtml], source);
     }
   }
 
-  /* Held values (step-end): still, then a dimmed tear one way, a smaller kick back, still again. */
-  @keyframes ascii-track {
-    96% {
-      transform: translateX(var(--ascii-track-shift));
-      opacity: var(--ascii-track-dip);
+  /*
+   * Held values (step-end): still, then a dimmed tear (0.3% of the cycle, about 110 ms), a smaller
+   * kick back (0.2%), still again. Upper band: slips at 4 s (11.1%) and 26 s (72.2%).
+   */
+  @keyframes ascii-slip-upper {
+    11.1%,
+    72.2% {
+      transform: translateX(var(--ascii-slip-shift));
+      opacity: var(--ascii-slip-dip);
     }
 
-    97% {
-      transform: translateX(calc(var(--ascii-track-shift) / -2));
+    11.4%,
+    72.5% {
+      transform: translateX(calc(var(--ascii-slip-shift) / -2));
       opacity: 1;
     }
 
-    98% {
+    11.6%,
+    72.7% {
+      transform: none;
+    }
+  }
+
+  /* Lower band: one slip at 13 s (36.1%), torn the other way. */
+  @keyframes ascii-slip-lower {
+    36.1% {
+      transform: translateX(calc(var(--ascii-slip-shift) * -1));
+      opacity: var(--ascii-slip-dip);
+    }
+
+    36.4% {
+      transform: translateX(calc(var(--ascii-slip-shift) / 2));
+      opacity: 1;
+    }
+
+    36.6% {
       transform: none;
     }
   }
@@ -231,8 +256,8 @@ assertAsciiBudget([wideHtml, compactHtml], source);
   /*
    * Thin DOM glue for the live signal; the logic is `lib/ascii-motion.ts`. Per figure, the grid
    * the container query shows (the one that intersects) tunes in once, then runs live frames.
-   * Everything stops offscreen, in a hidden tab and under reduced motion, and the rows go back
-   * to the build-time markup, which stays the source of truth.
+   * Everything stops offscreen, in a hidden tab, under reduced motion and while the TallyStrip
+   * HOLD key is checked; the rows then go back to the build-time markup, the source of truth.
    */
   import type { AsciiRun } from '../../lib/ascii.ts';
   import { runsHtml } from '../../lib/ascii-markup.ts';
@@ -240,21 +265,27 @@ assertAsciiBudget([wideHtml, compactHtml], source);
     ACQUIRE_DURATION_MS,
     ACQUIRE_FRAME_MS,
     acquisitionRuns,
+    canAnimate,
     LIVE_FRAME_MS,
     liveRuns,
     parseOrigin,
     revealThresholds,
+    skipsTuneIn,
     toneFromClass,
   } from '../../lib/ascii-motion.ts';
 
   const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
   const COLS_PROPERTY = '--ascii-cols';
+  /** The TallyStrip HOLD key (a checkbox); `global.css` pauses the CSS motion with it. */
+  const HOLD_SELECTOR = '[data-motion-hold]';
   /** Set while the script drives the figure; CSS hands the light from the breath to the rings. */
   const LIVE_ATTRIBUTE = 'data-live';
 
   type Grid = {
     rows: HTMLElement[];
     markup: string[];
+    /** What each row holds now, so a frame never reads `innerHTML` back. */
+    written: string[];
     source: AsciiRun[][];
     cols: number;
     visible: boolean;
@@ -272,27 +303,40 @@ assertAsciiBudget([wideHtml, compactHtml], source);
     return {
       rows,
       markup: rows.map((row) => row.innerHTML),
+      written: rows.map((row) => row.innerHTML),
       source: rows.map((row) => [...row.childNodes].map(readRun)),
       cols,
       visible: false,
     };
   }
 
-  /** Rewrites a grid row by row, skipping rows whose markup did not change. */
+  /** Writes a row unless it already holds that markup. */
+  function write(grid: Grid, y: number, html: string): void {
+    const element = grid.rows[y];
+    if (!element || grid.written[y] === html) return;
+    element.innerHTML = html;
+    grid.written[y] = html;
+  }
+
+  /** Rewrites a grid row by row from a frame's runs. */
   function paint(grid: Grid, row: (y: number) => AsciiRun[]): void {
-    grid.rows.forEach((element, y) => {
-      const html = runsHtml(row(y));
-      if (element.innerHTML !== html) element.innerHTML = html;
+    grid.rows.forEach((_, y) => {
+      write(grid, y, runsHtml(row(y)));
     });
   }
 
-  function animate(figure: HTMLElement, reduced: MediaQueryList): void {
+  function animate(
+    figure: HTMLElement,
+    reduced: MediaQueryList,
+    hold: HTMLInputElement | null,
+  ): void {
     const pres = [...figure.querySelectorAll('pre')];
     const grids = pres.map(readGrid);
     const origin = parseOrigin(figure.dataset.waveOrigin);
     let active: Grid | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let acquired = false;
+    let reported = false;
 
     const live = (grid: Grid) => {
       const start = performance.now();
@@ -336,13 +380,20 @@ assertAsciiBudget([wideHtml, compactHtml], source);
     const settle = () => {
       clearTimeout(timer);
       figure.removeAttribute(LIVE_ATTRIBUTE);
-      active?.rows.forEach((row, y) => {
-        row.innerHTML = active?.markup[y] ?? '';
+      if (!active) return;
+      const grid = active;
+      grid.markup.forEach((html, y) => {
+        write(grid, y, html);
       });
     };
 
     const update = () => {
-      const next = reduced.matches || document.hidden ? undefined : grids.find((g) => g.visible);
+      const state = {
+        reduced: reduced.matches,
+        hidden: document.hidden,
+        held: hold?.checked ?? false,
+      };
+      const next = canAnimate(state) ? grids.find((g) => g.visible) : undefined;
       if (next === active) return;
       settle();
       active = next;
@@ -357,15 +408,22 @@ assertAsciiBudget([wideHtml, compactHtml], source);
         const grid = grids[pres.indexOf(entry.target as HTMLPreElement)];
         if (grid) grid.visible = entry.isIntersecting;
       }
+      if (!reported) {
+        reported = true;
+        // performance.now() counts from navigation start.
+        acquired = skipsTuneIn(grids.some((g) => g.visible), performance.now());
+      }
       update();
     });
     for (const pre of pres) observer.observe(pre);
     reduced.addEventListener('change', update);
     document.addEventListener('visibilitychange', update);
+    hold?.addEventListener('change', update);
   }
 
   const reduced = matchMedia(REDUCED_MOTION);
+  const hold = document.querySelector<HTMLInputElement>(HOLD_SELECTOR);
   for (const figure of document.querySelectorAll<HTMLElement>('[data-ascii]')) {
-    animate(figure, reduced);
+    animate(figure, reduced, hold);
   }
 </script>

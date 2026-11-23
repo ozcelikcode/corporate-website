@@ -51,6 +51,14 @@
       /* biome-ignore-end lint/complexity/noImportantStyles: reduced motion must override every animation */
     }
   }
+
+  /* The TallyStrip HOLD key (WCAG 2.2.2 pause): every animation on the page freezes where it is. */
+  html:has([data-motion-hold]:checked) *,
+  html:has([data-motion-hold]:checked) *::before,
+  html:has([data-motion-hold]:checked) *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: the visitor's hold must override every animation */
+    animation-play-state: paused !important;
+  }
 }
 
 @utility label-mono {

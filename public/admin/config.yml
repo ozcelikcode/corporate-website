@@ -140,6 +140,14 @@ collections:
         widget: string
         i18n: true
         required: [en]
+      - name: motionHold
+        widget: string
+        i18n: true
+        required: [en]
+      - name: motionHoldHint
+        widget: string
+        i18n: true
+        required: [en]
       - name: noSignal
         widget: string
         i18n: true

@@ -12,6 +12,8 @@ tallyFormat: 1080i50
 tallyProgram: PGM
 tallyPreview: PVW
 tallyOnAir: ON AIR
+motionHold: Hold
+motionHoldHint: Pause all animation on the site
 noSignal: NO SIGNAL
 appOpen: Open
 appBrochure: Download brochure

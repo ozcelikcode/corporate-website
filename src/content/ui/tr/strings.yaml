@@ -11,6 +11,8 @@ tallyChannel: KANAL 01
 tallyProgram: PGM
 tallyPreview: PVW
 tallyOnAir: YAYINDA
+motionHold: Beklet
+motionHoldHint: Sitedeki tüm animasyonları duraklat
 noSignal: SİNYAL YOK
 appOpen: Aç
 appBrochure: Broşürü indir

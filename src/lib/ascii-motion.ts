@@ -28,10 +28,14 @@ export const REVEAL_ROW_BIAS = 0.35;
 
 /** Where the rings start: the top-centre region (the seed's mast top). Per figure via data. */
 export const WAVE_ORIGIN: Origin = { x: 0.5, y: 1 / 3 };
+const MS_PER_S = 1000;
+
 /** Ring speed, in picture widths per second. */
 export const WAVE_SPEED = 0.16;
-/** Gap between successive rings, in picture widths (a new ring every SPACING / SPEED s). */
-export const WAVE_SPACING = 0.24;
+/** A new ring leaves the transmitter this often: calm, like a beacon, not a strobe. */
+export const WAVE_CADENCE_MS = 2500;
+/** Gap between successive rings, in picture widths. */
+export const WAVE_SPACING = (WAVE_SPEED * WAVE_CADENCE_MS) / MS_PER_S;
 /** Length of the glow trailing each front, in picture widths. */
 export const WAVE_WIDTH = 0.07;
 /** Tone steps added right on a front, before falloff. */
@@ -43,7 +47,12 @@ export const WAVE_TRACE_GLYPH = '.';
 /** Depth of that dotted front, in picture widths (about one glyph). */
 export const WAVE_TRACE_WIDTH = 0.012;
 
-const MS_PER_S = 1000;
+/**
+ * Cold load: a figure already in view whose first report comes later than this was painted as the
+ * still picture first, so it goes straight to live instead of dropping back to static.
+ */
+export const TUNE_IN_WINDOW_MS = 300;
+
 const MAX_TONE = TONE_COUNT - 1;
 /** Cell centre offset, in cells. */
 const CENTRE = 0.5;
@@ -75,6 +84,18 @@ function cells(source: readonly AsciiRun[], cols: number): { glyphs: string; ton
 
 function pick(length: number, random: Random): number {
   return Math.min(length - 1, Math.floor(random() * length));
+}
+
+/** What can stop the live signal: reduced motion, a hidden tab, the visitor's HOLD key. */
+export type MotionState = { reduced: boolean; hidden: boolean; held: boolean };
+
+export function canAnimate({ reduced, hidden, held }: MotionState): boolean {
+  return !(reduced || hidden || held);
+}
+
+/** Skip the tune-in when the figure was in view at its first report and that came late. */
+export function skipsTuneIn(inViewAtFirstReport: boolean, sinceNavigationMs: number): boolean {
+  return inViewAtFirstReport && sinceNavigationMs > TUNE_IN_WINDOW_MS;
 }
 
 /** The tone of a run span (`t0`…`t5`); anything else is a markup bug. */

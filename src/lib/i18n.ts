@@ -55,6 +55,8 @@ export const UI_KEYS = [
   'tallyProgram',
   'tallyPreview',
   'tallyOnAir',
+  'motionHold',
+  'motionHoldHint',
   'noSignal',
   'appOpen',
   'appBrochure',
