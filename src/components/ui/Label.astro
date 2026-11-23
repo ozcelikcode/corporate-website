@@ -1,0 +1,25 @@
+---
+/** Uppercase tracked mono label with an optional zero-padded index, e.g. `[02] APPLICATIONS`. */
+
+interface Props {
+  text: string;
+  index?: number;
+  as?: 'p' | 'span';
+}
+
+/** Width of the zero-padded index inside the brackets. */
+const LABEL_INDEX_DIGITS = 2;
+
+const { text, index, as: Tag = 'p' } = Astro.props;
+const indexText =
+  index === undefined ? undefined : `[${String(index).padStart(LABEL_INDEX_DIGITS, '0')}]`;
+---
+<Tag class="label-mono text-ink-muted">
+  {
+    indexText !== undefined && (
+      <>
+        <span class="text-ink">{indexText}</span>{' '}
+      </>
+    )
+  }{text}
+</Tag>

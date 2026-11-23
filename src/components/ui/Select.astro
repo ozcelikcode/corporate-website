@@ -1,0 +1,35 @@
+---
+/**
+ * Native select with the platform arrow removed; a downward → glyph in a square end slot
+ * replaces it (decorative, pointer-transparent). Wrap it in `Field`.
+ */
+import { CONTROL_CLASS } from './control-class.ts';
+import Glyph from './Glyph.astro';
+
+interface Props {
+  id: string;
+  name: string;
+  required?: boolean;
+  options: readonly { value: string; label: string }[];
+  describedBy?: string;
+}
+
+const { id, name, required = false, options, describedBy } = Astro.props;
+---
+<div class="relative">
+  <select
+    class:list={[CONTROL_CLASS, 'appearance-none pe-11']}
+    id={id}
+    name={name}
+    required={required}
+    aria-describedby={describedBy}
+  >
+    {options.map(({ value, label }) => <option value={value}>{label}</option>)}
+  </select>
+  <span
+    class="pointer-events-none absolute inset-y-0 end-0 flex w-11 items-center justify-center text-ink-muted"
+    aria-hidden="true"
+  >
+    <Glyph name="→" class="rotate-90" />
+  </span>
+</div>

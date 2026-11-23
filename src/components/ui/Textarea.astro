@@ -1,0 +1,26 @@
+---
+/** Multi-line text control, vertically resizable; wrap it in `Field`. */
+import { CONTROL_CLASS } from './control-class.ts';
+
+interface Props {
+  id: string;
+  name: string;
+  required?: boolean;
+  maxlength: number;
+  rows?: number;
+  describedBy?: string;
+}
+
+const DEFAULT_ROWS = 6;
+
+const { id, name, required = false, maxlength, rows = DEFAULT_ROWS, describedBy } = Astro.props;
+---
+<textarea
+  class:list={[CONTROL_CLASS, 'resize-y']}
+  id={id}
+  name={name}
+  required={required}
+  maxlength={maxlength}
+  rows={rows}
+  aria-describedby={describedBy}
+></textarea>

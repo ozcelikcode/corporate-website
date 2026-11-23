@@ -1,0 +1,105 @@
+---
+/**
+ * SMPTE-style running timecode `PREFIX HH:MM:SS:FF`, CSS only: four registered integer
+ * properties advance in `steps()` and print through `counter()`. Decorative, so hidden from AT.
+ * Under reduced motion no animation is declared and it reads a static 00:00:00:00.
+ */
+
+interface Props {
+  prefix: string;
+}
+
+const FRAME_RATE = 25;
+const SECONDS_PER_MINUTE = 60;
+const MINUTES_PER_HOUR = 60;
+const HOURS_PER_DAY = 24;
+const SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR;
+const SECONDS_PER_DAY = SECONDS_PER_HOUR * HOURS_PER_DAY;
+
+/** Every count reaches CSS as a named custom property; rules never repeat the literals. */
+const TIMING_VARS = {
+  '--tc-frame-rate': FRAME_RATE,
+  '--tc-seconds-per-minute': SECONDS_PER_MINUTE,
+  '--tc-minutes-per-hour': MINUTES_PER_HOUR,
+  '--tc-hours-per-day': HOURS_PER_DAY,
+  '--tc-seconds-per-hour': SECONDS_PER_HOUR,
+  '--tc-seconds-per-day': SECONDS_PER_DAY,
+};
+
+const { prefix } = Astro.props;
+---
+<span class="inline-flex items-center gap-2 label-mono" style={TIMING_VARS} aria-hidden="true">
+  <span class="text-ink-muted">{prefix}</span>
+  <span class="timecode text-ink"></span>
+</span>
+
+<style>
+  @property --tc-h {
+    syntax: "<integer>";
+    inherits: false;
+    initial-value: 0;
+  }
+
+  @property --tc-m {
+    syntax: "<integer>";
+    inherits: false;
+    initial-value: 0;
+  }
+
+  @property --tc-s {
+    syntax: "<integer>";
+    inherits: false;
+    initial-value: 0;
+  }
+
+  @property --tc-f {
+    syntax: "<integer>";
+    inherits: false;
+    initial-value: 0;
+  }
+
+  .timecode {
+    counter-reset: tc-h var(--tc-h) tc-m var(--tc-m) tc-s var(--tc-s) tc-f var(--tc-f);
+  }
+
+  .timecode::after {
+    content: counter(tc-h, decimal-leading-zero) ":" counter(tc-m, decimal-leading-zero) ":"
+      counter(tc-s, decimal-leading-zero) ":" counter(tc-f, decimal-leading-zero);
+  }
+
+  /* Each unit counts 0 … N-1 over its period; the `to` value is never shown (steps jump-end). */
+  @media (prefers-reduced-motion: no-preference) {
+    .timecode {
+      animation:
+        tc-frames 1s steps(var(--tc-frame-rate)) infinite,
+        tc-seconds calc(var(--tc-seconds-per-minute) * 1s) steps(var(--tc-seconds-per-minute))
+          infinite,
+        tc-minutes calc(var(--tc-seconds-per-hour) * 1s) steps(var(--tc-minutes-per-hour)) infinite,
+        tc-hours calc(var(--tc-seconds-per-day) * 1s) steps(var(--tc-hours-per-day)) infinite;
+    }
+  }
+
+  @keyframes tc-frames {
+    to {
+      --tc-f: var(--tc-frame-rate);
+    }
+  }
+
+  @keyframes tc-seconds {
+    to {
+      --tc-s: var(--tc-seconds-per-minute);
+    }
+  }
+
+  @keyframes tc-minutes {
+    to {
+      --tc-m: var(--tc-minutes-per-hour);
+    }
+  }
+
+  @keyframes tc-hours {
+    to {
+      --tc-h: var(--tc-hours-per-day);
+    }
+  }
+</style>
