@@ -17,7 +17,7 @@ export const LABEL_MAX = 32;
 const label = z.string().max(LABEL_MAX); // mono tally label, e.g. "MISSION"
 export const actionSchema = z.strictObject({
   label,
-  href: z.string().regex(/^(\/(?![\/\\])|https:\/\/)/),
+  href: z.string().regex(/^(\/(?![/\\])|https:\/\/)/),
 });
 const md = z.string(); // Markdown, rendered by lib/markdown.ts
 /** Rundown slot length `HH:MM:SS`, display only (never summed or parsed as time). */
@@ -90,6 +90,19 @@ export const sectionsSchema = ({ image }: SchemaContext) =>
         });
       });
     });
+
+/** Application pages render their own h1 above the sections, so a hero (the other h1) is invalid. */
+export const applicationSectionsSchema = (context: SchemaContext) =>
+  sectionsSchema(context).superRefine((sections, ctx) => {
+    sections.forEach((section, i) => {
+      if (section.type !== 'hero') return;
+      ctx.addIssue({
+        code: 'custom',
+        path: [i],
+        message: `An application page cannot have a hero section (found at position ${i + 1}): the page header holds the h1`,
+      });
+    });
+  });
 
 export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
 export type SectionOf<T extends Section['type']> = Extract<Section, { type: T }>;

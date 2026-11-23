@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { z } from 'astro/zod';
-import { DURATION_PATTERN, LABEL_MAX, SECTION_TYPES, sectionsSchema } from './sections-schema.ts';
+import {
+  applicationSectionsSchema,
+  DURATION_PATTERN,
+  LABEL_MAX,
+  SECTION_TYPES,
+  sectionsSchema,
+} from './sections-schema.ts';
 
 // The real `image()` helper needs the Astro content runtime; a string stands in for it.
 const schema = sectionsSchema({ image: () => z.string() } as never);
@@ -127,4 +133,17 @@ test('rejects a second hero', () => {
   assert.deepEqual(issueMessages([fixtures.hero, fixtures.statement, fixtures.hero]), [
     'Only one hero section is allowed (another one at position 3)',
   ]);
+});
+
+test('application sections reject a hero (the application page owns the h1)', () => {
+  const applicationSchema = applicationSectionsSchema({ image: () => z.string() } as never);
+  const result = applicationSchema.safeParse([fixtures.hero]);
+  assert.equal(result.success, false);
+  assert.deepEqual(
+    result.error?.issues.map((issue) => issue.message),
+    [
+      'An application page cannot have a hero section (found at position 1): the page header holds the h1',
+    ],
+  );
+  assert.equal(applicationSchema.safeParse([fixtures.statement]).success, true);
 });

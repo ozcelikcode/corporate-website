@@ -1,0 +1,7 @@
+---
+import GenericPage from '../../components/pages/GenericPage.astro';
+import { pageStaticPaths } from '../../lib/routes.ts';
+
+export const getStaticPaths = () => pageStaticPaths('tr');
+---
+<GenericPage locale="tr" slug={Astro.params.slug ?? 'home'} />

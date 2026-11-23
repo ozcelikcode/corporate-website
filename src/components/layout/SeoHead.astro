@@ -10,7 +10,7 @@ import type { Alternate } from '../../lib/seo.ts';
 interface Props {
   title: string;
   description: string;
-  canonical: string;
+  canonical?: string | undefined;
   alternates: readonly Alternate[];
   siteName: string;
   locale: Locale;
@@ -34,7 +34,7 @@ const alternateOgLocales = alternates.flatMap(({ hreflang }) =>
 ---
 <title>{title}</title>
 <meta name="description" content={description} />
-<link rel="canonical" href={canonical} />
+{canonical !== undefined && <link rel="canonical" href={canonical} />}
 {noindex && <meta name="robots" content={ROBOTS_NOINDEX} />}
 {alternates.map(({ hreflang, href }) => <link rel="alternate" hreflang={hreflang} href={href} />)}
 
@@ -42,7 +42,7 @@ const alternateOgLocales = alternates.flatMap(({ hreflang }) =>
 <meta property="og:site_name" content={siteName} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
-<meta property="og:url" content={canonical} />
+{canonical !== undefined && <meta property="og:url" content={canonical} />}
 <meta property="og:locale" content={OG_LOCALE[locale]} />
 {alternateOgLocales.map((ogLocale) => <meta property="og:locale:alternate" content={ogLocale} />)}
 <meta property="og:image" content={image.url} />

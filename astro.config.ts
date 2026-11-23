@@ -1,6 +1,20 @@
+import { existsSync } from 'node:fs';
+import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, envField, fontProviders } from 'astro/config';
+import { buildOutputs } from './src/integrations/build-outputs.ts';
 import { resolveBuildMode } from './src/lib/build-mode.ts';
+
+// Pages that never belong in the sitemap; the TR quote page only once it is translated.
+const SITEMAP_EXCLUDED_PATHS = ['/404/', '/tr/404/', '/admin/'];
+const TR_QUOTE_PATH = '/tr/quote/';
+const TR_QUOTE_ENTRY = 'src/content/pages/tr/quote.yaml';
+
+function inSitemap(page: string): boolean {
+  const { pathname } = new URL(page);
+  if (SITEMAP_EXCLUDED_PATHS.includes(pathname)) return false;
+  return pathname !== TR_QUOTE_PATH || existsSync(TR_QUOTE_ENTRY);
+}
 
 // unicode-range values copied from Fontsource 5.3.0 CSS (@fontsource-variable/*), per subset.
 const UNICODE_RANGE_LATIN: [string, ...string[]] = [
@@ -122,5 +136,12 @@ export default defineConfig({
       }),
     },
   },
+  integrations: [
+    buildOutputs(),
+    sitemap({
+      filter: inSitemap,
+      i18n: { defaultLocale: 'en', locales: { en: 'en', tr: 'tr' } },
+    }),
+  ],
   vite: { plugins: [tailwindcss()] },
 });
