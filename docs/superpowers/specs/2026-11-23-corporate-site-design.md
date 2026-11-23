@@ -233,7 +233,7 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
 3. form controls (inputs, selects, textareas, buttons, the menu key);
 4. the `TitleSafe` media frame, used only on the hero media and the ApplicationPage cover.
 
-Everything else (content grids, cards, feature lists, FAQ, CTA) gets its hierarchy from spacing, `surface` vs `canvas` tone and type: no boxed cells. `GridFrame` is `spaced` by default; its `hairline` cell matrix is budget-limited. The "+" crosshairs are retired.
+Everything else (content grids, cards, feature lists, FAQ, CTA) gets its hierarchy from spacing, `surface` vs `canvas` tone and type: no boxed cells. `GridFrame` is spaced only. The "+" crosshairs are retired.
 
 **Broadcast details (CSS only, no client JS, static under reduced motion), used sparingly:**
 
