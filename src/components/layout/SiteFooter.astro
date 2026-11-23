@@ -38,6 +38,10 @@ const ROW = 'py-1.5';
 
 const { homeHref, logo, logoAlt, legalName, address, links, contacts, socials, labels } =
   Astro.props;
+
+/** One running `[NN]` sequence: the nav rows first, then the Contact and Follow labels. */
+const contactIndex = links.length + FIRST_INDEX;
+const socialIndex = contactIndex + 1;
 ---
 <footer class="mx-auto mt-24 max-w-page px-4 pb-8 md:px-8">
   <GridFrame columns={4} crosshairs>
@@ -66,7 +70,7 @@ const { homeHref, logo, logoAlt, legalName, address, links, contacts, socials, l
     </nav>
 
     <div class="cell flex flex-col gap-4">
-      <Label text={labels.contact} />
+      <Label text={labels.contact} index={contactIndex} />
       <address class="not-italic">
         <ul class="flex flex-col">
           {
@@ -84,7 +88,7 @@ const { homeHref, logo, logoAlt, legalName, address, links, contacts, socials, l
     </div>
 
     <div class="cell flex flex-col gap-4">
-      <Label text={labels.social} />
+      <Label text={labels.social} index={socialIndex} />
       <ul class="flex flex-col">
         {
           socials.map(({ label, href }) => (

@@ -3,15 +3,16 @@
  * Small-screen menu on the Popover API, no JS: the button opens a full-screen sheet in the top
  * layer; Esc or the close button (placed exactly over the open button) closes it, and focus
  * returns to the button. The sheet fades on opacity only; `transition-discrete` keeps it
- * rendered while it fades out. Hidden from `md` up, where SiteHeader shows the inline nav.
+ * rendered while it fades out. Hidden from `lg` up, where SiteHeader shows the inline nav.
+ * Row focus rings are inset (negative offset), so the scrolling sheet never clips them.
  */
 import Button from '../ui/Button.astro';
 import Glyph from '../ui/Glyph.astro';
 import Label from '../ui/Label.astro';
 
 interface Props {
-  links: readonly { label: string; href: string }[];
-  currentPath: string;
+  /** `current`: exact page (`aria-current`); `active`: current page or its section (visual). */
+  links: readonly { label: string; href: string; current: boolean; active: boolean }[];
   quote: { label: string; href: string };
   navLabel: string;
   openLabel: string;
@@ -25,9 +26,9 @@ const FIRST_INDEX = 1;
 const TOGGLE =
   'flex min-h-11 items-center border border-line-strong px-4 label-mono text-ink hover:border-ink';
 
-const { links, currentPath, quote, navLabel, openLabel, closeLabel } = Astro.props;
+const { links, quote, navLabel, openLabel, closeLabel } = Astro.props;
 ---
-<button type="button" class:list={[TOGGLE, 'md:hidden']} popovertarget={MENU_ID}>
+<button type="button" class:list={[TOGGLE, 'lg:hidden']} popovertarget={MENU_ID}>
   {openLabel}
 </button>
 
@@ -35,7 +36,7 @@ const { links, currentPath, quote, navLabel, openLabel, closeLabel } = Astro.pro
   id={MENU_ID}
   popover
   aria-label={navLabel}
-  class="m-0 h-dvh max-h-none w-full max-w-none border-0 bg-canvas p-0 text-ink opacity-0 transition-[opacity,display,overlay] transition-discrete duration-(--duration-base) open:opacity-100 starting:open:opacity-0 md:hidden"
+  class="m-0 h-dvh max-h-none w-full max-w-none border-0 bg-canvas p-0 text-ink opacity-0 transition-[opacity,display,overlay] transition-discrete duration-(--duration-base) open:opacity-100 starting:open:opacity-0 lg:hidden"
 >
   <div class="flex h-full flex-col overflow-y-auto">
     <div class="flex h-16 shrink-0 items-center justify-end border-b border-line px-4">
@@ -45,12 +46,13 @@ const { links, currentPath, quote, navLabel, openLabel, closeLabel } = Astro.pro
     </div>
     <ul class="divide-y divide-line border-b border-line">
       {
-        links.map(({ label, href }, index) => (
+        links.map(({ label, href, current, active }, index) => (
           <li>
             <a
-              class="group flex min-h-16 items-center justify-between gap-4 px-4 text-ink hover:bg-surface aria-[current=page]:bg-surface"
+              class="group flex min-h-16 items-center justify-between gap-4 px-4 text-ink hover:bg-surface focus-visible:outline-offset-[calc(var(--border-focus)*-1)] data-active:bg-surface"
               href={href}
-              aria-current={href === currentPath ? 'page' : undefined}
+              aria-current={current ? 'page' : undefined}
+              data-active={active ? '' : undefined}
             >
               <Label as="span" text={label} index={index + FIRST_INDEX} />
               <Glyph name="→" class="transition-transform group-hover:translate-x-1" />
