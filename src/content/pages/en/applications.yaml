@@ -1,0 +1,7 @@
+title: Applications
+description: Newsroom, playout and archive applications that work together or stand alone.
+sections:
+  - type: app-grid
+    label: Applications
+    heading: Software for every stage of the broadcast day
+    apps: []

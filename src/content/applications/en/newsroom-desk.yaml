@@ -1,0 +1,29 @@
+name: Newsroom Desk
+slug: newsroom-desk
+tagline: Plan, write and run the rundown from one screen.
+summary: A collaborative newsroom system for planning stories, editing scripts and building live rundowns, with changes visible to the whole team in real time.
+category: Newsroom
+cover: ../../../assets/uploads/cover-newsroom-desk.png
+coverAlt: Stacked hairline rectangles representing a rundown, one highlighted
+status: Stable
+order: 1
+links:
+  - label: Request a demo
+    href: /quote/
+brochure: https://example.com/brochures/newsroom-desk.pdf
+sections:
+  - type: feature-list
+    label: Capabilities
+    heading: What it does
+    items:
+      - title: Live rundowns
+        body: Reorder, time and lock stories while the show is running. Every operator sees the same state.
+      - title: Script editing
+        body: Write against a running clock with read-time estimates and tracked changes.
+      - title: Wire and feed intake
+        body: Pull agency copy and social feeds into one inbox, filtered by desk and topic.
+  - type: cta
+    heading: See Newsroom Desk with your own workflow
+    action:
+      label: Request a quote
+      href: /quote/

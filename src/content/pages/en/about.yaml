@@ -1,0 +1,31 @@
+title: About
+description: Who we are, what we build and how we work with broadcasters and media teams.
+sections:
+  - type: statement
+    label: About us
+    text: We are a small team of broadcast engineers and software developers. We build the tools we wished we had on the studio floor.
+  - type: feature-list
+    label: How we work
+    heading: Principles behind the product
+    items:
+      - title: Operators first
+        body: Features are designed with the people who run the show, and tested in real control rooms before release.
+      - title: Calm interfaces
+        body: Dense information, clear hierarchy and no surprises, so attention stays on the programme.
+      - title: Long-term support
+        body: Versions are supported for years, with upgrade paths that do not interrupt a broadcast day.
+  - type: faq
+    label: Questions
+    items:
+      - q: Who uses your software?
+        a: Regional and national broadcasters, production houses and corporate media teams running live and scheduled output.
+      - q: Do you offer on-premises installs?
+        a: Yes. Every application runs on your own infrastructure, in a private cloud, or as a hybrid of both.
+      - q: Can you integrate with our existing systems?
+        a: Most integrations use open standards such as MOS, GPI and REST. Our engineers will review your setup before quoting.
+  - type: cta
+    heading: Want to know more?
+    text: We are happy to walk you through the products and answer technical questions.
+    action:
+      label: Contact us
+      href: /contact/

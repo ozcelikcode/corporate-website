@@ -1,0 +1,41 @@
+# Only the home page is translated; links to untranslated pages use their English URL.
+title: Canlı haber ve yayın için yazılım
+description: Canlı yapımı sakin, doğru ve yayında tutan haber merkezi, playout ve arşiv yazılımları.
+sections:
+  - type: hero
+    label: Yayın yazılımı
+    headline: Kontrol odası için yazılım,
+    headlineAccent: yayında kalmak üzere tasarlandı.
+    lede: Brand, tek bir kaçırılmış cue'yu bile göze alamayan yayıncılar ve medya ekipleri için haber merkezi, playout ve arşiv araçları geliştirir.
+    actions:
+      - label: Teklif iste
+        href: /quote/
+      - label: Uygulamaları gör
+        href: /applications/
+    image: ../../../assets/uploads/test-card.png
+    imageAlt: Yedi gri çubuk, ortada bir daire ve gri tonlama basamakları içeren yayın test kartı
+  - type: statement
+    label: Misyon
+    text: Canlı yayın güvene dayanır. Kırmızı ışık yandığında operatörün beklediğini her seferinde yapan yazılımlar geliştiriyoruz.
+  - type: app-grid
+    label: Uygulamalar
+    heading: Üç araç, tek iş akışı
+    apps: []
+  - type: feature-list
+    label: Neden Brand
+    heading: Yayın gününün etrafında tasarlandı
+    items:
+      - title: Yük altında öngörülebilir
+        body: Her ekran sabit bir süre bütçesi içinde yanıt verir; son dakika haberinde operatör beklemez.
+      - title: Açık biçimler
+        body: Akışlar, grafikler ve medya belgelenmiş standartlarla girip çıkar; bağımlılık yaratmaz.
+      - title: Denetime hazır
+        body: Akış veya oynatma listesindeki her değişiklik kim, ne ve ne zaman bilgisiyle kaydedilir.
+      - title: Mühendisler destekler
+        body: Kodu yazan kişilerle konuşursunuz; yayın saatlerinizde adı belli bir irtibat kişiniz olur.
+  - type: cta
+    heading: Yeni bir kontrol odası mı kuruyorsunuz, yenilemeyi mi düşünüyorsunuz?
+    text: Tesisinizi anlatın, iki iş günü içinde bir kurulum öneralım.
+    action:
+      label: Teklif iste
+      href: /quote/

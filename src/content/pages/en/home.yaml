@@ -1,0 +1,40 @@
+title: Software for live news and broadcast
+description: Newsroom, playout and archive software that keeps live production calm, accurate and on air.
+sections:
+  - type: hero
+    label: Broadcast software
+    headline: Software for the control room,
+    headlineAccent: built to stay on air.
+    lede: Brand makes newsroom, playout and archive tools for broadcasters and media teams who cannot afford a missed cue.
+    actions:
+      - label: Request a quote
+        href: /quote/
+      - label: See applications
+        href: /applications/
+    image: ../../../assets/uploads/test-card.png
+    imageAlt: Broadcast test card with seven grey bars, a centred circle and a step wedge
+  - type: statement
+    label: Mission
+    text: Live production runs on trust. We build software that does exactly what the operator expects, every time the red light comes on.
+  - type: app-grid
+    label: Applications
+    heading: Three tools, one workflow
+    apps: []
+  - type: feature-list
+    label: Why Brand
+    heading: Built around the broadcast day
+    items:
+      - title: Predictable under load
+        body: Every screen answers in a fixed time budget, so an operator never waits during a breaking story.
+      - title: Open formats
+        body: Rundowns, graphics and media move in and out through documented standards, with no lock-in.
+      - title: Audit-ready
+        body: Each change to a rundown or playlist is logged with who, what and when, ready for compliance review.
+      - title: Supported by engineers
+        body: You speak to the people who wrote the code, with a named contact during your on-air hours.
+  - type: cta
+    heading: Planning a new control room or a refresh?
+    text: Tell us about your facility and we will recommend a setup within two working days.
+    action:
+      label: Request a quote
+      href: /quote/
