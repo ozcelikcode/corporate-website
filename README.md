@@ -97,7 +97,7 @@ pnpm format     # Biome check with fixes
 
 ## Content editing
 
-Open `/admin/` in a Chromium-based browser and sign in with GitHub. Edit pages, applications, navigation, UI strings or site settings in English and Turkish.
+Open `/admin/` and sign in with GitHub (any modern browser; only the optional "Work with Local Repository" mode needs Chromium). Edit pages, applications, navigation, UI strings or site settings in English and Turkish.
 
 | Role | Can do |
 |---|---|
