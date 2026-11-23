@@ -76,6 +76,8 @@ function inlineAsset(file: string): false | undefined {
 export default defineConfig({
   output: 'static',
   trailingSlash: 'always',
+  // Owner request: no floating Astro Dev Toolbar in `astro dev`.
+  devToolbar: { enabled: false },
   build: { format: 'directory' },
   site: buildMode.siteUrl,
   fonts: [
