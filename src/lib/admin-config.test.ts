@@ -55,6 +55,19 @@ test('config.yml limits the hero image to rasters the ASCII renderer reads', () 
   );
 });
 
+test('config.yml limits the social and cover images to rasters (the logo may stay SVG)', () => {
+  const RASTERS = 'accept: "image/png,image/jpeg,image/webp"';
+  // Flow maps, single-line or wrapped by the formatter: each is `{ name: <field>, ... }`.
+  const fieldBody = (name: string): string[] =>
+    [...config.matchAll(new RegExp(`\\{\\s*name: ${name},[^}]*\\}`, 'g'))].map((match) => match[0]);
+  assert.equal(fieldBody('ogImage').length, 2);
+  assert.equal(fieldBody('cover').length, 1);
+  for (const field of [...fieldBody('ogImage'), ...fieldBody('cover')])
+    assert.ok(field.includes(RASTERS), field);
+  assert.match(fieldBody('logo').join(), /widget: image/);
+  assert.doesNotMatch(fieldBody('logo').join(), /accept/);
+});
+
 test('config.yml media folders are valid for Sveltia and resolvable by Astro image()', () => {
   // Global public_folder must be an absolute site path; relative ones are rejected at load.
   assert.match(config, /^public_folder: \/\S+$/m);

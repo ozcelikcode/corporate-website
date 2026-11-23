@@ -22,6 +22,12 @@ const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const CONTACT_HREF_PATTERN = /^(mailto:|tel:|https:\/\/)/;
 const LINK_HREF_PATTERN = /^(\/(?![/\\])|https:\/\/|mailto:)/;
 
+/** Social and cover images are rasters only (the CMS field refuses SVG; the build does too). */
+const rasterImage = (image: SchemaContext['image'], field: string) =>
+  image().refine((metadata) => metadata.format !== 'svg', {
+    message: `${field} must be a PNG, JPEG or WebP image, not an SVG`,
+  });
+
 const accent = z
   .string()
   .regex(HEX_PATTERN, 'settings.accent must be a 6-digit hex colour such as #ffb000')
@@ -59,10 +65,10 @@ export const settingsSchema = ({ image }: SchemaContext) =>
     socials: listField(
       z.array(z.strictObject({ label: z.string(), href: z.string().regex(/^https:\/\//) })),
     ),
-    ogImage: image(),
+    ogImage: rasterImage(image, 'settings.ogImage'),
     organization: z.strictObject({
       legalName: z.string(),
-      url: z.url(),
+      url: z.url({ protocol: /^https$/ }),
       address: optionalField(z.string()),
     }),
   });
@@ -82,7 +88,7 @@ export const pageSchema = (context: SchemaContext) =>
   z.strictObject({
     title: z.string(),
     description: z.string().min(1).max(DESCRIPTION_MAX),
-    ogImage: optionalField(context.image()),
+    ogImage: optionalField(rasterImage(context.image, 'page.ogImage')),
     sections: sectionsSchema(context),
   });
 
@@ -93,7 +99,7 @@ export const applicationSchema = (context: SchemaContext) =>
     tagline: z.string().max(TAGLINE_MAX),
     summary: z.string(),
     category: z.string(),
-    cover: context.image(),
+    cover: rasterImage(context.image, 'application.cover'),
     coverAlt: z.string(),
     status: z.string().max(LABEL_MAX),
     order: z.number().int().min(0),

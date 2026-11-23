@@ -3,17 +3,23 @@
  * pipeline. One processor is created on first use and shared by every call; code blocks stay
  * plain (no syntax highlighting, so no inline colour styles reach the page).
  *
+ * Safety, applied by one inline remark plugin before anything is rendered:
+ * - Raw HTML is dropped (every `html` node: tags, comments, scripts, forms, iframes). Editors
+ *   write Markdown only.
+ * - Every link, image and link definition URL must be a site path (`/…`, never `//` or `/\`),
+ *   `https:`, `mailto:`, `tel:` or a `#fragment`. Anything else (`javascript:`, `data:`, `http:`,
+ *   a relative path) fails the build with a message naming the section and the URL. The check
+ *   runs on the decoded URL with the characters browsers ignore (tab, newline, leading
+ *   control characters and spaces) removed, so `JaVa\tScRiPt:` and `&#106;avascript:` are caught.
+ *
  * Page heading rules, applied by one inline rehype plugin:
- * - Content never adds an h1 (the page owns its single h1): `#`, setext `===` and raw `<h1>`
- *   all become h2. User rehype plugins run before Astro parses raw HTML, so raw tags are
- *   rewritten in the raw node's text.
+ * - Content never adds an h1 (the page owns its single h1): `#` and setext `===` become h2.
  * - Heading ids are `<idPrefix>-<n>` in document order. Astro always adds slug ids (no option
  *   turns them off) but keeps an id that is already set, so numbering first means slugs from two
  *   blocks never collide with each other or with page ids such as `#main`.
  *
  * Links: every anchor's href in the rendered HTML goes through the caller's `rewriteHref` (the
- * page locale's `localizeHref`), Markdown links and raw `<a>` alike. This runs on the output,
- * because raw HTML is parsed after user rehype plugins; the serializer double-quotes every
+ * page locale's `localizeHref`). This runs on the output; the serializer double-quotes every
  * attribute value, so one pattern finds each href.
  */
 import { createMarkdownProcessor, type MarkdownRenderer } from '@astrojs/markdown-remark';
@@ -30,12 +36,46 @@ type RenderFile = { data: { astro?: { frontmatter?: Record<string, unknown> } } 
 
 const HEADING_TAG = /^h[1-6]$/;
 const DEMOTED_TAG = 'h2';
-/** `<h1` or `</h1` followed by whitespace, `>` or `/`: never `<h10>` or `<header>`. */
-const RAW_H1_TAG = /<(\/?)h1(?=[\s/>])/gi;
 /** Render options carry the id prefix in the frontmatter slot (the only per-call channel). */
 const ID_PREFIX_KEY = 'headingIdPrefix';
 /** `<a …href="…"`: other attributes may come first, and a quoted value may hold `>`. */
 const ANCHOR_HREF = /(<a(?=\s)(?:[^>"]|"[^"]*")*?\shref=")([^"]*)"/g;
+
+/** The slice of the mdast tree the safety plugin reads. */
+type MdastNode = { type: string; url?: string; children?: MdastNode[] };
+
+/** Link-like nodes whose `url` ends up in an `href` or `src`. */
+const URL_NODE_TYPES: ReadonlySet<string> = new Set(['link', 'image', 'definition']);
+/** Characters a browser drops from a URL before reading it: tab, LF, CR anywhere. */
+const URL_IGNORED_ANYWHERE = /[\t\n\r]/g;
+/** Leading and trailing C0 controls and spaces are trimmed too. */
+// biome-ignore lint/suspicious/noControlCharactersInRegex: matching control characters is the point
+const URL_EDGE_JUNK = /^[\u0000-\u0020]+|[\u0000-\u0020]+$/g;
+const SAFE_URL = /^(?:\/(?![/\\])|#|https:|mailto:|tel:)/i;
+
+function isSafeContentUrl(url: string): boolean {
+  return SAFE_URL.test(url.replace(URL_IGNORED_ANYWHERE, '').replace(URL_EDGE_JUNK, ''));
+}
+
+function remarkSafeContent() {
+  return (tree: MdastNode, file: RenderFile): void => {
+    const prefix = file.data.astro?.frontmatter?.[ID_PREFIX_KEY];
+    const visit = (node: MdastNode): void => {
+      if (node.children === undefined) return;
+      node.children = node.children.filter((child) => child.type !== 'html');
+      for (const child of node.children) {
+        if (URL_NODE_TYPES.has(child.type) && !isSafeContentUrl(child.url ?? '')) {
+          throw new Error(
+            `Unsafe URL in Markdown (section "${String(prefix)}"): ${JSON.stringify(child.url)}. ` +
+              'Allowed: a site path starting with "/", https:, mailto:, tel: or #fragment.',
+          );
+        }
+        visit(child);
+      }
+    };
+    visit(tree);
+  };
+}
 
 function rehypePageHeadings() {
   return (tree: HastNode, file: RenderFile): void => {
@@ -43,9 +83,6 @@ function rehypePageHeadings() {
     if (typeof prefix !== 'string') throw new Error('renderMarkdown needs a heading id prefix');
     let count = 0;
     const visit = (node: HastNode): void => {
-      if (node.type === 'raw' && node.value !== undefined) {
-        node.value = node.value.replace(RAW_H1_TAG, `<$1${DEMOTED_TAG}`);
-      }
       if (node.type === 'element' && node.tagName !== undefined && HEADING_TAG.test(node.tagName)) {
         if (node.tagName === 'h1') node.tagName = DEMOTED_TAG;
         count += 1;
@@ -70,6 +107,7 @@ export async function renderMarkdown(
 ): Promise<string> {
   processor ??= createMarkdownProcessor({
     syntaxHighlight: false,
+    remarkPlugins: [remarkSafeContent],
     rehypePlugins: [rehypePageHeadings],
   });
   const { code } = await (await processor).render(source, {

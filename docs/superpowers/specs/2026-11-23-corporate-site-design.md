@@ -410,10 +410,11 @@ Workers Builds build variables, set in the dashboard: `SITE_URL` (feeds `site`) 
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains
 
 /admin/*
+  X-Robots-Tag: noindex, nofollow
   ! Content-Security-Policy
   Content-Security-Policy: default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.githubusercontent.com; media-src blob:; connect-src 'self' https://api.github.com https://*.githubusercontent.com https://<auth-worker>.workers.dev; frame-ancestors 'none'; base-uri 'self'; object-src 'none'
 
@@ -422,6 +423,7 @@ Workers Builds build variables, set in the dashboard: `SITE_URL` (feeds `site`) 
 ```
 
 - `'unsafe-inline'` is allowed for styles only.
+- `/admin/*` also carries `X-Robots-Tag: noindex, nofollow` (robots.txt disallows crawling, so crawlers never see the page's meta tag). `interest-cohort` is not in `Permissions-Policy`: browsers no longer recognise it.
 - `<auth-worker>` in the `/admin/*` policy is edited once by hand to the real auth Worker URL (§13 step 6), together with `base_url` in `config.yml`.
 - Non-production (preview) builds additionally get `X-Robots-Tag: noindex` appended to `dist/_headers` by `src/integrations/build-outputs.ts`.
 - The Worker sets its own `nosniff`, `Referrer-Policy`, HSTS and `Cache-Control: no-store` in `worker/headers.ts`.

@@ -76,7 +76,12 @@ singletons:
             label: Link
             widget: string
             pattern: ['^https:\/\/', "Start with https://"]
-      - { name: ogImage, label: Default social image, widget: image }
+      - {
+          name: ogImage,
+          label: Default social image,
+          widget: image,
+          accept: "image/png,image/jpeg,image/webp",
+        }
       - name: organization
         label: Organisation
         widget: object
@@ -352,7 +357,14 @@ collections:
         required: [en]
         minlength: 1
         maxlength: 160
-      - { name: ogImage, label: Social image, widget: image, i18n: true, required: false }
+      - {
+          name: ogImage,
+          label: Social image,
+          widget: image,
+          accept: "image/png,image/jpeg,image/webp",
+          i18n: true,
+          required: false,
+        }
       - &sections
         name: sections
         label: Sections
@@ -485,7 +497,14 @@ collections:
         maxlength: 120
       - { name: summary, label: Summary, widget: text, i18n: true, required: [en] }
       - { name: category, label: Category, widget: string, i18n: true, required: [en] }
-      - { name: cover, label: Cover image, widget: image, i18n: true, required: [en] }
+      - {
+          name: cover,
+          label: Cover image,
+          widget: image,
+          accept: "image/png,image/jpeg,image/webp",
+          i18n: true,
+          required: [en],
+        }
       - { name: coverAlt, label: Cover alt text, widget: string, i18n: true, required: [en] }
       - name: status
         label: Status
