@@ -164,6 +164,8 @@ Cloudflare requires a payment method on file to create any R2 bucket, even insid
 
 The accent colour must keep at least 3:1 contrast on the dark canvas; the build fails and names the field otherwise.
 
+Links in content (navigation, buttons, rich text and FAQ answers) are written as English site paths (`/about/`, `/quote/`), in every language. A Turkish page links the `/tr/` version of a page or application that has one, and the English URL of one that has not; this is worked out at build time. Translating a page is therefore one PR with the new TR entry only: no navigation or link edits, in that PR or after it.
+
 ## 5. Acceptance checks (production)
 
 Run these on the production URL once everything above is done.
@@ -191,6 +193,7 @@ These could not be automated in the build environment.
   4. Create a new EN page: the PR adds `src/content/pages/en/<slug>.yaml` only, no half-empty `pages/tr/<slug>.yaml` (new entries start in EN only; TR is turned on from the editor's menu when translated).
   5. Save the TR interface strings with a few fields cleared: the build passes and those strings show in English on `/tr/`.
   6. Try to upload an SVG or GIF as the hero image: the field refuses it (PNG, JPEG and WebP only).
+  7. Translate an existing page that has no TR version yet (turn TR on for it from the editor's menu): the PR adds `src/content/pages/tr/<slug>.yaml` only, its preview build passes, and on the preview every TR page's header, menu and footer link `/tr/<slug>/` with no navigation edit.
 
   Record the outcome of each (pass, or what the YAML looked like) in `memory-bank/techContext.md` under "CMS parity checks".
 - [ ] **(b) Turnstile in the real Workers runtime.**
@@ -231,7 +234,7 @@ Final local acceptance numbers (build, tests, bundle and page weight) are record
 
 - **Build fails with an accent contrast error:** the `accent` in site settings is below 3:1 on the canvas. Pick a lighter colour; the message names the field.
 - **`pnpm check` fails on a missing `solutions.json`:** run `pnpm build` first.
-- **Build fails with "Links to the wrong language":** a TR page links the English URL of a page that has a TR version (for example `/quote/` instead of `/tr/quote/`). Change the link to the `/tr/` URL the message names.
+- **Build fails with "Links to the wrong language":** a TR page links the English URL of a page that has a TR version (for example `/quote/` instead of `/tr/quote/`). Content links are localized at build time, so a plain site path never causes this: each line names the page, the link and the content files that can hold it (the page's entry, its EN entry where the page falls back to English, and the navigation). If the link there is an English site path like `/about/`, the code that renders it skips localization: that is a bug to report, not a content fix. Translating a page never needs a navigation edit.
 - **Build fails with "the slug ... is reserved":** pages cannot be called `admin`, `api`, `en` or `tr` (they would hide the CMS, the quote endpoint or a language). Rename the page.
 - **Build fails with "ASCII source ... must be a PNG, JPEG or WebP raster":** the hero image is an SVG, GIF or AVIF. Upload a PNG, JPEG or WebP instead.
 - **Quote shows `#error-send`:** Email Routing is not enabled, the destination is not verified, or `QUOTE_TO` / `QUOTE_FROM` / `TURNSTILE_SECRET_KEY` are not set. Check the Worker logs (observability is on).

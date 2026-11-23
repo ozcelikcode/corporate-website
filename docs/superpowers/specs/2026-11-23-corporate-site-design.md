@@ -204,6 +204,7 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
 - Markdown is rendered by `@astrojs/markdown-remark`, Astro's own pipeline.
 - The Applications index is a `pages` entry with an `app-grid` block.
 - TR routes build only translated entries. The toggle links to the TR twin, or to `/tr/` if there is none.
+- Content hrefs (navigation, actions, Markdown links) are written as EN site paths in every locale and localized at render time (`lib/localize-href.ts`): a TR page links `/tr/<path>` when TR builds that page or application, else the EN URL. Translating a page needs no navigation edit.
 - `hreflang` lists only existing translations, plus `x-default` pointing to EN.
 
 **v1 seed content.** The repo ships brand-neutral, realistic placeholder content:
