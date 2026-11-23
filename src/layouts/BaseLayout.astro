@@ -91,7 +91,7 @@ const currentPath = Astro.url.pathname;
     <SeoHead
       title={formatTitle(title, settings.brandName)}
       description={description}
-      canonical={canonical}
+      canonical={noindex ? undefined : canonical}
       alternates={alternates}
       siteName={settings.brandName}
       locale={contentLocale}
