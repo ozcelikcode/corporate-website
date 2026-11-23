@@ -1,0 +1,92 @@
+---
+/**
+ * Sticky top bar: logo (home link), inline nav from `md`, language toggle and the quote key.
+ * Below `md` the nav and quote key move into MobileNav. The quote key joins the bar at `lg`:
+ * between `md` and `lg` it does not fit on one line next to the nav. The current page's link carries
+ * `aria-current="page"` and an accent underline bar (a graphic, so 3:1 is enough).
+ */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import type { Locale } from '../../lib/i18n.ts';
+import Button from '../ui/Button.astro';
+import LanguageToggle from './LanguageToggle.astro';
+import MobileNav from './MobileNav.astro';
+
+type Link = { label: string; href: string };
+
+interface Props {
+  locale: Locale;
+  neutralPath: string;
+  availableLocales: readonly Locale[];
+  currentPath: string;
+  homeHref: string;
+  logo: ImageMetadata;
+  logoAlt: string;
+  links: readonly Link[];
+  quote: Link;
+  labels: {
+    nav: string;
+    language: string;
+    menuOpen: string;
+    menuClose: string;
+  };
+}
+
+const {
+  locale,
+  neutralPath,
+  availableLocales,
+  currentPath,
+  homeHref,
+  logo,
+  logoAlt,
+  links,
+  quote,
+  labels,
+} = Astro.props;
+---
+<header class="sticky top-0 z-(--z-header) border-b border-line bg-canvas">
+  <div class="mx-auto flex h-16 max-w-page items-center gap-4 px-4 md:gap-6 md:px-8">
+    <a href={homeHref} class="me-auto flex min-h-11 shrink-0 items-center">
+      <Image src={logo} alt={logoAlt} class="h-6 w-auto" loading="eager" />
+    </a>
+
+    <nav aria-label={labels.nav} class="hidden md:block">
+      <ul class="flex items-center gap-1 lg:gap-4">
+        {
+          links.map(({ label, href }) => (
+            <li>
+              <a
+                class="relative flex min-h-11 items-center px-2 label-mono text-ink-muted hover:text-ink aria-[current=page]:text-ink aria-[current=page]:after:absolute aria-[current=page]:after:inset-x-2 aria-[current=page]:after:-bottom-2.5 aria-[current=page]:after:h-0.5 aria-[current=page]:after:bg-accent"
+                href={href}
+                aria-current={href === currentPath ? 'page' : undefined}
+              >
+                {label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <LanguageToggle
+      locale={locale}
+      neutralPath={neutralPath}
+      availableLocales={availableLocales}
+      label={labels.language}
+    />
+
+    <div class="hidden whitespace-nowrap lg:block">
+      <Button href={quote.href} size="sm">{quote.label}</Button>
+    </div>
+
+    <MobileNav
+      links={links}
+      currentPath={currentPath}
+      quote={quote}
+      navLabel={labels.nav}
+      openLabel={labels.menuOpen}
+      closeLabel={labels.menuClose}
+    />
+  </div>
+</header>

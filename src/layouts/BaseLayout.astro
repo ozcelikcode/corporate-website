@@ -1,0 +1,154 @@
+---
+/**
+ * Document shell for every page. `locale` is the UI language (header, nav, footer, form labels);
+ * `contentLocale` is the language of the entry in the default slot. They differ only on a
+ * fallback render (a TR route showing an untranslated EN entry): that render is wrapped in
+ * `lang={contentLocale}`, its canonical points at the EN URL, it is `noindex` and lists no
+ * hreflang alternates (a `noindex` page lists none either). The brand accent reaches CSS as
+ * `--accent-seed` on `<html>`.
+ */
+import { Font, getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import SeoHead from '../components/layout/SeoHead.astro';
+import SiteFooter from '../components/layout/SiteFooter.astro';
+import SiteHeader from '../components/layout/SiteHeader.astro';
+import TallyStrip from '../components/layout/TallyStrip.astro';
+import { getNavigation, getSettings, getUiDictionary } from '../lib/content.ts';
+import { type Locale, localizePath, t, type UiKey } from '../lib/i18n.ts';
+import { absoluteUrl, formatTitle, hreflangLinks } from '../lib/seo.ts';
+import '../styles/global.css';
+
+interface Props {
+  locale: Locale;
+  contentLocale: Locale;
+  neutralPath: string;
+  title: string;
+  description: string;
+  ogImage?: ImageMetadata | undefined;
+  availableLocales: readonly Locale[];
+  noindex?: boolean;
+  jsonLd?: string | undefined;
+}
+
+/** Open Graph card size recommended by the major link previewers. */
+const OG_IMAGE_WIDTH = 1200;
+const OG_IMAGE_HEIGHT = 630;
+const OG_IMAGE_FORMAT = 'png';
+const HOME_PATH = '/';
+const QUOTE_PATH = '/quote/';
+const FAVICON_HREF = '/favicon.svg';
+/**
+ * Preload only the upright faces; italics load on demand. The local provider sets no subset, so
+ * latin-ext (same style and weight range) cannot be filtered out here and is preloaded too.
+ */
+const FONT_PRELOAD = [{ style: 'normal' }];
+
+const {
+  locale,
+  contentLocale,
+  neutralPath,
+  title,
+  description,
+  ogImage,
+  availableLocales,
+  noindex = false,
+  jsonLd,
+} = Astro.props;
+
+const site = Astro.site;
+if (site === undefined) throw new Error('BaseLayout needs `site` in astro.config.ts');
+
+const [settings, dict, navigation] = await Promise.all([
+  getSettings(),
+  getUiDictionary(),
+  getNavigation(locale),
+]);
+const ui = (key: UiKey) => t(dict, locale, key);
+
+const isFallback = contentLocale !== locale;
+const canonical = absoluteUrl(localizePath(neutralPath, contentLocale), site);
+const alternates = isFallback || noindex ? [] : hreflangLinks(neutralPath, availableLocales, site);
+
+const og = await getImage({
+  src: ogImage ?? settings.ogImage,
+  width: OG_IMAGE_WIDTH,
+  height: OG_IMAGE_HEIGHT,
+  format: OG_IMAGE_FORMAT,
+});
+
+const homeHref = localizePath(HOME_PATH, locale);
+const quote = { label: ui('navQuote'), href: localizePath(QUOTE_PATH, locale) };
+const currentPath = Astro.url.pathname;
+---
+<!doctype html>
+<html lang={locale} style={{ '--accent-seed': settings.accent }}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <Font cssVariable="--font-grotesk" preload={FONT_PRELOAD} />
+    <Font cssVariable="--font-martian" preload={FONT_PRELOAD} />
+    <link rel="icon" href={FAVICON_HREF} type="image/svg+xml" />
+    <SeoHead
+      title={formatTitle(title, settings.brandName)}
+      description={description}
+      canonical={canonical}
+      alternates={alternates}
+      siteName={settings.brandName}
+      locale={contentLocale}
+      image={{ url: absoluteUrl(og.src, site), width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT }}
+      noindex={noindex || isFallback}
+      jsonLd={jsonLd}
+    />
+    <slot name="head" />
+  </head>
+  <body>
+    <a
+      href="#main"
+      class="sr-only label-mono focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-(--z-popover) focus:flex focus:min-h-11 focus:items-center focus:bg-ink focus:px-4 focus:text-canvas"
+    >
+      {ui('skipToContent')}
+    </a>
+    <SiteHeader
+      locale={locale}
+      neutralPath={neutralPath}
+      availableLocales={availableLocales}
+      currentPath={currentPath}
+      homeHref={homeHref}
+      logo={settings.logo}
+      logoAlt={settings.logoAlt}
+      links={navigation.data.header}
+      quote={quote}
+      labels={{
+        nav: ui('navPrimaryLabel'),
+        language: ui('languageLabel'),
+        menuOpen: ui('menuOpen'),
+        menuClose: ui('menuClose'),
+      }}
+    />
+    <TallyStrip
+      live={ui('tallyLive')}
+      timecode={ui('tallyTimecode')}
+      channel={ui('tallyChannel')}
+      format={ui('tallyFormat')}
+    />
+    <main id="main" tabindex="-1" class="focus:outline-none">
+      {isFallback ? <div lang={contentLocale}><slot /></div> : <slot />}
+    </main>
+    <SiteFooter
+      homeHref={homeHref}
+      logo={settings.logo}
+      logoAlt={settings.logoAlt}
+      legalName={settings.organization.legalName}
+      address={settings.organization.address}
+      links={navigation.data.footer}
+      contacts={settings.contacts}
+      socials={settings.socials}
+      labels={{
+        nav: ui('navFooterLabel'),
+        contact: ui('footerContact'),
+        social: ui('footerSocial'),
+        rights: ui('footerRights'),
+      }}
+    />
+  </body>
+</html>
