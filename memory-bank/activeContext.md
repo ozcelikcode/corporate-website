@@ -36,8 +36,7 @@
 - Sveltia step 6 (manual check in Chromium with File System Access, "Work with Local Repository"): pending owner, see runbook. Also unverified: `sortable_fields` and how empty lists are serialised.
 - Font preload: 4 upright files, accepted.
 - Unoptimized imported images (any image imported without `<Image>`/`getImage`) ship the original, EXIF included, to `dist/_astro`. Decide in Task 8: strip EXIF on upload, or route all images through the optimizer.
-- Rich-text Markdown with a `# ` heading would add a second h1 (no heading shift in `renderMarkdown`); seed uses `##`. Decide in Task 8 whether to guard it.
-- Spec §8 still says GridFrame's hairline cell matrix is budget-limited; the variant was removed in Task 7.
+- Task 8: the application page renders its own h1, yet `applications.sections` may hold a hero at position 1 (SectionRenderer would make it a second h1). Disallow heroes in applications, or let ApplicationPage demote it.
 - `.superpowers/` is git-ignored (SDD reports and review diffs stay local).
 
 ## Left to the builder (verify during implementation)
