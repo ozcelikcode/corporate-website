@@ -5,8 +5,9 @@
  * fallback render (a TR route showing an untranslated EN entry): that render is wrapped in
  * `lang={contentLocale}`, its canonical points at the EN URL, it is `noindex` and lists no
  * hreflang alternates (a `noindex` page lists none either). The brand accent reaches CSS as
- * `--accent-seed` on `<html>`. Navigation hrefs are written as EN site paths and localized here
- * (`hrefLocalizer`), so header, menu and footer link the locale's URL of every translated page.
+ * `--accent-seed` on `<html>`. The logo, the quote key and the navigation hrefs (written as EN site
+ * paths) all go through `hrefLocalizer`, so header, menu and footer link the locale's URL of every
+ * page the locale builds; the language toggle keeps its own rule.
  */
 import { Font, getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
@@ -78,8 +79,9 @@ const og = await getImage({
   format: OG_IMAGE_FORMAT,
 });
 
-const homeHref = localizePath(HOME_PATH, locale);
-const quote = { label: ui('navQuote'), href: localizePath(pagePath(QUOTE_SLUG), locale) };
+/** One rule for every header and footer link: the logo, the quote key and the nav entries. */
+const homeHref = localize(HOME_PATH);
+const quote = { label: ui('navQuote'), href: localize(pagePath(QUOTE_SLUG)) };
 const localizeLinks = (links: readonly { label: string; href: string }[]) =>
   links.map((link) => ({ ...link, href: localize(link.href) }));
 const currentPath = Astro.url.pathname;
