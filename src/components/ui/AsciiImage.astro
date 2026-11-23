@@ -1,0 +1,140 @@
+---
+/**
+ * The signature image: an upload rendered as coloured ASCII at build time (zero runtime cost).
+ * Two grids are rendered (`cols` and a coarser compact one); a container query on the figure
+ * shows the one whose glyphs stay legible. Same-tone runs become one span. Screen readers get
+ * `alt` from the figure; both grids are hidden. Spans come from a string (`set:html`), so they
+ * carry no scoped-style attributes: smaller HTML. The build fails if the markup is over budget.
+ */
+import type { ImageMetadata } from 'astro';
+import { ASCII_COLUMNS, ASCII_COLUMNS_COMPACT, CHAR_ASPECT, renderAscii } from '../../lib/ascii.ts';
+import { asciiMarkup, assertAsciiBudget } from '../../lib/ascii-markup.ts';
+import { resolveUploadPath } from '../../lib/ascii-source.ts';
+
+interface Props {
+  image: ImageMetadata;
+  alt: string;
+  /** Columns of the wide grid. */
+  cols?: number;
+}
+
+const { image, alt, cols = ASCII_COLUMNS } = Astro.props;
+const source = resolveUploadPath(image);
+const [wide, compact] = await Promise.all([
+  renderAscii(source, cols),
+  renderAscii(source, ASCII_COLUMNS_COMPACT),
+]);
+const wideHtml = asciiMarkup(wide);
+const compactHtml = asciiMarkup(compact);
+assertAsciiBudget([wideHtml, compactHtml], source);
+---
+<figure role="img" aria-label={alt} data-ascii style={{ '--ascii-aspect': CHAR_ASPECT }}>
+  <pre
+    class="ascii-wide font-mono"
+    aria-hidden="true"
+    style={{ '--ascii-cols': wide.cols }}
+    set:html={wideHtml}
+  />
+  <pre
+    class="ascii-compact font-mono"
+    aria-hidden="true"
+    style={{ '--ascii-cols': compact.cols }}
+    set:html={compactHtml}
+  />
+</figure>
+
+<style>
+  [data-ascii] {
+    /* Martian Mono glyph advance in em: 700 of 1000 units (fixed pitch), checked in the browser. */
+    --ascii-advance: 0.7;
+
+    /*
+     * Shimmer: an alpha band (peak opaque, edges at the floor) on a mask much wider than the
+     * figure. The mask slides its full travel once per period; the band is on screen for only
+     * part of it, so the size sets the rest between sweeps.
+     */
+    --ascii-shimmer-duration: 9s;
+    --ascii-shimmer-floor: 78%;
+    --ascii-shimmer-angle: 100deg;
+    --ascii-shimmer-band-start: 45%;
+    --ascii-shimmer-band-peak: 50%;
+    --ascii-shimmer-band-end: 55%;
+    --ascii-shimmer-size: 600%;
+    --ascii-shimmer-edge: color-mix(in srgb, black var(--ascii-shimmer-floor), transparent);
+
+    container-type: inline-size;
+    margin: 0;
+  }
+
+  pre {
+    margin: 0;
+    overflow: hidden;
+    font-size: calc(100cqi / var(--ascii-cols) / var(--ascii-advance));
+    /* Row height = advance ÷ cell aspect, so the grid keeps the image's proportions. */
+    line-height: calc(var(--ascii-advance) / var(--ascii-aspect));
+    letter-spacing: 0;
+    font-kerning: none;
+    font-variant-ligatures: none;
+  }
+
+  .ascii-compact {
+    display: none;
+  }
+
+  /* 30rem: below it the wide grid's glyphs drop under about 0.45rem, so the compact grid takes over. */
+  @container (inline-size < 30rem) {
+    .ascii-wide {
+      display: none;
+    }
+
+    .ascii-compact {
+      display: block;
+    }
+  }
+
+  pre :global(.t0) {
+    color: var(--color-tone-0);
+  }
+
+  pre :global(.t1) {
+    color: var(--color-tone-1);
+  }
+
+  pre :global(.t2) {
+    color: var(--color-tone-2);
+  }
+
+  pre :global(.t3) {
+    color: var(--color-tone-3);
+  }
+
+  pre :global(.t4) {
+    color: var(--color-tone-4);
+  }
+
+  pre :global(.t5) {
+    color: var(--color-tone-5);
+  }
+
+  /* Documented exception to "no gradients": an alpha-only mask band, only when motion is welcome. */
+  @media (prefers-reduced-motion: no-preference) {
+    pre {
+      mask-image: linear-gradient(
+        var(--ascii-shimmer-angle),
+        var(--ascii-shimmer-edge) var(--ascii-shimmer-band-start),
+        black var(--ascii-shimmer-band-peak),
+        var(--ascii-shimmer-edge) var(--ascii-shimmer-band-end)
+      );
+      mask-size: var(--ascii-shimmer-size) 100%;
+      mask-position: 100% 0;
+      animation: ascii-shimmer var(--ascii-shimmer-duration) linear infinite;
+    }
+  }
+
+  /* From the right end of the mask to the left end: the band crosses left to right. */
+  @keyframes ascii-shimmer {
+    to {
+      mask-position: 0 0;
+    }
+  }
+</style>
