@@ -5,9 +5,10 @@
 - 2026-11-23: Memory bank created (projectbrief, techContext, systemPatterns, activeContext, progress).
 - 2026-11-23: Root `CLAUDE.md` and project skill `team-delegation` created.
 - 2026-11-23: Owner approved the design spec. Repo made public (CODEOWNERS enforcement on `main` now possible).
+- 2026-11-23: Implementation plan written (`docs/superpowers/plans/2026-11-23-corporate-site.md`, 12 tasks, groups G1–G8).
 
 ## Next
-- Write the implementation plan beside the spec.
+- Owner reviews the implementation plan, then G1 (Task 1 toolchain scaffold).
 - Scaffold the project: package.json, tsconfig, Biome, Astro config, wrangler config, `.nvmrc`.
 - Build tokens, global styles, i18n and content libs, content collections.
 - Build UI primitives, section blocks, layout components, pages, TR wrappers.
@@ -21,7 +22,7 @@
 
 ## Milestones (planned order)
 1. Spec approved (done, 2026-11-23).
-2. Implementation plan written.
+2. Implementation plan written (done, 2026-11-23).
 3. Foundation: tooling, tokens, content schema, i18n.
 4. UI kit and 7 section blocks.
 5. Pages, routes, TR wrappers, SEO.

@@ -25,7 +25,7 @@ Principles:
 - `send_email` reaches only **verified** destinations, from a sender on a zone with Email Routing enabled.
 - The owner already owns the apex domain and manages it in Cloudflare (zone on the same account). Email Routing and the verified destination can therefore be set up from day one, even while the site is served on `*.workers.dev`; the quote flow works at v1 launch. Attaching the domain to the Worker is optional and later.
 - Cost: the domain is already owned; everything else stays on free tiers. R2 stays (the owner explicitly asked for an R2 assets subdomain), but R2 requires a payment method on file even though expected usage stays inside the free tier.
-- Enforced CODEOWNERS review needs a **public repo or a paid GitHub plan** (the repo is currently private; see §14).
+- The repo is public (decided 2026-11-23), so branch protection on main enforces 1 CODEOWNERS approval for free.
 - Sveltia is pre-1.0, so pin it exactly.
 - Turkish needs `latin-ext` font subsets.
 
@@ -414,7 +414,7 @@ Error handling:
 
 Deploy order: **auth Worker → GitHub App callback → site.**
 
-1. **Repo:** public (recommended) or a paid plan, for enforced review (owner decision pending, §14). Add `.github/CODEOWNERS`.
+1. **Repo:** public (decided 2026-11-23), so branch protection on main enforces 1 CODEOWNERS approval for free. Add `.github/CODEOWNERS`.
 2. **Roles:** Admin = Maintain/Admin + CODEOWNER. Editor = Write.
 3. **Ruleset on `main`:** PR required, 1 CODEOWNERS approval, no force-push, no bypass.
 4. **Auth Worker (first, by hand):**
@@ -486,7 +486,7 @@ Deploy order: **auth Worker → GitHub App callback → site.**
 18. Component files are PascalCase; all other files are kebab-case.
 19. Structured, PII-free `console.error` in the Worker is the only console use allowed.
 20. TypeScript is pinned to 6.0.3, not 7.0.2, because of the `@astrojs/check` peer range.
-21. A public repo or a paid GitHub plan is needed to enforce CODEOWNERS review. Owner decision pending (§14).
+21. The repo is public (decided 2026-11-23), so branch protection on main enforces 1 CODEOWNERS approval for free.
 22. `sveltia-cms-auth` is not vendored. It is deployed once, by hand, from the official repo as its own Worker before the site. Its URL is set by a one-time manual edit of `config.yml` `base_url` and the `/admin/*` CSP in `_headers`, not a build variable: a generator step for two static values that change at most once would be over-engineering. Deploy order: auth Worker → GitHub App callback → site.
 23. Quote `solutions` are validated against a generated allow-list. A small Astro integration (`astro:build:done`) writes `worker/generated/solutions.json` (application slugs + `general`), and the Worker imports it. Build order is `astro build` → Worker bundle. Unknown slugs are rejected.
 24. PR preview builds are for visual review only. They use Turnstile's official always-pass test keys, `SITE_URL` falls back to the preview host, previews are `noindex` (`X-Robots-Tag` + disallow-all `robots.txt`), and CMS auth is not expected to work on them. Production keys are used only on `main`.

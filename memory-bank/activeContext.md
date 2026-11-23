@@ -7,7 +7,8 @@
 - Memory bank and project instructions (`CLAUDE.md`, team-delegation skill) are set up.
 
 ## Next step
-Write the implementation plan (beside the spec in `docs/superpowers/specs/`), then execute it through delegated agents.
+- Implementation plan written: `docs/superpowers/plans/2026-11-23-corporate-site.md` (12 tasks, 8 dispatch groups G1–G8, subagent-driven execution).
+- Owner reviews the plan, then start G1 (Task 1: toolchain scaffold).
 
 ## Key decisions so far
 - Own UI kit of about 12 Astro primitives with `class-variance-authority`; no shadcn/React islands.
