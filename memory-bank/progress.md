@@ -7,9 +7,10 @@
 - 2026-11-23: Owner approved the design spec. Repo made public (CODEOWNERS enforcement on `main` now possible).
 - 2026-11-23: Implementation plan written (`docs/superpowers/plans/2026-11-23-corporate-site.md`, 12 tasks, groups G1–G8).
 - 2026-11-23: Task 1 toolchain scaffold done (configs, build-mode + 6 tests, worker stub, scaffold page).
+- 2026-11-23: Task 2 done: tokens, global styles and utilities, local Fontsource variable fonts, token swatch on the scaffold page.
 
 ## Next
-- G2: Task 2 tokens and fonts.
+- G3: Task 3 content ∥ Task 4 UI atoms.
 - Build tokens, global styles, i18n and content libs, content collections.
 - Build UI primitives, section blocks, layout components, pages, TR wrappers.
 - Build the Worker (`/api/quote`), Turnstile verification, mail builder.
@@ -33,3 +34,4 @@
 ## Log
 - 2026-11-23: Project started; spec, memory bank and delegation skill created. No code yet.
 - 2026-11-23: Task 1 implemented; gate (build, check, lint, test) green.
+- 2026-11-23: Task 2 implemented; gate green, contrast measured (ink 16.5, ink-muted 8.3, line-strong 3.45 on canvas).

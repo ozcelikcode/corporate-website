@@ -27,7 +27,13 @@ Dev dependencies:
 - Astro `output: 'static'`; no Cloudflare adapter (avoids an SSR Worker in front of static pages).
 - `trailingSlash: 'always'`, paired with `html_handling: auto-trailing-slash`.
 - Scripts: `test` (`node --test "src/**/*.test.ts" "worker/**/*.test.ts"`), `dev`, `build`, `preview` (build + `wrangler dev`), `check` (`astro check` + `tsc -p worker --noEmit`), `lint`, `format` (Biome), `deploy`.
-- Fonts via Astro fonts API, `fontProviders.local()`: Schibsted Grotesk + Martian Mono (OFL, `latin` + `latin-ext`).
+- Fonts via Astro fonts API (`fonts` top-level config, stable since Astro 6), `fontProviders.local()`; see "Fonts" below.
+
+## Fonts (Task 2)
+- Files: `src/assets/fonts/schibsted-grotesk/{latin,latin-ext}-wght-{normal,italic}.woff2` and `src/assets/fonts/martian-mono/{latin,latin-ext}-wght-normal.woff2`, each folder with `OFL.txt`.
+- Source: Fontsource CDN, variable builds pinned at 5.3.0: `https://cdn.jsdelivr.net/fontsource/fonts/schibsted-grotesk:vf@5.3.0/<subset>-wght-<style>.woff2` and `.../martian-mono:vf@5.3.0/<subset>-wght-normal.woff2` (verified `wOF2` magic). `OFL.txt` from google/fonts `ofl/schibstedgrotesk/OFL.txt` and `ofl/martianmono/OFL.txt` (SIL OFL 1.1). `unicode-range` values copied from `@fontsource-variable/*@5.3.0` CSS into named constants in `astro.config.ts`.
+- Option shape (Astro 7.4.13, read from `node_modules/astro/dist/assets/fonts`): `{ provider: fontProviders.local(), name, cssVariable, fallbacks, options: { variants: [{ src: [path], weight: '400 900', style, unicodeRange }] } }`. Weights: Schibsted `400 900` (normal + italic), Martian `100 800` (the vf instance has `wght` only; `wdth` is fixed). Fallbacks: `system-ui, sans-serif` / `ui-monospace, monospace` (Astro adds metric-matched Arial/Courier fallbacks).
+- Usage: `<Font cssVariable="--font-grotesk" preload />` (+ `--font-martian`) from `astro:assets`; it emits inline `<style>` @font-face blocks and preload links. Plain `preload` preloads all 6 files; Task 5 should narrow it (e.g. `preload={[{ style: 'normal' }]}`).
 
 ## Cloudflare services (free tier only)
 - Workers Static Assets: serves `dist/`; `run_worker_first: ["/api/*"]`; `not_found_handling: "404-page"`. Static requests never invoke the Worker.
@@ -50,7 +56,7 @@ Dev dependencies:
 - Worker may use `console.error({ code, step })` only (no PII).
 
 ## Open verifications (builder)
-Fonts API option shape; Astro i18n fallback on dynamic static routes; Sveltia feature support (editorial workflow, singletons, R2); `astro/zod` bundling in the Worker (else add `zod ^4.6.7`); Workers Builds Node/pnpm support; `send_email` on free plan; no inline `<script>` in `dist/` (CSP).
+Astro i18n fallback on dynamic static routes; Sveltia feature support (editorial workflow, singletons, R2); `astro/zod` bundling in the Worker (else add `zod ^4.6.7`); Workers Builds Node/pnpm support; `send_email` on free plan; no inline `<script>` in `dist/` (CSP).
 
 ## Test conventions
 - `node --test` with `node:assert/strict`; `*.test.ts` next to its unit; relative imports end in `.ts`; tested modules never import `astro:*` at runtime.
