@@ -1,0 +1,481 @@
+# Sveltia CMS config. Mirrors the Zod schemas in src/content.config.ts and
+# src/lib/sections-schema.ts (all strict objects): field names, limits and href
+# patterns must stay in sync with them. Verified against sveltiacms.app docs.
+
+backend:
+  name: github
+  repo: "<owner>/<repo>" # replace once with the real GitHub repository
+  branch: main
+  base_url: https://auth-worker.example.workers.dev # replace with the sveltia-cms-auth Worker URL (runbook step)
+
+# Editors submit a branch + PR per entry; only users who can merge to main publish.
+publish_mode: editorial_workflow
+
+media_folder: src/assets/uploads
+public_folder: ../../assets/uploads
+
+i18n:
+  structure: multiple_folders
+  locales: [en, tr]
+  default_locale: en
+
+singletons:
+  - name: settings
+    label: Site settings
+    file: src/content/settings/site.yaml
+    icon: settings
+    # Not localised: no field below sets i18n, so the file is shared by all locales.
+    media_folder: src/assets/uploads
+    public_folder: ../../assets/uploads
+    fields:
+      - { name: brandName, label: Brand name, widget: string }
+      - { name: logo, label: Logo, widget: image }
+      - { name: logoAlt, label: Logo alt text, widget: string }
+      - name: accent
+        label: Accent colour
+        widget: string
+        hint: 6-digit hex such as #ffb000. Needs at least 3:1 contrast on the dark canvas; the build fails otherwise and names this field.
+        pattern: ["^#[0-9a-fA-F]{6}$", "Use a 6-digit hex colour such as #ffb000"]
+      - name: contacts
+        label: Contacts
+        widget: list
+        min: 1
+        hint: At least one entry must have kind "email".
+        fields:
+          - name: kind
+            label: Kind
+            widget: select
+            options: [email, phone, address]
+          - { name: value, label: Value, widget: string }
+          - name: href
+            label: Link
+            widget: string
+            pattern: ['^(mailto:|tel:|https:\/\/)', "Start with mailto:, tel: or https://"]
+      - name: socials
+        label: Social links
+        widget: list
+        required: false
+        fields:
+          - { name: label, label: Label, widget: string }
+          - name: href
+            label: Link
+            widget: string
+            pattern: ['^https:\/\/', "Start with https://"]
+      - { name: ogImage, label: Default social image, widget: image }
+      - name: organization
+        label: Organisation
+        widget: object
+        fields:
+          - { name: legalName, label: Legal name, widget: string }
+          - name: url
+            label: Website URL
+            widget: string
+            pattern: ['^https?:\/\/\S+$', "Enter a full URL such as https://example.com"]
+          - { name: address, label: Address, widget: string, required: false }
+
+collections:
+  - name: ui
+    label: Interface strings
+    folder: src/content/ui
+    create: false
+    delete: false
+    summary: Interface strings
+    media_folder: src/assets/uploads
+    public_folder: ../../../assets/uploads
+    i18n: true
+    fields:
+      - name: skipToContent
+        widget: string
+        i18n: true
+        required: [en]
+      - name: menuOpen
+        widget: string
+        i18n: true
+        required: [en]
+      - name: menuClose
+        widget: string
+        i18n: true
+        required: [en]
+      - name: navPrimaryLabel
+        widget: string
+        i18n: true
+        required: [en]
+      - name: navFooterLabel
+        widget: string
+        i18n: true
+        required: [en]
+      - name: languageLabel
+        widget: string
+        i18n: true
+        required: [en]
+      - name: navQuote
+        widget: string
+        i18n: true
+        required: [en]
+      - name: tallyLive
+        widget: string
+        i18n: true
+        required: [en]
+      - name: tallyTimecode
+        widget: string
+        i18n: true
+        required: [en]
+      - name: tallyChannel
+        widget: string
+        i18n: true
+        required: [en]
+      - name: tallyFormat
+        widget: string
+        i18n: true
+        required: [en]
+      - name: tallyOnAir
+        widget: string
+        i18n: true
+        required: [en]
+      - name: appOpen
+        widget: string
+        i18n: true
+        required: [en]
+      - name: appBrochure
+        widget: string
+        i18n: true
+        required: [en]
+      - name: appLinks
+        widget: string
+        i18n: true
+        required: [en]
+      - name: footerContact
+        widget: string
+        i18n: true
+        required: [en]
+      - name: footerSocial
+        widget: string
+        i18n: true
+        required: [en]
+      - name: footerRights
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteName
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteEmail
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteCompany
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteRole
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteCountry
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteSolutions
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteSolutionsGeneral
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteSolutionsHint
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteTimeline
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteTimelineAsap
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteTimelineQuarter
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteTimelineHalfYear
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteTimelineExploring
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteMessage
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteConsent
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteConsentLink
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteSubmit
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteOptional
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteNoScript
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteSentTitle
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteSentBody
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteErrorInvalidTitle
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteErrorInvalidBody
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteErrorVerifyTitle
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteErrorVerifyBody
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteErrorSendTitle
+        widget: string
+        i18n: true
+        required: [en]
+      - name: quoteErrorSendBody
+        widget: string
+        i18n: true
+        required: [en]
+
+  - name: navigation
+    label: Navigation
+    folder: src/content/navigation
+    create: false
+    delete: false
+    summary: Main navigation
+    media_folder: src/assets/uploads
+    public_folder: ../../../assets/uploads
+    i18n: true
+    fields:
+      - name: header
+        label: Header links
+        widget: list
+        min: 1
+        i18n: true
+        required: [en]
+        fields:
+          - { name: label, label: Label, widget: string }
+          - name: href
+            label: Link
+            widget: string
+            pattern:
+              [
+                '^(\/(?![\/\\])|https:\/\/|mailto:)',
+                "Use a site path like /about/, an https:// URL or mailto:",
+              ]
+      - name: footer
+        label: Footer links
+        widget: list
+        required: false
+        i18n: true
+        fields:
+          - { name: label, label: Label, widget: string }
+          - name: href
+            label: Link
+            widget: string
+            pattern:
+              [
+                '^(\/(?![\/\\])|https:\/\/|mailto:)',
+                "Use a site path like /about/, an https:// URL or mailto:",
+              ]
+
+  - name: pages
+    label: Pages
+    folder: src/content/pages
+    slug:
+      editable: [create]
+    media_folder: src/assets/uploads
+    public_folder: ../../../assets/uploads
+    i18n: true
+    fields:
+      - { name: title, label: Title, widget: string, i18n: true, required: [en] }
+      - name: description
+        label: Description
+        widget: string
+        i18n: true
+        required: [en]
+        minlength: 1
+        maxlength: 160
+      - { name: ogImage, label: Social image, widget: image, i18n: true, required: false }
+      - &sections
+        name: sections
+        label: Sections
+        widget: list
+        typeKey: type
+        i18n: true
+        required: [en]
+        collapsed: auto
+        types:
+          - name: hero
+            label: Hero
+            fields:
+              - &label { name: label, label: Label, widget: string, maxlength: 32 }
+              - { name: headline, label: Headline, widget: string }
+              - { name: headlineAccent, label: Headline accent, widget: string }
+              - { name: lede, label: Lede, widget: text }
+              - name: actions
+                label: Actions
+                widget: list
+                required: false
+                max: 2
+                fields:
+                  - { name: label, label: Label, widget: string, maxlength: 32 }
+                  - name: href
+                    label: Link
+                    widget: string
+                    pattern:
+                      [
+                        '^(\/(?![\/\\])|https:\/\/)',
+                        "Use a site path like /quote/ or an https:// URL",
+                      ]
+              - { name: image, label: Image, widget: image }
+              - { name: imageAlt, label: Image alt text, widget: string }
+          - name: statement
+            label: Statement
+            fields:
+              - *label
+              - { name: text, label: Text, widget: text }
+          - name: app-grid
+            label: Application grid
+            fields:
+              - *label
+              - { name: heading, label: Heading, widget: string }
+              - name: apps
+                label: Application slugs
+                widget: list
+                field: { name: slug, label: Slug, widget: string }
+                required: false
+                hint: Leave empty to show all applications, ordered by their order field.
+          - name: feature-list
+            label: Feature list
+            fields:
+              - *label
+              - { name: heading, label: Heading, widget: string }
+              - name: items
+                label: Items
+                widget: list
+                min: 1
+                max: 8
+                fields:
+                  - { name: title, label: Title, widget: string }
+                  - { name: body, label: Body, widget: text }
+          - name: rich-text
+            label: Rich text
+            fields:
+              - { name: body, label: Body, widget: markdown }
+          - name: cta
+            label: Call to action
+            fields:
+              - { name: heading, label: Heading, widget: string }
+              - { name: text, label: Text, widget: text, required: false }
+              - name: action
+                label: Action
+                widget: object
+                fields:
+                  - { name: label, label: Label, widget: string, maxlength: 32 }
+                  - name: href
+                    label: Link
+                    widget: string
+                    pattern:
+                      [
+                        '^(\/(?![\/\\])|https:\/\/)',
+                        "Use a site path like /quote/ or an https:// URL",
+                      ]
+          - name: faq
+            label: FAQ
+            fields:
+              - *label
+              - name: items
+                label: Questions
+                widget: list
+                min: 1
+                fields:
+                  - { name: q, label: Question, widget: string }
+                  - { name: a, label: Answer, widget: markdown }
+
+  - name: applications
+    label: Applications
+    folder: src/content/applications
+    slug: "{{fields.slug}}"
+    identifier_field: name
+    sortable_fields: [order, name]
+    media_folder: src/assets/uploads
+    public_folder: ../../../assets/uploads
+    i18n: true
+    fields:
+      - { name: name, label: Name, widget: string, i18n: true, required: [en] }
+      - name: slug
+        label: Slug
+        widget: string
+        i18n: duplicate
+        pattern: ["^[a-z0-9]+(?:-[a-z0-9]+)*$", "Lowercase letters, digits and single hyphens only"]
+      - name: tagline
+        label: Tagline
+        widget: string
+        i18n: true
+        required: [en]
+        maxlength: 120
+      - { name: summary, label: Summary, widget: text, i18n: true, required: [en] }
+      - { name: category, label: Category, widget: string, i18n: true, required: [en] }
+      - { name: cover, label: Cover image, widget: image, i18n: true, required: [en] }
+      - { name: coverAlt, label: Cover alt text, widget: string, i18n: true, required: [en] }
+      - name: status
+        label: Status
+        widget: string
+        i18n: true
+        required: [en]
+        maxlength: 32
+      - name: order
+        label: Order
+        widget: number
+        value_type: int
+        min: 0
+        i18n: duplicate
+      - name: links
+        label: Links
+        widget: list
+        i18n: true
+        required: false
+        fields:
+          - { name: label, label: Label, widget: string, maxlength: 32 }
+          - name: href
+            label: Link
+            widget: string
+            pattern:
+              ['^(\/(?![\/\\])|https:\/\/)', "Use a site path like /quote/ or an https:// URL"]
+      - name: brochure
+        label: Brochure URL
+        widget: string
+        i18n: true
+        required: false
+        hint: Public https URL of the PDF (large files live in R2, not in the repo).
+        pattern: ['^https:\/\/\S+$', "Start with https://"]
+      - *sections
