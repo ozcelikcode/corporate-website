@@ -8,7 +8,7 @@
  * format keeps its case (`1080i50`: the `i` means interlaced).
  *
  * The HOLD key is the site's motion pause (WCAG 2.2.2), on every page and breakpoint: a native
- * checkbox, so it needs no JS. `[data-motion-hold]:checked` pauses every animation in
+ * checkbox, so it needs no JS. Its hint sits outside the label (description only, read once). `[data-motion-hold]:checked` pauses every animation in
  * `global.css`, and the AsciiImage script listens to it to stop its loop. Its lamp lights while
  * held. Off by default: the site moves unless the visitor holds it.
  */
@@ -46,8 +46,8 @@ const { live, timecode, channel, program, preview, format, hold, holdHint } = As
       <input class="sr-only" type="checkbox" data-motion-hold aria-describedby="motion-hold-hint" />
       <span class="hold-lamp size-2 shrink-0 bg-ink-muted" aria-hidden="true"></span>
       {hold}
-      <span id="motion-hold-hint" class="sr-only">{holdHint}</span>
     </label>
+    <span id="motion-hold-hint" class="sr-only">{holdHint}</span>
   </div>
 </div>
 

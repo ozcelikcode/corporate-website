@@ -42,7 +42,7 @@ test('assertAsciiBudget fails a noisy render, naming the source and its size', (
   );
 });
 
-test('the seed test card fits the budget at both column counts', async () => {
+test('the seed transmitter image fits the budget at both column counts', async () => {
   const markups = await Promise.all(
     [ASCII_COLUMNS, ASCII_COLUMNS_COMPACT].map(async (cols) =>
       asciiMarkup(await renderAscii(SEED, cols)),
