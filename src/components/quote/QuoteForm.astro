@@ -1,0 +1,166 @@
+---
+/**
+ * The quote form: a plain multipart POST to the Worker (no client JS of its own; Turnstile adds
+ * its hidden token field). Every `maxlength` comes from `QUOTE_LIMITS` and every option value
+ * from `quote-schema.ts`, so the page and the Worker share one contract. Multipart, not
+ * urlencoded: a max-length Turkish submission percent-encodes past the Worker's body cap.
+ * Layout (border budget): spaced `surface` panels, borders only on the controls. Consent,
+ * Turnstile and submit sit on the canvas, where the widget's 300 CSS px minimum fits at 360.
+ */
+import { type Locale, t, type UiDictionary, type UiKey } from '../../lib/i18n.ts';
+import {
+  GENERAL_SOLUTION,
+  QUOTE_LIMITS,
+  TIMELINES,
+  type Timeline,
+} from '../../lib/quote-schema.ts';
+import Button from '../ui/Button.astro';
+import Checkbox from '../ui/Checkbox.astro';
+import Field from '../ui/Field.astro';
+import GridFrame from '../ui/GridFrame.astro';
+import { hintId } from '../ui/hint-id.ts';
+import Input from '../ui/Input.astro';
+import Label from '../ui/Label.astro';
+import Select from '../ui/Select.astro';
+import Textarea from '../ui/Textarea.astro';
+
+interface Props {
+  locale: Locale;
+  ui: UiDictionary;
+  solutions: readonly { value: string; label: string }[];
+  privacyHref: string;
+  siteKey: string;
+  /** Direct address for visitors without JS (the first `email` contact in settings). */
+  email: string;
+  /** `[NN]` index of the form band, continuing the page's section numbering. */
+  index: number;
+}
+
+const ACTION = '/api/quote';
+const ENCTYPE = 'multipart/form-data';
+const MAILTO = 'mailto:';
+const TURNSTILE_ACTION = 'quote';
+const TURNSTILE_THEME = 'dark';
+const TURNSTILE_SIZE = 'flexible';
+/**
+ * The placeholder option of the required select: an empty value, so `required` blocks submission
+ * until a timeline is picked. An option needs visible text, so it shows a dash (no copy).
+ */
+const PLACEHOLDER = { value: '', label: '—' } as const;
+
+const TIMELINE_LABEL_KEYS = {
+  asap: 'quoteTimelineAsap',
+  quarter: 'quoteTimelineQuarter',
+  'half-year': 'quoteTimelineHalfYear',
+  exploring: 'quoteTimelineExploring',
+} as const satisfies Record<Timeline, UiKey>;
+
+const PANEL = 'bg-surface p-6 md:p-8';
+/** Reserves the widget's 65 CSS px height, so the submit key does not jump when it loads. */
+const TURNSTILE_SLOT = 'min-h-17 w-full max-w-md';
+const LINK = 'underline decoration-line-strong underline-offset-4 hover:decoration-ink';
+
+const { locale, ui: dict, solutions, privacyHref, siteKey, email, index } = Astro.props;
+const ui = (key: UiKey) => t(dict, locale, key);
+const optional = ui('quoteOptional');
+
+const solutionOptions = [
+  ...solutions,
+  { value: GENERAL_SOLUTION, label: ui('quoteSolutionsGeneral') },
+];
+const timelineOptions = [
+  PLACEHOLDER,
+  ...TIMELINES.map((value) => ({ value, label: ui(TIMELINE_LABEL_KEYS[value]) })),
+];
+const solutionsHintId = hintId('quote-solutions');
+---
+<form method="post" action={ACTION} enctype={ENCTYPE}>
+  <input type="hidden" name="locale" value={locale} />
+  <GridFrame columns={12}>
+    <div class="flex flex-col gap-6 lg:col-span-3">
+      <Label index={index} />
+      <noscript>
+        <p class="text-ink-muted">{ui('quoteNoScript')}</p>
+        <p class="mt-4">
+          <a class={LINK} href={`${MAILTO}${email}`}>{email}</a>
+        </p>
+      </noscript>
+    </div>
+    <div class="flex min-w-0 flex-col gap-6 lg:col-span-9">
+      <div class={PANEL}>
+        <GridFrame columns={2}>
+          <Field id="quote-name" label={ui('quoteName')}>
+            <Input id="quote-name" name="name" required maxlength={QUOTE_LIMITS.name} autocomplete="name" />
+          </Field>
+          <Field id="quote-email" label={ui('quoteEmail')}>
+            <Input
+              id="quote-email"
+              name="email"
+              type="email"
+              required
+              maxlength={QUOTE_LIMITS.email}
+              autocomplete="email"
+            />
+          </Field>
+          <Field id="quote-company" label={ui('quoteCompany')}>
+            <Input
+              id="quote-company"
+              name="company"
+              required
+              maxlength={QUOTE_LIMITS.company}
+              autocomplete="organization"
+            />
+          </Field>
+          <Field id="quote-role" label={ui('quoteRole')} optionalLabel={optional}>
+            <Input id="quote-role" name="role" maxlength={QUOTE_LIMITS.role} autocomplete="organization-title" />
+          </Field>
+          <Field id="quote-country" label={ui('quoteCountry')} optionalLabel={optional}>
+            <Input id="quote-country" name="country" maxlength={QUOTE_LIMITS.country} autocomplete="country-name" />
+          </Field>
+          <Field id="quote-timeline" label={ui('quoteTimeline')}>
+            <Select id="quote-timeline" name="timeline" required options={timelineOptions} />
+          </Field>
+        </GridFrame>
+      </div>
+      <fieldset class:list={[PANEL, 'min-w-0']} aria-describedby={solutionsHintId}>
+        <legend class="float-start w-full label-mono text-ink">{ui('quoteSolutions')}</legend>
+        <p id={solutionsHintId} class="clear-both pt-2 font-mono text-label text-ink-muted">
+          {ui('quoteSolutionsHint')}
+        </p>
+        <ul class="mt-4 grid grid-cols-1 gap-x-8 md:grid-cols-2 lg:grid-cols-3">
+          {
+            solutionOptions.map(({ value, label }) => (
+              <li>
+                <Checkbox id={`quote-solution-${value}`} name="solutions" value={value}>
+                  {label}
+                </Checkbox>
+              </li>
+            ))
+          }
+        </ul>
+      </fieldset>
+      <div class={PANEL}>
+        <Field id="quote-message" label={ui('quoteMessage')}>
+          <Textarea id="quote-message" name="message" required maxlength={QUOTE_LIMITS.message} />
+        </Field>
+      </div>
+      <div class="flex flex-col items-start gap-6 pt-6">
+        <Checkbox id="quote-consent" name="consent" value="on" required>
+          <span>
+            {ui('quoteConsent')} <a href={privacyHref}>{ui('quoteConsentLink')}</a>
+          </span>
+        </Checkbox>
+        <div
+          class:list={['cf-turnstile', TURNSTILE_SLOT]}
+          data-sitekey={siteKey}
+          data-action={TURNSTILE_ACTION}
+          data-theme={TURNSTILE_THEME}
+          data-size={TURNSTILE_SIZE}
+          data-language={locale}
+        >
+        </div>
+        <Button type="submit">{ui('quoteSubmit')}</Button>
+      </div>
+    </div>
+  </GridFrame>
+</form>

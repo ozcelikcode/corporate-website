@@ -1,0 +1,78 @@
+---
+/**
+ * The quote page for `locale` (the `quote` entry, else its EN fallback): the page's sections with
+ * the title band (SectionRenderer owns the one h1), the `:target` status panels, then the form
+ * band. The only client script on the site outside `/admin/` is Turnstile, loaded here.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+  availableLocales,
+  getPage,
+  getSettings,
+  getUiDictionary,
+  listApplications,
+} from '../../lib/content.ts';
+import { BUILD } from '../../lib/env.ts';
+import { type Locale, localizePath, pagePath } from '../../lib/i18n.ts';
+import QuoteForm from '../quote/QuoteForm.astro';
+import QuoteStatus from '../quote/QuoteStatus.astro';
+import SectionRenderer from '../sections/SectionRenderer.astro';
+
+interface Props {
+  locale: Locale;
+}
+
+const QUOTE_SLUG = 'quote';
+const PRIVACY_SLUG = 'privacy';
+const TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+/** The form band continues the page's `[NN]` numbering after its sections. */
+const NEXT_INDEX = 1;
+/** Same band rhythm and container as SectionRenderer's bands, after one divider rule. */
+const FORM_BAND = 'border-t border-line py-16 md:py-24 last:pb-0';
+const CONTAINER = 'mx-auto max-w-page px-4 md:px-8';
+
+const { locale } = Astro.props;
+
+const [page, privacy, pageLocales, settings, ui, applications] = await Promise.all([
+  getPage(locale, QUOTE_SLUG),
+  getPage(locale, PRIVACY_SLUG),
+  availableLocales('pages', QUOTE_SLUG),
+  getSettings(),
+  getUiDictionary(),
+  listApplications(locale),
+]);
+
+const email = settings.contacts.find((contact) => contact.kind === 'email')?.value;
+if (email === undefined) throw new Error('settings.contacts needs an entry with kind "email"');
+
+const privacyHref = localizePath(pagePath(PRIVACY_SLUG), privacy.locale);
+const solutions = applications.map((app) => ({ value: app.data.slug, label: app.data.name }));
+---
+<BaseLayout
+  locale={locale}
+  contentLocale={page.locale}
+  neutralPath={pagePath(QUOTE_SLUG)}
+  title={page.data.title}
+  description={page.data.description}
+  ogImage={page.data.ogImage}
+  availableLocales={pageLocales}
+>
+  <Fragment slot="head">
+    <script is:inline src={TURNSTILE_SCRIPT} async defer></script>
+  </Fragment>
+  <SectionRenderer sections={page.data.sections} locale={locale} pageTitle={page.data.title} />
+  <QuoteStatus locale={locale} ui={ui} email={email} />
+  <div class={FORM_BAND}>
+    <div class={CONTAINER}>
+      <QuoteForm
+        locale={locale}
+        ui={ui}
+        solutions={solutions}
+        privacyHref={privacyHref}
+        siteKey={BUILD.turnstileSiteKey}
+        email={email}
+        index={page.data.sections.length + NEXT_INDEX}
+      />
+    </div>
+  </div>
+</BaseLayout>
