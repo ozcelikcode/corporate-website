@@ -288,3 +288,47 @@ test('console.error gets exactly { code, step } and never the visitor email', as
     assert.equal(JSON.stringify(args).includes('visitor@example.org'), false);
   }
 });
+
+test('a body stream that errors mid-upload is a 303 #error-invalid with Worker headers', async (t: TestContext) => {
+  const calls: unknown[][] = [];
+  t.mock.method(console, 'error', (...args: unknown[]) => {
+    calls.push(args);
+  });
+  const body = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      controller.error(new Error('disconnect'));
+    },
+  });
+  const request = new Request(URL_QUOTE, {
+    method: 'POST',
+    headers: { Origin: ORIGIN, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+    duplex: 'half',
+  } as RequestInit);
+  const response = await handleQuote(request, ENV, harness().deps);
+  assert.equal(location(response), `${ORIGIN}/quote/#error-invalid`);
+  assert.equal(response.headers.get('Cache-Control'), 'no-store');
+  assert.deepEqual(calls, [[{ code: 'guard', step: 'body' }]]);
+});
+
+test('early guard failures take the locale from the Referer path via isLocale only', async () => {
+  const tr = await handleQuote(
+    formPost({}, { Origin: 'https://evil.example', Referer: `${ORIGIN}/tr/quote/` }),
+    ENV,
+    harness().deps,
+  );
+  assert.equal(location(tr), `${ORIGIN}/tr/quote/#error-invalid`);
+  for (const referer of [
+    'https://evil.example/\\tr/',
+    'javascript:alert(1)',
+    'not a url',
+    'https://x.example/tx/quote/',
+  ]) {
+    const response = await handleQuote(
+      formPost({}, { Origin: 'https://evil.example', Referer: referer }),
+      ENV,
+      harness().deps,
+    );
+    assert.equal(location(response), `${ORIGIN}/quote/#error-invalid`);
+  }
+});

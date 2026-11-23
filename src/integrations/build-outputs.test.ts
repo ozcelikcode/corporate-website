@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { pathToFileURL } from 'node:url';
+import { DEFAULT_LOCALE, LOCALES } from '../lib/i18n.ts';
 import {
   appendNoindex,
   pruneUnreferencedImages,
@@ -84,4 +85,26 @@ test('appendNoindex adds one X-Robots-Tag inside the /* block and is idempotent'
   assert.equal(once.match(/X-Robots-Tag: noindex/g)?.length, 1);
   assert.ok(once.startsWith('/*\n  X-Robots-Tag: noindex\n  X-Frame-Options: DENY\n'));
   assert.equal(appendNoindex(once), once);
+});
+
+test('appendNoindex handles CRLF, trailing spaces and leading comments', () => {
+  const headers = '# security\r\n/*  \r\n  X-Frame-Options: DENY\r\n';
+  const result = appendNoindex(headers);
+  assert.equal(
+    result,
+    '# security\r\n/*  \r\n  X-Robots-Tag: noindex\r\n  X-Frame-Options: DENY\r\n',
+  );
+  assert.equal(appendNoindex(result), result);
+});
+
+test('appendNoindex throws when there is no /* rule', () => {
+  assert.throws(() => appendNoindex('/admin/*\n  X-A: b\n'), /\/\*/);
+});
+
+test('APPLICATION_PATH is built from LOCALES', () => {
+  for (const locale of LOCALES) {
+    const prefix = locale === DEFAULT_LOCALE ? '' : `${locale}/`;
+    assert.deepEqual(solutionSlugs([`${prefix}applications/x/`]), ['x', 'general']);
+  }
+  assert.deepEqual(solutionSlugs(['de/applications/x/']), ['general']);
 });

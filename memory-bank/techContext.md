@@ -67,7 +67,7 @@ Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fie
 - `astro/zod` bundles in the Worker (`wrangler deploy --dry-run`): no `zod` pin needed. `cloudflare:email` and the JSON import (`with { type: 'json' }`) bundle too. Bundle `index.js` 792 KiB (limit 3 MiB).
 - `send_email` binding `QUOTE_MAILER` (no `destination_address`); `Buffer` is not used in the Worker (no `nodejs_compat`), base64 goes through `btoa`.
 - `astro:build:done` still passes `pages`; the allow-list comes from `pages[].pathname`.
-- Cloudflare `_headers`: two `/*` blocks do not merge (the later one replaced the first in `wrangler dev`), so the preview noindex line is inserted into the existing `/*` block.
+- Cloudflare `_headers`: two `/*` blocks do not merge (the later one replaced the first in `wrangler dev`), so the preview noindex line is inserted into the existing `/*` block (regex tolerant of CRLF, trailing spaces, comments; throws when no `/*` rule exists).
 - Local smoke test: `.dev.vars` (gitignored) with Turnstile's always-pass secret; `wrangler dev` on 8787 serves the CSP from `_headers`. Real email delivery and live siteverify are not verified locally.
 
 ## Test conventions

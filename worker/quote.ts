@@ -92,14 +92,22 @@ function declaredLengthTooLarge(request: Request, limit: number): boolean {
 }
 
 async function parseForm(request: Request, limit: number): Promise<FormData | null> {
-  const bytes = await readCapped(request, limit);
-  if (bytes === null) return null;
   const headers = { 'Content-Type': request.headers.get('Content-Type') ?? '' };
   try {
+    const bytes = await readCapped(request, limit);
+    if (bytes === null) return null;
     return await new Response(bytes, { headers }).formData();
   } catch {
     return null;
   }
+}
+
+/** Locale for failures before the form is read: the Referer's first path segment, via `isLocale` only. */
+function refererLocale(request: Request): Locale {
+  const referer = request.headers.get('Referer');
+  if (referer === null || !URL.canParse(referer)) return FALLBACK_LOCALE;
+  const segment = new URL(referer).pathname.split('/')[1];
+  return isLocale(segment) ? segment : FALLBACK_LOCALE;
 }
 
 function localeOf(form: FormData): Locale {
@@ -123,7 +131,8 @@ export async function handleQuote(
     );
   }
   const { origin, hostname } = new URL(request.url);
-  const invalid = (code: LogCode, step: string, locale: Locale = FALLBACK_LOCALE): Response => {
+  const earlyLocale = refererLocale(request);
+  const invalid = (code: LogCode, step: string, locale: Locale = earlyLocale): Response => {
     fail(code, step);
     return redirect(origin, locale, 'error-invalid');
   };
@@ -133,7 +142,7 @@ export async function handleQuote(
   const limit = parseLimit(env.MAX_BODY_BYTES);
   if (limit === null) {
     fail('config', 'max-body');
-    return redirect(origin, FALLBACK_LOCALE, 'error-send');
+    return redirect(origin, earlyLocale, 'error-send');
   }
   if (declaredLengthTooLarge(request, limit)) return invalid('guard', 'content-length');
   const form = await parseForm(request, limit);

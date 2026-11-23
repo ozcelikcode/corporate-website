@@ -20,9 +20,13 @@ import { GENERAL_SOLUTION } from '../lib/quote-schema.ts';
 export const GENERATED_SOLUTIONS_PATH = 'worker/generated/solutions.json';
 const HEADERS_FILE = '_headers';
 const NOINDEX_HEADER = 'X-Robots-Tag: noindex';
-const ALL_PATHS_RULE = '/*\n';
-const NOINDEX_LINE = `  ${NOINDEX_HEADER}\n`;
-const APPLICATION_PATH = /^\/?(?:tr\/)?applications\/([^/]+)\/$/;
+const ALL_PATHS_RULE = /^\/\*[ \t]*\r?$/m;
+const NOINDEX_LINE = `  ${NOINDEX_HEADER}`;
+const LINE_BREAK = /\r?\n/;
+const NON_DEFAULT_LOCALES = LOCALES.filter((locale) => locale !== DEFAULT_LOCALE);
+export const APPLICATION_PATH = new RegExp(
+  `^/?(?:(?:${NON_DEFAULT_LOCALES.join('|')})/)?applications/([^/]+)/$`,
+);
 const NOT_FOUND_DIR = '404';
 const NOT_FOUND_INDEX = 'index.html';
 const NOT_FOUND_FILE = '404.html';
@@ -90,15 +94,20 @@ export function solutionSlugs(pathnames: readonly string[]): string[] {
 }
 
 /**
- * Adds the noindex header to the `/*` rule. It goes into the existing block: a second `/*` block
- * would replace the first one's headers (CSP included) instead of merging with them.
+ * Adds the noindex header to the `/*` rule, tolerating CRLF, trailing spaces and leading comments.
+ * It goes into the existing block: a second `/*` block would replace the first one's headers
+ * (CSP included) instead of merging with them. Throws when no `/*` rule exists.
  */
 export function appendNoindex(headers: string): string {
   if (headers.includes(NOINDEX_HEADER)) return headers;
-  if (headers.startsWith(ALL_PATHS_RULE)) {
-    return `${ALL_PATHS_RULE}${NOINDEX_LINE}${headers.slice(ALL_PATHS_RULE.length)}`;
-  }
-  return `${ALL_PATHS_RULE}${NOINDEX_LINE}\n${headers}`;
+  const rule = ALL_PATHS_RULE.exec(headers);
+  if (rule === null) throw new Error('dist/_headers has no /* rule to add X-Robots-Tag to');
+  const end = rule.index + rule[0].length;
+  const newline = headers.slice(end).startsWith('\r\n') || rule[0].endsWith('\r') ? '\r\n' : '\n';
+  const lineEnd = LINE_BREAK.exec(headers.slice(end));
+  const insertAt = lineEnd === null ? headers.length : end + lineEnd.index + lineEnd[0].length;
+  const prefix = lineEnd === null ? newline : '';
+  return `${headers.slice(0, insertAt)}${prefix}${NOINDEX_LINE}${newline}${headers.slice(insertAt)}`;
 }
 
 export async function writeSolutionsAllowList(
