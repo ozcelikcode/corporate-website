@@ -5,7 +5,7 @@ A static, brand-agnostic corporate showcase site. It presents the brand's identi
 
 ## Principles
 1. Small beats feature-rich. "Efficient and beautiful" beats "feature-rich". Every file, dependency and block must earn its place.
-2. Hand-crafted, not templated. Control-room monitor-wall look: hairline grids, sharp corners, mono tally labels, one two-tone headline, one ASCII hero image.
+2. Hand-crafted, not templated. Control-room monitor-wall look: calm spacing with hairlines in moderation, sharp corners, a few broadcast details, mono tally labels, one two-tone headline, one ASCII hero image.
 3. Platform first. Use forms, `<dialog>`, Popover API and `<details>` before any JS.
 4. Content is data. Every user-facing string lives in typed content.
 
@@ -33,7 +33,7 @@ A static, brand-agnostic corporate showcase site. It presents the brand's identi
 
 ## Success criteria
 - Lighthouse about 100 across the board.
-- Near-zero client JS (Turnstile on `/quote` only).
+- Near-zero client JS: Turnstile on `/quote`, and one ≤ 2 KB self-hosted ASCII motion module on pages with the ASCII hero (owner request, Task 7b).
 - WCAG 2.2 AA; mobile-first.
 - Zero hosting cost; near-zero maintenance.
 - Typed content fully separate from code; no hardcoded copy.

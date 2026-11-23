@@ -1,0 +1,33 @@
+---
+/**
+ * Uppercase tracked mono label with an optional zero-padded index, e.g. `[02] APPLICATIONS`.
+ * Without `text` it prints the index alone (`[01]`), as on an application tile.
+ * `strap` sets it as an on-air name strap (`lower-third`: tinted band, accent key); see LowerThird.
+ */
+import { cva } from 'class-variance-authority';
+import { padIndex } from './pad-index.ts';
+
+interface Props {
+  text?: string;
+  index?: number | undefined;
+  as?: 'p' | 'span';
+  strap?: boolean;
+}
+
+const STRAP = {
+  true: 'lower-third',
+  false: '',
+} as const satisfies Record<`${NonNullable<Props['strap']>}`, string>;
+
+const label = cva('label-mono text-ink-muted', { variants: { strap: STRAP } });
+
+const { text, index, as: Tag = 'p', strap = false } = Astro.props;
+const indexText = index === undefined ? undefined : `[${padIndex(index)}]`;
+---
+<Tag class={label({ strap })}>
+  <span
+    >{indexText !== undefined && <span class="text-ink">{indexText}</span>}{
+      indexText !== undefined && text !== undefined && ' '
+    }{text}</span
+  >
+</Tag>

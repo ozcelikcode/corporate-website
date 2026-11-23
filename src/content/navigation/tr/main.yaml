@@ -1,0 +1,17 @@
+# Links use English site paths; Turkish pages link the /tr/ URL of every page that has one.
+header:
+  - label: Uygulamalar
+    href: /applications/
+  - label: Hakkımızda
+    href: /about/
+  - label: İletişim
+    href: /contact/
+footer:
+  - label: Uygulamalar
+    href: /applications/
+  - label: Hakkımızda
+    href: /about/
+  - label: İletişim
+    href: /contact/
+  - label: Gizlilik
+    href: /privacy/

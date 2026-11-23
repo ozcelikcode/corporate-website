@@ -1,0 +1,419 @@
+---
+/**
+ * The signature image: an upload rendered as coloured ASCII at build time. Two grids are rendered
+ * (`ASCII_COLUMNS` and a coarser compact one); a container query on the figure shows the one whose glyphs
+ * stay legible. Each row is a span of same-tone run spans. Screen readers get `alt` from the
+ * figure; both grids are hidden. Spans come from a string (`set:html`), so they carry no
+ * scoped-style attributes: smaller HTML. The build fails if the markup is over budget.
+ *
+ * Live signal, only under `prefers-reduced-motion: no-preference` (the build-time render is the
+ * no-JS and reduced-motion picture). CSS: a hum bar rolls down, rows slip sync three times per
+ * 36 s cycle (a sideways tear with a dropout dip, 9/13/14 s apart), and without JS the brightest
+ * tone breathes. The module script (`ascii-motion.ts` logic) tunes in: static resolves into the
+ * picture when it first scrolls into view (a figure already in view on a late first report goes
+ * straight to live); then a ring of brightness leaves the transmitter (`WAVE_ORIGIN`, top centre)
+ * every 2.5 s, with a little glyph grain. The TallyStrip HOLD key pauses all of it.
+ * Nothing changes the grid's box: transforms, opacity and same-width glyphs only.
+ */
+import type { ImageMetadata } from 'astro';
+import { ASCII_COLUMNS, ASCII_COLUMNS_COMPACT, renderAscii } from '../../lib/ascii.ts';
+import { CHAR_ASPECT } from '../../lib/ascii-glyphs.ts';
+import { asciiMarkup, assertAsciiBudget } from '../../lib/ascii-markup.ts';
+import { resolveUploadPath } from '../../lib/ascii-source.ts';
+
+interface Props {
+  image: ImageMetadata;
+  alt: string;
+}
+
+const { image, alt } = Astro.props;
+const source = resolveUploadPath(image);
+const [wide, compact] = await Promise.all([
+  renderAscii(source, ASCII_COLUMNS),
+  renderAscii(source, ASCII_COLUMNS_COMPACT),
+]);
+const wideHtml = asciiMarkup(wide);
+const compactHtml = asciiMarkup(compact);
+assertAsciiBudget([wideHtml, compactHtml], source);
+---
+<figure
+  role="img"
+  aria-label={alt}
+  data-ascii
+  style={{ '--ascii-aspect': CHAR_ASPECT }}
+>
+  <pre
+    class="ascii-wide font-mono"
+    aria-hidden="true"
+    style={{ '--ascii-cols': wide.cols }}
+    set:html={wideHtml}
+  />
+  <pre
+    class="ascii-compact font-mono"
+    aria-hidden="true"
+    style={{ '--ascii-cols': compact.cols }}
+    set:html={compactHtml}
+  />
+</figure>
+
+<style>
+  [data-ascii] {
+    /* Martian Mono glyph advance in em: 700 of 1000 units (fixed pitch), checked in the browser. */
+    --ascii-advance: 0.7;
+
+    /*
+     * Motion: documented exceptions to the 240ms rule (ambient signal, not UI feedback); all of it
+     * sits under `prefers-reduced-motion: no-preference`.
+     *
+     * Hum bar: a soft band that brightens the glyphs (colour-dodge barely lifts the dark canvas)
+     * while it rolls down, like mains hum on a monitor. It travels `travel` figure heights per
+     * period; only `1 + band` of that crosses the picture, the rest is rest between passes.
+     */
+    --ascii-roll-duration: 9s;
+    --ascii-roll-band: 0.45;
+    --ascii-roll-travel: 2;
+    /* Dodge divides by (1 - glow): a dim, opaque glow lifts bright glyphs and leaves the canvas. */
+    --ascii-roll-glow: color-mix(in oklab, var(--color-ink) 28%, black);
+    /*
+     * Sync slip: a band of rows tears sideways by a fraction of a glyph and dips (a dropout) for
+     * about two frames, then snaps back. Both bands share one cycle: slips at 4 s (rows 5–6),
+     * 13 s (rows 10–12) and 26 s (rows 5–6), so the gaps are 9, 13 and 14 s. The keyframe
+     * percentages below are those times over the 36 s cycle; change them together.
+     */
+    --ascii-slip-cycle: 36s;
+    --ascii-slip-shift: 0.45ch;
+    --ascii-slip-dip: 0.55;
+    /*
+     * Breath (no-JS picture only; with JS the rings carry the light): the brightest tone dims
+     * and recovers in coarse steps, so it repaints a few times a second, not every frame.
+     */
+    --ascii-breath-duration: 2.6s;
+    --ascii-breath-floor: 0.8;
+    --ascii-breath-steps: 8;
+
+    position: relative;
+    overflow: clip;
+    container-type: inline-size;
+    margin: 0;
+    /* The hum bar blends with what is under it, and the frame isolates: give it the canvas. */
+    background-color: var(--color-canvas);
+  }
+
+  pre {
+    margin: 0;
+    overflow: hidden;
+    font-size: calc(100cqi / var(--ascii-cols) / var(--ascii-advance));
+    /* Row height = advance ÷ cell aspect, so the grid keeps the image's proportions. */
+    line-height: calc(var(--ascii-advance) / var(--ascii-aspect));
+    letter-spacing: 0;
+    font-kerning: none;
+    font-variant-ligatures: none;
+  }
+
+  /*
+   * A row is an inline-block on its own line: same line box as plain text, and it can move. Full
+   * width, so a row whose text grows or shrinks never moves the line break after it (no CLS).
+   */
+  pre > :global(span) {
+    display: inline-block;
+    inline-size: 100%;
+  }
+
+  .ascii-compact {
+    display: none;
+  }
+
+  /* 30rem: below it the wide grid's glyphs drop under about 0.45rem, so the compact grid takes over. */
+  @container (inline-size < 30rem) {
+    .ascii-wide {
+      display: none;
+    }
+
+    .ascii-compact {
+      display: block;
+    }
+  }
+
+  pre :global(.t0) {
+    color: var(--color-tone-0);
+  }
+
+  pre :global(.t1) {
+    color: var(--color-tone-1);
+  }
+
+  pre :global(.t2) {
+    color: var(--color-tone-2);
+  }
+
+  pre :global(.t3) {
+    color: var(--color-tone-3);
+  }
+
+  pre :global(.t4) {
+    color: var(--color-tone-4);
+  }
+
+  pre :global(.t5) {
+    color: var(--color-tone-5);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Documented exception to "no gradients": the hum bar's soft band. Transform only. */
+    [data-ascii]::after {
+      content: "";
+      position: absolute;
+      inset-inline: 0;
+      inset-block-start: 0;
+      block-size: calc(var(--ascii-roll-band) * 100%);
+      background-image: linear-gradient(to bottom, transparent, var(--ascii-roll-glow), transparent);
+      mix-blend-mode: color-dodge;
+      pointer-events: none;
+      transform: translateY(-100%);
+      animation: ascii-roll var(--ascii-roll-duration) linear infinite;
+    }
+
+    pre > :global(span:nth-child(n + 5):nth-child(-n + 6)) {
+      animation: ascii-slip-upper var(--ascii-slip-cycle) step-end infinite;
+    }
+
+    pre > :global(span:nth-child(n + 10):nth-child(-n + 12)) {
+      animation: ascii-slip-lower var(--ascii-slip-cycle) step-end infinite;
+    }
+
+    [data-ascii]:not([data-live]) pre :global(.t5) {
+      animation: ascii-breath var(--ascii-breath-duration) steps(var(--ascii-breath-steps)) infinite
+        alternate;
+    }
+  }
+
+  /* From just above the figure, `travel` figure heights down (the band is `band` of the figure). */
+  @keyframes ascii-roll {
+    to {
+      transform: translateY(
+        calc(100% * var(--ascii-roll-travel) / var(--ascii-roll-band) - 100%)
+      );
+    }
+  }
+
+  /*
+   * Held values (step-end): still, then a dimmed tear (0.3% of the cycle, about 110 ms), a smaller
+   * kick back (0.2%), still again. Upper band: slips at 4 s (11.1%) and 26 s (72.2%).
+   */
+  @keyframes ascii-slip-upper {
+    11.1%,
+    72.2% {
+      transform: translateX(var(--ascii-slip-shift));
+      opacity: var(--ascii-slip-dip);
+    }
+
+    11.4%,
+    72.5% {
+      transform: translateX(calc(var(--ascii-slip-shift) / -2));
+      opacity: 1;
+    }
+
+    11.6%,
+    72.7% {
+      transform: none;
+    }
+  }
+
+  /* Lower band: one slip at 13 s (36.1%), torn the other way. */
+  @keyframes ascii-slip-lower {
+    36.1% {
+      transform: translateX(calc(var(--ascii-slip-shift) * -1));
+      opacity: var(--ascii-slip-dip);
+    }
+
+    36.4% {
+      transform: translateX(calc(var(--ascii-slip-shift) / 2));
+      opacity: 1;
+    }
+
+    36.6% {
+      transform: none;
+    }
+  }
+
+  @keyframes ascii-breath {
+    to {
+      opacity: var(--ascii-breath-floor);
+    }
+  }
+</style>
+
+<script>
+  /*
+   * Thin DOM glue for the live signal; the logic is `lib/ascii-motion.ts`. Per figure, the grid
+   * the container query shows (the one that intersects) tunes in once, then runs live frames.
+   * Everything stops offscreen, in a hidden tab, under reduced motion and while the TallyStrip
+   * HOLD key is checked; the rows then go back to the build-time markup, the source of truth.
+   */
+  import type { AsciiRun } from '../../lib/ascii.ts';
+  import { runsHtml } from '../../lib/ascii-markup.ts';
+  import {
+    ACQUIRE_DURATION_MS,
+    ACQUIRE_FRAME_MS,
+    acquisitionRuns,
+    canAnimate,
+    LIVE_FRAME_MS,
+    liveRuns,
+    revealThresholds,
+    skipsTuneIn,
+    toneFromClass,
+    WAVE_ORIGIN,
+  } from '../../lib/ascii-motion.ts';
+
+  const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
+  const COLS_PROPERTY = '--ascii-cols';
+  /** The TallyStrip HOLD key (a checkbox); `global.css` pauses the CSS motion with it. */
+  const HOLD_SELECTOR = '[data-motion-hold]';
+  /** Set while the script drives the figure; CSS hands the light from the breath to the rings. */
+  const LIVE_ATTRIBUTE = 'data-live';
+
+  type Grid = {
+    rows: HTMLElement[];
+    markup: string[];
+    /** What each row holds now, so a frame never reads `innerHTML` back. */
+    written: string[];
+    source: AsciiRun[][];
+    cols: number;
+    visible: boolean;
+  };
+
+  function readRun(node: ChildNode): AsciiRun {
+    const text = node.textContent ?? '';
+    return node instanceof Element ? { tone: toneFromClass(node.className), text } : { tone: 0, text };
+  }
+
+  function readGrid(pre: HTMLElement): Grid {
+    const rows = [...pre.children].filter((row) => row instanceof HTMLElement);
+    const cols = Number(pre.style.getPropertyValue(COLS_PROPERTY));
+    if (!Number.isInteger(cols) || cols < 1) throw new Error('ASCII grid without a column count');
+    return {
+      rows,
+      markup: rows.map((row) => row.innerHTML),
+      written: rows.map((row) => row.innerHTML),
+      source: rows.map((row) => [...row.childNodes].map(readRun)),
+      cols,
+      visible: false,
+    };
+  }
+
+  /** Writes a row unless it already holds that markup. */
+  function write(grid: Grid, y: number, html: string): void {
+    const element = grid.rows[y];
+    if (!element || grid.written[y] === html) return;
+    element.innerHTML = html;
+    grid.written[y] = html;
+  }
+
+  /** Rewrites a grid row by row from a frame's runs. */
+  function paint(grid: Grid, row: (y: number) => AsciiRun[]): void {
+    grid.rows.forEach((_, y) => {
+      write(grid, y, runsHtml(row(y)));
+    });
+  }
+
+  function animate(
+    figure: HTMLElement,
+    reduced: MediaQueryList,
+    hold: HTMLInputElement | null,
+  ): void {
+    const pres = [...figure.querySelectorAll('pre')];
+    const grids = pres.map(readGrid);
+    let active: Grid | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let acquired = false;
+    let reported = false;
+
+    const live = (grid: Grid) => {
+      const start = performance.now();
+      const rows = grid.rows.length;
+      const frame = () => {
+        const time = performance.now() - start;
+        paint(grid, (y) =>
+          liveRuns(grid.source[y] ?? [], grid.cols, y, rows, WAVE_ORIGIN, time, Math.random),
+        );
+        timer = setTimeout(frame, LIVE_FRAME_MS);
+      };
+      frame();
+    };
+
+    const acquire = (grid: Grid) => {
+      const start = performance.now();
+      const thresholds = revealThresholds(grid.rows.length, grid.cols, Math.random);
+      const frame = () => {
+        const progress = (performance.now() - start) / ACQUIRE_DURATION_MS;
+        if (progress >= 1) {
+          acquired = true;
+          live(grid);
+          return;
+        }
+        paint(grid, (y) =>
+          acquisitionRuns(
+            grid.source[y] ?? [],
+            grid.cols,
+            thresholds,
+            y * grid.cols,
+            progress,
+            Math.random,
+          ),
+        );
+        timer = setTimeout(frame, ACQUIRE_FRAME_MS);
+      };
+      frame();
+    };
+
+    /** Stops the current grid and puts it back exactly as built. */
+    const settle = () => {
+      clearTimeout(timer);
+      figure.removeAttribute(LIVE_ATTRIBUTE);
+      if (!active) return;
+      const grid = active;
+      grid.markup.forEach((html, y) => {
+        write(grid, y, html);
+      });
+    };
+
+    const update = () => {
+      const state = {
+        reduced: reduced.matches,
+        hidden: document.hidden,
+        held: hold?.checked ?? false,
+      };
+      const next = canAnimate(state) ? grids.find((g) => g.visible) : undefined;
+      if (next === active) return;
+      settle();
+      active = next;
+      if (!active) return;
+      figure.setAttribute(LIVE_ATTRIBUTE, '');
+      if (acquired) live(active);
+      else acquire(active);
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const grid = grids[pres.indexOf(entry.target as HTMLPreElement)];
+        if (grid) grid.visible = entry.isIntersecting;
+      }
+      if (!reported) {
+        reported = true;
+        // performance.now() counts from navigation start.
+        acquired = skipsTuneIn(grids.some((g) => g.visible), performance.now());
+      }
+      update();
+    });
+    for (const pre of pres) observer.observe(pre);
+    reduced.addEventListener('change', update);
+    document.addEventListener('visibilitychange', update);
+    hold?.addEventListener('change', update);
+  }
+
+  const reduced = matchMedia(REDUCED_MOTION);
+  const hold = document.querySelector<HTMLInputElement>(HOLD_SELECTOR);
+  for (const figure of document.querySelectorAll<HTMLElement>('[data-ascii]')) {
+    animate(figure, reduced, hold);
+  }
+</script>

@@ -1,0 +1,85 @@
+---
+/**
+ * The quote page for `locale` (the `quote` entry, else its EN fallback): the page's sections with
+ * the title band (SectionRenderer owns the one h1), the `:target` status panels, then the form
+ * band. Turnstile loads here (quote pages only); the only other client script outside `/admin/`
+ * is the ASCII motion module, on pages that render `AsciiImage`.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+  availableLocales,
+  getPage,
+  getSettings,
+  getUiDictionary,
+  listApplications,
+} from '../../lib/content.ts';
+import { BUILD } from '../../lib/env.ts';
+import { type Locale, localizePath, pagePath } from '../../lib/i18n.ts';
+import { QUOTE_SLUG } from '../../lib/page-slugs.ts';
+import { MAX_SOLUTIONS } from '../../lib/quote-schema.ts';
+import QuoteForm from '../quote/QuoteForm.astro';
+import QuoteStatus from '../quote/QuoteStatus.astro';
+import { BAND, CONTAINER, DIVIDER } from '../sections/band-class.ts';
+import SectionRenderer from '../sections/SectionRenderer.astro';
+
+interface Props {
+  locale: Locale;
+}
+
+const PRIVACY_SLUG = 'privacy';
+const TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+/** The form band continues the page's `[NN]` numbering after its sections. */
+const NEXT_INDEX = 1;
+/** The form adds `general` to the application choices. */
+const GENERAL_COUNT = 1;
+
+const { locale } = Astro.props;
+
+const [page, privacy, pageLocales, settings, ui, applications] = await Promise.all([
+  getPage(locale, QUOTE_SLUG),
+  getPage(locale, PRIVACY_SLUG),
+  availableLocales('pages', QUOTE_SLUG),
+  getSettings(),
+  getUiDictionary(),
+  listApplications(locale),
+]);
+
+const email = settings.contacts.find((contact) => contact.kind === 'email')?.value;
+if (email === undefined) throw new Error('settings.contacts needs an entry with kind "email"');
+
+const privacyHref = localizePath(pagePath(PRIVACY_SLUG), privacy.locale);
+const solutions = applications.map((app) => ({ value: app.data.slug, label: app.data.name }));
+if (solutions.length + GENERAL_COUNT > MAX_SOLUTIONS) {
+  throw new Error(
+    `The quote form offers ${solutions.length} applications plus "general", more than MAX_SOLUTIONS (${MAX_SOLUTIONS}) in src/lib/quote-schema.ts; raise the limit or remove applications`,
+  );
+}
+---
+<BaseLayout
+  locale={locale}
+  contentLocale={page.locale}
+  neutralPath={pagePath(QUOTE_SLUG)}
+  title={page.data.title}
+  description={page.data.description}
+  ogImage={page.data.ogImage}
+  availableLocales={pageLocales}
+>
+  <Fragment slot="head">
+    <script is:inline src={TURNSTILE_SCRIPT} async defer></script>
+  </Fragment>
+  <SectionRenderer sections={page.data.sections} locale={locale} pageTitle={page.data.title} />
+  <QuoteStatus locale={locale} ui={ui} email={email} />
+  <div class:list={[BAND, DIVIDER]}>
+    <div class={CONTAINER}>
+      <QuoteForm
+        locale={locale}
+        ui={ui}
+        solutions={solutions}
+        privacyHref={privacyHref}
+        siteKey={BUILD.turnstileSiteKey}
+        email={email}
+        index={page.data.sections.length + NEXT_INDEX}
+      />
+    </div>
+  </div>
+</BaseLayout>

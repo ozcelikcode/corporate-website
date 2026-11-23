@@ -1,0 +1,37 @@
+name: Playout Control
+slug: playout-control
+tagline: Frame-accurate playout, scheduled and live.
+summary: Automation for linear channels and live events. Play clips, graphics and live sources from one schedule, with failover and an operator view designed for long shifts.
+category: Playout
+cover: ../../../assets/uploads/cover-playout-control.png
+coverAlt: Parallel hairline tracks crossed by a single amber playhead
+status: Stable
+order: 2
+links:
+  - label: Request a demo
+    href: /quote/
+brochure: https://example.com/brochures/playout-control.pdf
+sections:
+  - type: feature-list
+    label: Capabilities
+    heading: What it does
+    items:
+      - title: Frame-accurate schedules
+        body: Build channel schedules with exact timing, event chains and fallback content.
+        duration: "00:01:00"
+      - title: Hot standby
+        body: A mirrored engine takes over within a frame when the primary fails.
+        duration: "00:00:40"
+      - title: Graphics and live inputs
+        body: Trigger lower thirds, tickers and live sources from the same timeline.
+        duration: "00:01:25"
+  - type: faq
+    label: Questions
+    items:
+      - q: Which video formats are supported?
+        a: SD, HD and UHD in common broadcast codecs. A full list is provided with your quote.
+  - type: cta
+    heading: Planning a channel launch?
+    action:
+      label: Request a quote
+      href: /quote/

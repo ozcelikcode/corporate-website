@@ -1,0 +1,21 @@
+---
+/**
+ * "No signal" test pattern for the 404 page: the seven SMPTE 75% bars filling a 16:9 frame, with
+ * a canvas slate in the middle carrying a muted tally and the slate text (`ui.noSignal`). Exposed
+ * as one image named by that text; the bars and slate inside are presentational. No motion.
+ */
+import { BAR_TONES } from './bar-tones.ts';
+import Tally from './Tally.astro';
+
+interface Props {
+  text: string;
+}
+
+const { text } = Astro.props;
+---
+<div role="img" aria-label={text} class="relative grid aspect-video w-full grid-cols-7">
+  {BAR_TONES.map((tone) => <span class={tone} />)}
+  <div class="absolute inset-0 grid place-items-center">
+    <p class="bg-canvas px-6 py-4"><Tally text={text} tone="muted" /></p>
+  </div>
+</div>

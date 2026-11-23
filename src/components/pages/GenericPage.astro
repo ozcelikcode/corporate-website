@@ -1,0 +1,57 @@
+---
+/**
+ * Any `pages` entry: the layout plus its sections, with the title as the page's one h1 unless a
+ * hero leads (SectionRenderer owns that rule). Only `home` carries Organization JSON-LD.
+ */
+import { getImage } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { availableLocales, getPage, getSettings } from '../../lib/content.ts';
+import { HOME_SLUG, type Locale, pagePath } from '../../lib/i18n.ts';
+import { absoluteUrl, organizationJsonLd } from '../../lib/seo.ts';
+import SectionRenderer from '../sections/SectionRenderer.astro';
+
+interface Props {
+  locale: Locale;
+  slug: string;
+}
+
+const { locale, slug } = Astro.props;
+const site = Astro.site;
+if (site === undefined) throw new Error('GenericPage needs `site` in astro.config.ts');
+
+const [page, locales] = await Promise.all([getPage(locale, slug), availableLocales('pages', slug)]);
+
+async function homeJsonLd(origin: URL): Promise<string> {
+  const settings = await getSettings();
+  const logo = await getImage({ src: settings.logo });
+  const contact = (kind: 'email' | 'phone') =>
+    settings.contacts.find((item) => item.kind === kind)?.value;
+  const email = contact('email');
+  const telephone = contact('phone');
+  const { address } = settings.organization;
+  return organizationJsonLd({
+    name: settings.brandName,
+    legalName: settings.organization.legalName,
+    url: settings.organization.url,
+    logoUrl: absoluteUrl(logo.src, origin),
+    sameAs: settings.socials.map((social) => social.href),
+    ...(email === undefined ? {} : { email }),
+    ...(telephone === undefined ? {} : { telephone }),
+    ...(address === undefined ? {} : { address }),
+  });
+}
+
+const jsonLd = slug === HOME_SLUG ? await homeJsonLd(site) : undefined;
+---
+<BaseLayout
+  locale={locale}
+  contentLocale={page.locale}
+  neutralPath={pagePath(slug)}
+  title={page.data.title}
+  description={page.data.description}
+  ogImage={page.data.ogImage}
+  availableLocales={locales}
+  jsonLd={jsonLd}
+>
+  <SectionRenderer sections={page.data.sections} locale={locale} pageTitle={page.data.title} />
+</BaseLayout>

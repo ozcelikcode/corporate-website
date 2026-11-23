@@ -1,0 +1,59 @@
+---
+/**
+ * Applications as spaced `surface` tiles (no borders), under a lower-third section heading.
+ * Each tile is one link: `[NN]` and the status tally on top, the frameless `DuotoneCover`, the
+ * name as a lower third (strap = category), the tagline and → at the foot. Inside the link the
+ * cover is decorative (`alt=""`), so the link's name stays the tile text; `coverAlt` describes
+ * it on the application page. Links go through `localize`: the page locale's URL when the
+ * application is translated, else the EN one.
+ */
+import { listApplications } from '../../lib/content.ts';
+import { selectApps } from '../../lib/entries.ts';
+import { applicationPath } from '../../lib/i18n.ts';
+import DuotoneCover from '../ui/DuotoneCover.astro';
+import Glyph from '../ui/Glyph.astro';
+import GridFrame from '../ui/GridFrame.astro';
+import Label from '../ui/Label.astro';
+import LowerThird from '../ui/LowerThird.astro';
+import Tally from '../ui/Tally.astro';
+import type { BlockProps } from './block-props.ts';
+
+type Props = BlockProps<'app-grid'>;
+
+/** Tile widths: about 20rem (one column on phones) up to about 27rem (three columns at 90rem). */
+const COVER_WIDTHS = [480, 960];
+const COVER_SIZES = '(min-width: 64rem) 30vw, (min-width: 48rem) 45vw, 100vw';
+/** The arrow nudges forward on hover and keyboard focus (transform only). */
+const NUDGE = 'transition-transform group-hover:translate-x-1 group-focus-visible:translate-x-1';
+/** Tile indexes count from 1. */
+const FIRST_INDEX = 1;
+
+const { section, index, locale, headingLevel, localize } = Astro.props;
+const apps = selectApps(await listApplications(locale), section.apps);
+---
+<div class="flex flex-col gap-12 md:gap-16">
+  <LowerThird level={headingLevel} text={section.heading} label={section.label} index={index} />
+  <GridFrame as="ul" columns={3}>
+    {
+      apps.map((app, i) => (
+        <li class="bg-surface">
+          <a
+            href={localize(applicationPath(app.slug))}
+            class="group flex h-full flex-col gap-6 p-6"
+          >
+            <div class="flex items-center justify-between gap-4">
+              <Label as="span" index={i + FIRST_INDEX} />
+              <Tally text={app.data.status} />
+            </div>
+            <DuotoneCover src={app.data.cover} alt="" widths={COVER_WIDTHS} sizes={COVER_SIZES} />
+            <LowerThird level={3} text={app.data.name} label={app.data.category} />
+            <p class="text-ink-muted">{app.data.tagline}</p>
+            <div class="mt-auto flex justify-end text-ink">
+              <Glyph name="→" class={NUDGE} />
+            </div>
+          </a>
+        </li>
+      ))
+    }
+  </GridFrame>
+</div>

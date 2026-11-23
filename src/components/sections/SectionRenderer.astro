@@ -1,0 +1,85 @@
+---
+/**
+ * Renders a page's `sections[]` as full-bleed bands, each with the page container inside.
+ * - Dividers (border budget): every band after the first opens with one full-width hairline
+ *   rule; blocks never draw their own outer borders.
+ * - The page's one h1: a hero at position 0 takes it. Otherwise, when `pageTitle` is set, a title
+ *   band carrying it (display size) comes first; without `pageTitle` there is no h1 here (the
+ *   caller renders its own, as the application page does). Every other heading is h2 or below.
+ * - The default slot sits between the title band and the sections (the 404's test pattern).
+ * - `index` is the section's 1-based position (its `[NN]` label); the title band is not counted.
+ * - Content hrefs: one `hrefLocalizer` for the page's locale, shared by every block.
+ * The switch is exhaustive: a new section type fails `astro check` until it is handled here.
+ */
+import { assertNever } from '../../lib/assert-never.ts';
+import { hrefLocalizer } from '../../lib/content.ts';
+import type { Locale } from '../../lib/i18n.ts';
+import type { Section } from '../../lib/sections-schema.ts';
+import Heading from '../ui/Heading.astro';
+import AppGrid from './AppGrid.astro';
+import { BAND, CONTAINER, DIVIDER, FIRST_BAND } from './band-class.ts';
+import Cta from './Cta.astro';
+import Faq from './Faq.astro';
+import FeatureList from './FeatureList.astro';
+import Hero from './Hero.astro';
+import RichText from './RichText.astro';
+import Statement from './Statement.astro';
+
+interface Props {
+  sections: readonly Section[];
+  locale: Locale;
+  pageTitle?: string | undefined;
+}
+
+/** `[NN]` indexes count from 1. */
+const FIRST_INDEX = 1;
+
+const { sections, locale, pageTitle } = Astro.props;
+const heroLeads = sections[0]?.type === 'hero';
+const titleBand = heroLeads ? undefined : pageTitle;
+/** Position of the first section among the bands: 1 when a title band precedes it. */
+const bandOffset = titleBand === undefined ? 0 : 1;
+const localize = await hrefLocalizer(locale);
+---
+{
+  titleBand !== undefined && (
+    <div class:list={[BAND, FIRST_BAND]}>
+      <div class={CONTAINER}>
+        <Heading level={1} text={titleBand} />
+      </div>
+    </div>
+  )
+}
+<slot />
+{
+  sections.map((section, i) => {
+    const isFirstBand = i + bandOffset === 0;
+    const common = { index: i + FIRST_INDEX, locale, localize };
+    return (
+      <section class:list={[BAND, isFirstBand ? FIRST_BAND : DIVIDER]}>
+        <div class={CONTAINER}>
+          {(() => {
+            switch (section.type) {
+              case 'hero':
+                return <Hero section={section} {...common} headingLevel={isFirstBand ? 1 : 2} />;
+              case 'statement':
+                return <Statement section={section} {...common} headingLevel={2} />;
+              case 'app-grid':
+                return <AppGrid section={section} {...common} headingLevel={2} />;
+              case 'feature-list':
+                return <FeatureList section={section} {...common} headingLevel={2} />;
+              case 'rich-text':
+                return <RichText section={section} {...common} headingLevel={2} />;
+              case 'cta':
+                return <Cta section={section} {...common} headingLevel={2} />;
+              case 'faq':
+                return <Faq section={section} {...common} headingLevel={2} />;
+              default:
+                return assertNever(section);
+            }
+          })()}
+        </div>
+      </section>
+    );
+  })
+}

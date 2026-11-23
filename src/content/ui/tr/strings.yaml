@@ -1,0 +1,48 @@
+skipToContent: İçeriğe geç
+menuOpen: Menü
+menuClose: Kapat
+navPrimaryLabel: Ana gezinme
+navFooterLabel: Alt gezinme
+languageLabel: Dil
+navQuote: Teklif iste
+tallyLive: CANLI
+tallyTimecode: TC
+tallyChannel: KANAL 01
+tallyProgram: PGM
+tallyPreview: PVW
+tallyOnAir: YAYINDA
+motionHold: Beklet
+motionHoldHint: Sitedeki tüm animasyonları duraklat
+noSignal: SİNYAL YOK
+appBrochure: Broşürü indir
+footerContact: İletişim
+footerSocial: Takip edin
+footerRights: Tüm hakları saklıdır.
+quoteName: Ad soyad
+quoteEmail: İş e-postası
+quoteCompany: Şirket
+quoteRole: Görev
+quoteCountry: Ülke
+quoteSolutions: İlgilendiğiniz çözümler
+quoteSolutionsGeneral: Genel bilgi talebi
+quoteSolutionsHint: Bilgi almak istediğiniz tüm çözümleri seçin.
+quoteTimeline: Zaman planı
+quoteTimelinePlaceholder: Zaman planı seçin
+quoteTimelineAsap: En kısa sürede
+quoteTimelineQuarter: Bu çeyrek içinde
+quoteTimelineHalfYear: Altı ay içinde
+quoteTimelineExploring: Yalnızca araştırıyorum
+quoteMessage: Projenizden bahsedin
+quoteConsent: Bilgilerimin bu talebi yanıtlamak için kullanılmasını kabul ediyorum.
+quoteConsentLink: Gizlilik politikasını okuyun
+quoteSubmit: Talebi gönder
+quoteOptional: isteğe bağlı
+quoteNoScript: Bu form, insan olduğunuzu doğrulamak için JavaScript gerektirir. JavaScript olmadan aşağıdaki e-posta adresinden bize yazın.
+quoteSentTitle: Talebiniz alındı
+quoteSentBody: Teşekkürler. Ekibimizden biri iki iş günü içinde size dönüş yapacak.
+quoteErrorInvalidTitle: Formu kontrol edin
+quoteErrorInvalidBody: Bazı alanlar eksik veya geçersiz. Alanları gözden geçirip formu yeniden gönderin.
+quoteErrorVerifyTitle: Doğrulama başarısız
+quoteErrorVerifyBody: Talebi doğrulayamadık. Yeniden deneyin ya da aşağıdaki e-posta adresinden bize yazın.
+quoteErrorSendTitle: Talep gönderilemedi
+quoteErrorSendBody: Bizim tarafımızda bir sorun oluştu. Daha sonra yeniden deneyin ya da aşağıdaki e-posta adresinden bize yazın.

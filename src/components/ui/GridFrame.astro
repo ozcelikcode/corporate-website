@@ -1,0 +1,30 @@
+---
+/**
+ * Spaced responsive grid with a fixed column ramp (1 → md 2 → lg 3 or 4; 12 from `lg`). No lines
+ * (border budget, spec §8): hierarchy comes from the gaps, `surface` vs `canvas` tone and type.
+ * Children are free; tone cards set their own `bg-surface` and padding. Every track is
+ * `minmax(0, 1fr)`, so a container-sized child (the ASCII figure) or a long word never widens it.
+ * For 12 columns, children set `lg:col-span-*` and each row's spans must add up to 12.
+ */
+import { cva } from 'class-variance-authority';
+
+interface Props {
+  as?: 'div' | 'section' | 'ul';
+  columns?: 1 | 2 | 3 | 4 | 12;
+}
+
+const COLUMNS = {
+  1: '',
+  2: 'md:grid-cols-2',
+  3: 'md:grid-cols-2 lg:grid-cols-3',
+  4: 'md:grid-cols-2 lg:grid-cols-4',
+  12: 'lg:grid-cols-12',
+} as const satisfies Record<NonNullable<Props['columns']>, string>;
+
+const frame = cva('grid grid-cols-1 gap-x-8 gap-y-12 lg:gap-x-12', {
+  variants: { columns: COLUMNS },
+});
+
+const { as: Tag = 'div', columns = 1 } = Astro.props;
+---
+<Tag class={frame({ columns })}><slot /></Tag>

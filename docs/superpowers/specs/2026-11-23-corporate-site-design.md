@@ -9,13 +9,13 @@ This is a static, brand-agnostic corporate showcase. The first tenant builds sof
 Principles:
 
 1. **Small beats feature-rich.** Every file, dependency and block must earn its place.
-2. **Hand-crafted, not templated.** The look of a control-room monitor wall: hairline grids, sharp corners, mono tally labels, one two-tone headline, one ASCII hero image.
+2. **Hand-crafted, not templated.** The look of a control-room monitor wall: calm editorial spacing with hairlines in moderation, sharp corners, a few broadcast details, mono tally labels, one two-tone headline, one ASCII hero image.
 3. **Platform first.** Use forms, `<dialog>`, Popover API and `<details>` before any JS.
 4. **Content is data.** Every user-facing string lives in typed content.
 
 ## 2. Goals / non-goals / anti-goals
 
-- **Goals:** Lighthouse ~100 across the board; near-zero client JS (Turnstile, `/quote` only); WCAG 2.2 AA; mobile-first; zero hosting cost; near-zero maintenance; typed content separate from code; EN at `/`, optional TR at `/tr/`.
+- **Goals:** Lighthouse ~100 across the board; near-zero client JS (Turnstile on `/quote`, plus one ≤ 2 KB self-hosted ASCII motion module on pages with the ASCII hero); WCAG 2.2 AA; mobile-first; zero hosting cost; near-zero maintenance; typed content separate from code; EN at `/`, optional TR at `/tr/`.
 - **Non-goals (forbidden):** visitor auth/accounts, payments, cart, servers/VPS/databases, paid services.
 - **Anti-goals:** `any`; swallowed errors; leftover `console.log`; magic numbers, raw hex or px in components; hardcoded copy; repeated style blocks; dead code; unused deps.
 
@@ -85,7 +85,7 @@ EDITOR ──► /admin (Sveltia, static) ──► sveltia-cms-auth Worker (Git
 │     └─ config.yml                  # backend (base_url = auth Worker URL, edited once by hand),
 │                                    #   i18n, collections, media folders
 ├─ src/
-│  ├─ content.config.ts              # all collections: glob loader + astro/zod
+│  ├─ content.config.ts              # all collections: glob loader + schemas from lib/content-schemas.ts
 │  ├─ content/
 │  │  ├─ settings/site.yaml          # singleton, shared across locales
 │  │  ├─ ui/{en,tr}/strings.yaml
@@ -95,14 +95,17 @@ EDITOR ──► /admin (Sveltia, static) ──► sveltia-cms-auth Worker (Git
 │  ├─ assets/
 │  │  ├─ fonts/                      # 2 variable woff2 families (consumed by the fonts API)
 │  │  └─ uploads/                    # CMS image uploads → AVIF/WebP at build;
-│  │                                 #   seed: neutral test-card hero (ASCII source)
+│  │                                 #   seed: transmitter-mast hero (ASCII source; transmitter.png)
 │  ├─ styles/
 │  │  ├─ tokens.css                  # @theme: every design token
-│  │  └─ global.css                  # base, prose, grid/crosshair, scanline, reduced-motion
+│  │  └─ global.css                  # base, prose, grid, lower-third, scanline, reduced-motion
 │  ├─ lib/
 │  │  ├─ i18n.ts                     # locales, localizePath, alternates, t() with en fallback
 │  │  ├─ content.ts                  # getPage/getApplications/getSettings with locale fallback
+│  │  ├─ content-schemas.ts          # entry schemas of every collection (tested)
 │  │  ├─ sections-schema.ts          # block union (shared by pages + applications)
+│  │  ├─ blank.ts                    # optionalField: a blank CMS value counts as absent
+│  │  ├─ page-slugs.ts               # own-route and forbidden page slugs
 │  │  ├─ markdown.ts                 # memoized Astro markdown processor
 │  │  ├─ seo.ts                      # meta, canonical, hreflang, Organization JSON-LD
 │  │  ├─ ascii.ts                    # sharp → glyph grid + quantized tone runs
@@ -110,10 +113,12 @@ EDITOR ──► /admin (Sveltia, static) ──► sveltia-cms-auth Worker (Git
 │  │  └─ quote-schema.ts             # form schema, enums, limits (site + Worker)
 │  ├─ integrations/build-outputs.ts  # astro:build:done: writes worker/generated/solutions.json;
 │  │                                 #   on non-production builds appends X-Robots-Tag: noindex to dist/_headers
+│  │                                 #   fails on a locale page linking the EN URL of its own translation
 │  ├─ layouts/BaseLayout.astro       # <html>, head, fonts, accent var, skip link, header/footer
 │  ├─ components/
 │  │  ├─ ui/                         # Button, Label, Heading, Tally, Timecode, GridFrame,
-│  │  │                              #   Field, Input, Textarea, Select, Checkbox, AsciiImage, Prose
+│  │  │                              #   Field, Input, Textarea, Select, Checkbox, AsciiImage, Prose,
+│  │  │                              #   DuotoneCover
 │  │  ├─ sections/                   # Hero, Statement, AppGrid, FeatureList, RichText, Cta, Faq,
 │  │  │                              #   SectionRenderer (exhaustive switch on `type`)
 │  │  ├─ layout/                     # SiteHeader, SiteFooter, MobileNav (popover),
@@ -154,12 +159,13 @@ EDITOR ──► /admin (Sveltia, static) ──► sveltia-cms-auth Worker (Git
   - `socials[]`
   - `ogImage`
   - `organization`: {legalName, url, address?}
-- **ui:** keyed strings. TR may be partial and falls back to EN.
+- **ui:** keyed strings. TR may be partial and falls back to EN; a blank TR string counts as missing (EN fallback), never a build failure.
 - **navigation:** `header[]`, `footer[]` of {label, href}.
-- **pages:** `title`, `description`, `ogImage?`, `sections[]`.
+- **pages:** `title`, `description`, `ogImage?`, `sections[]`. Slugs `admin`, `api` and every locale code are forbidden (they would shadow `/admin/`, `/api/` or a locale root); the build fails naming the slug.
+- **Blank optional values:** every optional field (`ogImage`, `organization.address`, `links`, `brochure`, feature-list `duration`, cta `text`) reads a blank value (`""`, whitespace-only or `null`) as absent, so a field cleared in the CMS never fails the build (`optionalField`, `lib/blank.ts`). The CMS also leaves empty optional fields out (`output.omit_empty_optional_fields`) and starts new entries in EN only (`i18n.initial_locales: default`).
 - **applications:**
   - `name`, `slug`, `tagline`, `summary`, `category`
-  - `cover` + `coverAlt`
+  - `cover` + `coverAlt` (the cover is also the page's og:image)
   - `status` (short tally label)
   - `order`
   - `links[]?`
@@ -198,12 +204,13 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
 - Markdown is rendered by `@astrojs/markdown-remark`, Astro's own pipeline.
 - The Applications index is a `pages` entry with an `app-grid` block.
 - TR routes build only translated entries. The toggle links to the TR twin, or to `/tr/` if there is none.
+- Content hrefs (navigation, actions, Markdown links) are written as EN site paths in every locale and localized at render time (`lib/localize-href.ts`): a TR page links `/tr/<path>` when TR builds that page or application, else the EN URL. Translating a page needs no navigation edit.
 - `hreflang` lists only existing translations, plus `x-default` pointing to EN.
 
 **v1 seed content.** The repo ships brand-neutral, realistic placeholder content:
 - EN: `settings`, `ui`, `navigation`, all pages, and 3 sample applications.
 - TR: `ui`, `navigation` and the home page only, to prove the plumbing and the EN fallback.
-- A neutral broadcast test-card style hero image is included as the ASCII source.
+- A bold broadcast motif is included as the ASCII source: a transmitter mast with signal waves radiating from its top (`src/assets/uploads/transmitter.png`; owner direction 2026-11-23: the look must evoke broadcasting to anyone).
 - Real tenant content is entered later by admins through the CMS.
 
 ## 8. Design system
@@ -212,12 +219,13 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
 
 | Group | Tokens |
 |---|---|
-| Color (OKLCH) | `canvas`, `surface`, `ink`, `ink-muted`, `line`, `line-strong`, `critical`; `accent` = `var(--accent-seed)` (the only value injected from settings, on `<html>`); `accent-dim` and `accent-wash` derived via `color-mix(in oklch, …)` |
+| Color (OKLCH) | `canvas`, `surface`, `ink`, `ink-muted`, `line`, `line-strong`, `critical`; `accent` = `var(--accent-seed)` (the only value injected from settings, on `<html>`); `accent-dim` and `accent-wash` derived via `color-mix(in oklab, …)` (oklab: oklch hue path runs through green) |
+| Bars | `bars-white … bars-blue`: the seven SMPTE 75% bars (`rgb(75% 75% 75%)` …). A fixed broadcast standard, not brand colour: the documented exception to the accent-only rule, used only by `BarsStrip` and `NoSignal` (decorative, `aria-hidden` / one `role="img"`) |
 | Type | `--font-sans`, `--font-mono`; `--text-label`, `-body`, `-lede`, `-h2`, `-display` (fluid `clamp`); `--tracking-label` |
 | Space | `--spacing: 0.25rem` (4px base) |
 | Line | `--border-hairline: 1px` |
 | Radius / shadow | `--radius-*: initial; --shadow-*: initial` (no such utilities exist) |
-| Z-index | `--z-header`, `--z-popover`, `--z-dialog` |
+| Z-index | `--z-header`, `--z-popover` |
 | Motion | `--duration-fast` 120ms, `--duration-base` 240ms, `--ease-signal` |
 | Layout | `--container-page`, 12-column grid |
 
@@ -226,27 +234,47 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
 - **Martian Mono** (labels/data): its wide, instrument-like forms read like broadcast hardware labelling.
 - Both are OFL and loaded via `fontProviders.local()`. Swappable, but never for Inter, Geist, Space Grotesk, Poppins or Montserrat.
 
+**Border budget (binding, owner feedback 2026-11-23):** borders in moderation. 1px hairlines appear only on:
+1. the header's bottom edge and the footer's top edge;
+2. section dividers (one rule between major sections; it may carry a label);
+3. form controls (inputs, selects, textareas, buttons, the menu key);
+4. the `TitleSafe` media frame, used only on the hero media and the ApplicationPage cover.
+
+Everything else (content grids, cards, feature lists, FAQ, CTA, rich-text block quotes) gets its hierarchy from spacing, `surface` vs `canvas` tone and type: no boxed cells. `GridFrame` is spaced only. The "+" crosshairs are retired.
+
+**Broadcast details (CSS only, no client JS, static under reduced motion), used sparingly:**
+
+| Detail | Where | Notes |
+|---|---|---|
+| Tally + PGM/PVW | `TallyStrip` | `surface` band under the header, segments split by spacing. LIVE and PGM lamps accent, PVW muted; labels from `ui` (`tallyProgram`, `tallyPreview`) |
+| Title-safe corner brackets | exactly two media frames: the hero ASCII and the ApplicationPage cover (app-grid tile covers stay frameless) | `TitleSafe`: hairline frame; the picture is inset by the title-safe margin (`--title-safe-inset`, 5% of the frame width), and four L-shaped marks sit inside that margin, so they never cross the media |
+| Lower third | section headings (`app-grid`, `feature-list`) and application card titles | `LowerThird`: heading above, mono label strap below (translucent ink band, accent key on its leading edge), in an `<hgroup>` |
+| Rundown rows | `feature-list` | numbered rows, title, body and a mono duration column `HH:MM:SS` from the item's optional `duration` (display only) |
+| SMPTE colour-bar micro strip | one signature divider: laid on the footer's top rule at the content edge | `BarsStrip`, `bars-*` tokens, `aria-hidden` |
+| "NO SIGNAL" test pattern | 404 page | `NoSignal`: bars filling a 16:9 frame, canvas slate with a muted tally and `ui.noSignal` |
+
+A VU meter was considered and dropped: a second perpetual animation beside the running timecode added clutter.
+
 **Do:**
-- One shared 1px hairline grid, never doubled.
-- "+" crosshairs at grid intersections.
+- Hairlines only within the border budget above, never doubled.
 - Uppercase tracked mono labels with an index, e.g. `[02] APPLICATIONS`.
 - One two-tone headline per page.
 - Typographic glyphs (→ ↗ + ●) instead of icons.
-- Motion on opacity/transform only, ≤240ms.
+- Motion on opacity/transform only, ≤240ms. Exceptions: the Timecode counter and the AsciiImage live signal (ambient, static under reduced motion).
 - Scanlines on the hero only.
 - Accent for large text and graphics only.
 
-**Don't:** radius, shadows, gradients (except the ASCII shimmer mask), blur/glass, purple, emoji, icon packs, stock photos, centered three-icon feature rows.
+**Don't:** radius, shadows, gradients (except the ASCII hum bar and the hero scanlines), blur/glass, purple (the SMPTE magenta bar is the standard's own, not decoration), boxed content grids, emoji, icon packs, stock photos, centered three-icon feature rows.
 
 | Block | Visual |
 |---|---|
-| `hero` | Split grid: label, two-tone headline, lede, ≤2 actions left; ASCII render right |
+| `hero` | Spaced split (no cell borders): label, two-tone headline, lede, ≤2 actions left; ASCII render right in `TitleSafe` with scanlines. The image must be a PNG, JPEG or WebP raster (the CMS field accepts only those; any other type fails the build naming the file) |
 | `statement` | Full-width mission sentence in display type, mono label in the gutter |
-| `app-grid` | Hairline cell matrix: index, status tally, name, tagline, duotone cover, ↗ |
-| `feature-list` | Numbered rows, title left, body right, hairline dividers |
+| `app-grid` | Spaced `surface` tiles (no borders): index, status tally, lower-third name, tagline, frameless duotone cover, → (internal link) |
+| `feature-list` | Rundown: numbered rows, title, body, mono `HH:MM:SS` duration column; spacing between rows, no rules |
 | `rich-text` | `Prose` column ≤68ch, mono h3+ |
-| `cta` | One bordered band: heading, single action, accent "ON AIR" tally |
-| `faq` | Native `<details>` rows, "+" ↔ "−" |
+| `cta` | One `surface` band (no border): heading, single action, accent "ON AIR" tally |
+| `faq` | Native `<details>` rows, "+" ↔ "−"; spacing between rows, no rules |
 
 **Signature components:**
 
@@ -255,27 +283,37 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
   - Luminance picks a glyph from a ramp; each glyph gets one of 6 accent/ink tones.
   - Same-tone runs merge into one `<span>`.
   - Output is a `<pre aria-hidden>` inside a `<figure role="img" aria-label>`, sized with container query units.
-  - Optional CSS shimmer, only under `prefers-reduced-motion: no-preference`.
-- **`TallyStrip`:** `● LIVE` plus SMPTE timecode `HH:MM:SS:FF`, made with a CSS `@property` counter (no JS). Static under reduced motion.
+  - **Signature moment: a live broadcast signal** (Task 7b; owner: "ASCII effects must be animated", and the effect must evoke broadcasting to anyone). Only under `prefers-reduced-motion: no-preference`; the build-time render is the no-JS and reduced-motion picture. Zero layout shift: rows are full-width inline-blocks, motion is transform, opacity and same-width glyphs only. Each effect maps to a broadcast idea:
+    - *Tuning in* (module): when the figure first scrolls into view, the frame is static noise that resolves glyph by glyph into the picture over about 1.2 s (random order, rolling roughly top-down; tones settle with their glyphs). On a cold load, a figure already in view whose first report comes more than 300 ms after navigation start has already painted the still picture, so it skips the tune-in and goes straight to live.
+    - *Transmission* (module): a ring of brightness leaves the transmitter every 2.5 s (`WAVE_CADENCE_MS`) and travels outward from `WAVE_ORIGIN` (top centre, the seed's mast top). Glyphs under a ring step up in tone, a dotted front crosses empty sky, and the signal fades with distance. A little glyph grain (rare ramp-neighbour flicker) rides on top.
+    - *Hum bar* (CSS): a soft colour-dodge band rolls slowly down the picture, like mains hum on a monitor.
+    - *Sync slip* (CSS): both slip bands share one 36 s cycle with slips at 4 s (rows 5–6), 13 s (rows 10–12) and 26 s (rows 5–6), so the gaps are 9, 13 and 14 s (never under 8 s). Each slip tears a band sideways by a fraction of a glyph and dips it for about two frames (a dropout).
+    - *Breath* (CSS, no-JS picture only): the brightest tone dims and recovers in coarse steps.
+  - **HOLD key** (WCAG 2.2.2 pause, no extra JS): a native checkbox styled as a broadcast key at the end of `TallyStrip`, on every page and breakpoint, outside the strip's `aria-hidden` status segments, 44px tall, labelled by `ui.motionHold` (EN "Hold", TR "Beklet") and described by `ui.motionHoldHint`. Off by default (the site moves). Checked, `global.css` sets `animation-play-state: paused` on everything (timecode, hum bar, slips, breath), its lamp lights, and the ASCII module stops and restores the static markup.
+  - The module (`lib/ascii-motion.ts` pure logic, thin glue in the component) is one Astro-bundled `/_astro/*.js` file (≤ 2 KB gzipped, CSP `script-src 'self'`). It runs only on the visible grid, pauses offscreen and in hidden tabs, never runs under reduced motion (and follows changes to it) or while HOLD is checked, and restores the build-time markup whenever it stops. It caches each row's last markup, so frames never read `innerHTML`.
+- **`TallyStrip`:** `■ LIVE` plus SMPTE timecode `HH:MM:SS:FF`, made with a CSS `@property` counter (no JS), channel, `■ PGM ■ PVW` and the format. Static under reduced motion.
 
 ```
-+------------------------------------------------------------------------------+
-| [LOGO] BRAND            APPLICATIONS   ABOUT   CONTACT     EN / TR  [QUOTE ↗] |
-+-------------------------------+----------------------------------------------+
-| ● LIVE   TC 00:14:07:12   CH 01 · PGM                     1920×1080 · 25p    |
-+-------------------------------+----------------------------------------------+
-| [01] MISSION                  |  ..::--==++**##%%@@@@%%##**++==--::..         |
-|                               |  .:-=+*#%@@@@@@@@@@@@@@@@@@@@%#*+=-:.         |
-| Software that keeps           |  :=*#%@@@@%#*+=-::::-=+*#%@@@@%#*=:           |
-| every newsroom on air.        |  -+#@@@%*=:.   ASCII render   .:=*%@@@#+-     |
-| ^ ink        ^ accent line    |  :=*#%@@@@%#*+=-::::-=+*#%@@@@%#*=:           |
-|                               |  .:-=+*#%@@@@@@@@@@@@@@@@@@@@%#*+=-:.         |
-| Lede, max 60ch, ink-muted.    |  ..::--==++**##%%@@@@%%##**++==--::..         |
-|                               |                                               |
-| [ EXPLORE APPLICATIONS → ]    |                                               |
-| [ REQUEST A QUOTE ↗ ]         |                                               |
-+-------------------------------+----------------------------------------------+
+ [LOGO]                 APPLICATIONS   ABOUT   CONTACT     EN / TR  [QUOTE →]
+──────────────────────────────────────────────────────────────────────────────  header rule
+ ■ LIVE  TC 00:14:07:12  CH 01  ■ PGM ■ PVW                            1080i50   surface band
+
+ [01] MISSION                   ┌──────────────────────────────────────────────┐
+                                │   ┌─                                    ─┐   │
+ Software that keeps            │    ..::--==++**##%%@@@@%%##**++==--::..      │
+ every newsroom on air.         │    :=*#%@@@@%#*+=-::::-=+*#%@@@@%#*=:        │
+ ^ ink        ^ accent line     │    -+#@@@%*=:.   ASCII render   .:=*%@@@     │
+                                │    :=*#%@@@@%#*+=-::::-=+*#%@@@@%#*=:        │
+ Lede, max 60ch, ink-muted.     │   └─                                    ─┘   │
+                                └──────────────────────────────────────────────┘
+ [ EXPLORE APPLICATIONS → ]       ^ TitleSafe: hairline frame, title-safe marks, scanlines
+ [ REQUEST A QUOTE → ]
+──────────────────────────────────────────────────────────────────────────────  section divider
+ ...
+▀▀▀▀▀▀▀────────────────────────────────────────────────────────────────────────  footer rule + bars strip
 ```
+
+Internal links (the quote key included) use →, outbound links ↗, both drawn by `Glyph`.
 
 ## 9. `wrangler.jsonc` (draft)
 
@@ -396,7 +434,7 @@ The form is a plain `<form method="post" action="/api/quote">`:
 - **Limits:** all limits and enums live in `src/lib/quote-schema.ts` and drive both the HTML attributes and the Worker validation.
 - **Solutions allow-list:** the Astro build emits `worker/generated/solutions.json` (every application slug, deduplicated across locales, plus the literal `general`) through `src/integrations/build-outputs.ts` (`astro:build:done`). The Worker imports it and rejects unknown slugs. It is generated, gitignored and has no runtime lookup.
 - **Availability:** the flow works at v1 launch on `*.workers.dev`, because Email Routing lives on the owner's existing zone (§3, §13).
-- **JS:** Turnstile (`data-action="quote"`) is the only JS, loaded on `/quote` only.
+- **JS:** Turnstile (`data-action="quote"`) loads on the quote pages only (`/quote/`, `/tr/quote/`). The only other client JS outside `/admin/` is the ASCII motion module, on pages that render the ASCII hero (§8).
 
 Worker steps:
 1. Accept only `POST /api/quote`; anything else returns 405.
@@ -416,7 +454,7 @@ Deploy order: **auth Worker → GitHub App callback → site.**
 
 1. **Repo:** public (decided 2026-11-23), so branch protection on main enforces 1 CODEOWNERS approval for free. Add `.github/CODEOWNERS`.
 2. **Roles:** Admin = Maintain/Admin + CODEOWNER. Editor = Write.
-3. **Ruleset on `main`:** PR required, 1 CODEOWNERS approval, no force-push, no bypass.
+3. **Ruleset on `main`:** PR required, 1 CODEOWNERS approval, no force-push. Bypass list: the Repository admin and Maintain roles only, so admins can merge their own changes (otherwise nothing the owner writes could ever be published); editors (Write) are not on it and always need 1 Code Owner approval (runbook 3.4).
 4. **Auth Worker (first, by hand):**
    - Deploy the official `sveltia/sveltia-cms-auth` repo as its own Worker. It is not vendored in this repo.
    - Record its URL.
@@ -490,5 +528,5 @@ Deploy order: **auth Worker → GitHub App callback → site.**
 22. `sveltia-cms-auth` is not vendored. It is deployed once, by hand, from the official repo as its own Worker before the site. Its URL is set by a one-time manual edit of `config.yml` `base_url` and the `/admin/*` CSP in `_headers`, not a build variable: a generator step for two static values that change at most once would be over-engineering. Deploy order: auth Worker → GitHub App callback → site.
 23. Quote `solutions` are validated against a generated allow-list. A small Astro integration (`astro:build:done`) writes `worker/generated/solutions.json` (application slugs + `general`), and the Worker imports it. Build order is `astro build` → Worker bundle. Unknown slugs are rejected.
 24. PR preview builds are for visual review only. They use Turnstile's official always-pass test keys, `SITE_URL` falls back to the preview host, previews are `noindex` (`X-Robots-Tag` + disallow-all `robots.txt`), and CMS auth is not expected to work on them. Production keys are used only on `main`.
-25. v1 ships brand-neutral, realistic placeholder seed content: EN for settings, ui, navigation, all pages and 3 sample applications; TR for ui, navigation and home only, to prove the plumbing and fallback. A neutral test-card hero image is the ASCII source. Real content is entered later by admins via the CMS.
+25. v1 ships brand-neutral, realistic placeholder seed content: EN for settings, ui, navigation, all pages and 3 sample applications; TR for ui, navigation and home only, to prove the plumbing and fallback. A transmitter-mast hero image (signal waves from its top) is the ASCII source. Real content is entered later by admins via the CMS.
 26. The accent is validated, never adjusted. The CMS field is restricted to a 6-digit hex pattern with a contrast hint, and the build fails loudly, naming the field, when contrast against the canvas is below 3:1. Admins see the failure on the PR preview before merging.

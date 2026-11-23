@@ -1,0 +1,103 @@
+/*
+ * Design tokens: the single source of every colour, size and timing value.
+ * One dark theme (monitor wall). Default namespaces are cleared first, so only
+ * the tokens below exist as utilities; radius and elevation utilities do not exist.
+ */
+
+@theme {
+  --color-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --blur-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --text-shadow-*: initial; /* not covered by --text-*: initial */
+  --animate-*: initial;
+
+  /* Colour (OKLCH) */
+  --color-canvas: oklch(0.17 0.008 255);
+  --color-surface: oklch(0.21 0.008 255);
+  --color-ink: oklch(0.95 0.005 255);
+  --color-ink-muted: oklch(0.74 0.01 255);
+  --color-line: oklch(0.32 0.01 255); /* decorative grid only */
+  --color-line-strong: oklch(0.52 0.012 255); /* control borders, >= 3:1 on canvas */
+  --color-critical: oklch(0.7 0.17 30);
+  --color-accent: var(--accent-seed);
+  /* Mixed in oklab, not oklch: polar mixing swings the hue toward the canvas hue (amber turns green). */
+  --color-accent-dim: color-mix(in oklab, var(--accent-seed) 55%, var(--color-canvas));
+  --color-accent-wash: color-mix(in oklab, var(--accent-seed) 12%, var(--color-canvas));
+
+  /*
+   * ASCII tones, darkest to brightest: a duotone ramp canvas → accent → ink, so luminance rises
+   * with every step for any valid accent (>= 3:1 on canvas, below ink) and the image reads true.
+   */
+  --color-tone-0: color-mix(in oklab, var(--accent-seed) 25%, var(--color-canvas));
+  --color-tone-1: var(--color-accent-dim);
+  --color-tone-2: color-mix(in oklab, var(--accent-seed) 80%, var(--color-canvas));
+  --color-tone-3: var(--color-accent);
+  --color-tone-4: color-mix(in oklab, var(--accent-seed) 50%, var(--color-ink));
+  --color-tone-5: var(--color-ink);
+
+  /*
+   * SMPTE 75% colour bars, left to right (fixed broadcast standard, not brand colours).
+   * Documented exception to the accent-only rule: used only by BarsStrip (aria-hidden) and
+   * NoSignal (one labelled image), both decorative.
+   */
+  --color-bars-white: rgb(75% 75% 75%);
+  --color-bars-yellow: rgb(75% 75% 0%);
+  --color-bars-cyan: rgb(0% 75% 75%);
+  --color-bars-green: rgb(0% 75% 0%);
+  --color-bars-magenta: rgb(75% 0% 75%);
+  --color-bars-red: rgb(75% 0% 0%);
+  --color-bars-blue: rgb(0% 0% 75%);
+
+  /* Type scale (fluid) */
+  --text-label: 0.75rem;
+  --text-label--line-height: 1.4;
+  --text-body: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --text-body--line-height: 1.55;
+  --text-lede: clamp(1.125rem, 1.02rem + 0.5vw, 1.375rem);
+  --text-lede--line-height: 1.45;
+  --text-h2: clamp(1.5rem, 1.2rem + 1.5vw, 2.25rem);
+  --text-h2--line-height: 1.1;
+  --text-display: clamp(2.5rem, 1.5rem + 5vw, 5.5rem);
+  --text-display--line-height: 0.98;
+  --tracking-label: 0.12em;
+  --tracking-display: -0.02em; /* optical tightening for display-size headlines */
+
+  /* Default motion for bare transition utilities: the motion tokens below */
+  --default-transition-duration: var(--duration-fast);
+  --default-transition-timing-function: var(--ease-signal);
+
+  /* Space and layout */
+  --spacing: 0.25rem;
+  --container-page: 90rem;
+  --container-measure: 60ch; /* lede and short body copy (spec §8 wireframe: "max 60ch") */
+}
+
+/* Font families come from the Astro fonts API (--font-grotesk, --font-martian). */
+@theme inline {
+  --font-sans: var(--font-grotesk);
+  --font-mono: var(--font-martian);
+}
+
+/* Plain variables (no utilities). --accent-seed is overridden per page by BaseLayout. */
+@layer base {
+  :root {
+    --accent-seed: oklch(0.8 0.16 75);
+
+    --border-hairline: 1px;
+    --border-focus: 0.125rem;
+    /* Translucent ink band: reads on canvas and surface alike (lower thirds, prose quotes). */
+    --ink-band: color-mix(in oklab, var(--color-ink) 6%, transparent);
+
+    --z-header: 10;
+    --z-popover: 20;
+
+    --duration-fast: 120ms;
+    --duration-base: 240ms;
+    --ease-signal: cubic-bezier(0.2, 0, 0, 1);
+  }
+}

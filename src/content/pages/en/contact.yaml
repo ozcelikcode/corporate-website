@@ -1,0 +1,21 @@
+title: Contact
+description: Get in touch with the team for product questions, support and partnerships.
+sections:
+  - type: statement
+    label: Contact
+    text: Write to us about a product, a support question or a partnership. A person reads every message.
+  - type: rich-text
+    body: |
+      ## Sales and general enquiries
+
+      Use the contact details below, or send a structured request through the quote form. We reply within two working days.
+
+      ## Support
+
+      Customers with a support agreement reach the on-call engineer through the channel named in their contract.
+  - type: cta
+    heading: Ready to scope a project?
+    text: The quote form collects the details we need to give you a precise answer.
+    action:
+      label: Request a quote
+      href: /quote/

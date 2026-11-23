@@ -1,0 +1,68 @@
+---
+/**
+ * Media frame for exactly two places: the hero image and the ApplicationPage cover. One hairline
+ * edge; the picture sits inset by the broadcast title-safe margin (5% of the frame width), and
+ * four L-shaped corner marks sit inside that margin, halfway between edge and picture, so they
+ * never cross the media. Insets use `cqi` against the frame, so both axes share one length.
+ * The marks are decorative and hidden from assistive tech. `scanlines` adds the hero raster.
+ */
+
+interface Props {
+  scanlines?: boolean;
+}
+
+/** Corner name → the two edges it draws (block, inline), in logical directions. */
+const CORNERS = ['start-start', 'start-end', 'end-start', 'end-end'] as const;
+
+const { scanlines = false } = Astro.props;
+---
+<div class:list={['title-safe relative border border-line', { scanlines }]}>
+  <div class="title-safe-picture"><slot /></div>
+  {CORNERS.map((corner) => <span class="title-safe-mark" data-corner={corner} aria-hidden="true" />)}
+</div>
+
+<style>
+  .title-safe {
+    /* Title-safe margin: 5% of the frame width on every side (90% safe area). */
+    --title-safe-inset: 5cqi;
+    /* The marks sit in the middle of that margin. */
+    --title-safe-mark-inset: calc(var(--title-safe-inset) / 2);
+    --title-safe-arm: calc(var(--spacing) * 5);
+    --title-safe-stroke: var(--border-hairline);
+
+    container-type: inline-size;
+  }
+
+  .title-safe-picture {
+    padding: var(--title-safe-inset);
+  }
+
+  .title-safe-mark {
+    position: absolute;
+    z-index: 1;
+    inline-size: var(--title-safe-arm);
+    block-size: var(--title-safe-arm);
+    border: 0 solid var(--color-ink-muted);
+    pointer-events: none;
+  }
+
+  [data-corner^="start"] {
+    inset-block-start: var(--title-safe-mark-inset);
+    border-block-start-width: var(--title-safe-stroke);
+  }
+
+  [data-corner^="end"] {
+    inset-block-end: var(--title-safe-mark-inset);
+    border-block-end-width: var(--title-safe-stroke);
+  }
+
+  [data-corner$="-start"] {
+    inset-inline-start: var(--title-safe-mark-inset);
+    border-inline-start-width: var(--title-safe-stroke);
+  }
+
+  [data-corner$="-end"] {
+    inset-inline-end: var(--title-safe-mark-inset);
+    border-inline-end-width: var(--title-safe-stroke);
+  }
+</style>

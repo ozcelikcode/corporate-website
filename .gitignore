@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.astro/
+.wrangler/
+.claude/worktrees/
+worker/generated/
+.dev.vars
+.env*
+.DS_Store
+.superpowers/

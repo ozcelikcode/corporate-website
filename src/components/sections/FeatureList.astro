@@ -1,0 +1,56 @@
+---
+/**
+ * Rundown: a lower-third section heading over numbered rows (running number, title, body and a
+ * mono `HH:MM:SS` duration column, end-aligned; empty for a row without `duration`). Rows are set
+ * apart by spacing, never by rules. The rows share their parent's columns through `subgrid`, so
+ * numbers, titles, bodies and durations line up from row to row:
+ * - below `md`: number and duration on one line, then title and body;
+ * - `md`: number | title over body | duration;
+ * - `lg`: number | title | body | duration, like a rundown sheet.
+ * Below `md` each row is its own two-column grid; from `md` it inherits the list's column gap.
+ * Item titles are h3 (the section heading is h2). The duration is a `<time datetime="PT…">`, so
+ * assistive tech gets a real length. The DOM keeps the `lg` reading order. The running number
+ * repeats the list's own numbering, so it is hidden from assistive tech.
+ */
+import { durationToIso } from '../../lib/duration.ts';
+import LowerThird from '../ui/LowerThird.astro';
+import { padIndex } from '../ui/pad-index.ts';
+import type { BlockProps } from './block-props.ts';
+
+type Props = BlockProps<'feature-list'>;
+
+/** Row numbers count from 1. */
+const FIRST_ROW = 1;
+const ROW_COLUMNS =
+  'md:grid-cols-[auto_minmax(0,1fr)_auto] lg:grid-cols-[auto_minmax(0,2fr)_minmax(0,3fr)_auto]';
+
+const { section, index, headingLevel } = Astro.props;
+---
+<div class="flex flex-col gap-12 md:gap-16">
+  <LowerThird level={headingLevel} text={section.heading} label={section.label} index={index} />
+  <ol class:list={['grid grid-cols-1 gap-x-8 gap-y-10 md:gap-y-12 lg:gap-x-12', ROW_COLUMNS]}>
+    {
+      section.items.map((item, i) => (
+        <li class="grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-y-3 max-md:gap-x-6 md:col-span-3 md:grid-cols-subgrid lg:col-span-4">
+          <span class="col-start-1 row-start-1 label-mono text-ink" aria-hidden="true">
+            {padIndex(i + FIRST_ROW)}
+          </span>
+          <h3 class="col-span-2 row-start-2 text-lede font-semibold md:col-span-1 md:col-start-2 md:row-start-1">
+            {item.title}
+          </h3>
+          <p class="col-span-2 row-start-3 max-w-measure text-ink-muted md:col-span-1 md:col-start-2 md:row-start-2 lg:col-start-3 lg:row-start-1">
+            {item.body}
+          </p>
+          {item.duration !== undefined && (
+            <time
+              datetime={durationToIso(item.duration)}
+              class="col-start-2 row-start-1 justify-self-end label-mono text-ink-muted md:col-start-3 lg:col-start-4"
+            >
+              {item.duration}
+            </time>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</div>

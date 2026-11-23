@@ -1,0 +1,22 @@
+---
+/**
+ * Lower third: a heading with its mono label set beneath it as an on-air name strap (name above,
+ * strap below, accent key on the strap's leading edge). `<hgroup>` ties the strap to the heading
+ * as its subtitle. Used for section headings and application card titles, nowhere else.
+ */
+import Heading from './Heading.astro';
+import Label from './Label.astro';
+
+interface Props {
+  level: 2 | 3;
+  text: string;
+  label: string;
+  index?: number | undefined;
+}
+
+const { level, text, label, index } = Astro.props;
+---
+<hgroup class="flex flex-col items-start gap-2">
+  <Heading level={level} text={text} />
+  <Label text={label} index={index} strap />
+</hgroup>
