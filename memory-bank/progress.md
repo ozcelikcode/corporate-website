@@ -12,14 +12,15 @@
 - 2026-11-23: Task 4 done: 12 UI atoms + Glyph, atom showcase on the scaffold page.
 - 2026-11-23: Tasks 5 (layout shell and SEO head), 6 (ASCII pipeline and AsciiImage) and 11 (Sveltia admin config) done, including fix rounds.
 - 2026-11-23: Task 7a design refinement done: border budget, spaced GridFrame, TitleSafe, LowerThird, BarsStrip, NoSignal, TallyStrip PGM/PVW, rundown `duration`.
-- Tasks 1–6, 11 and 7a done (2026-11-23).
+- 2026-11-23: Task 7 done: 7 section blocks, SectionRenderer (dividers, exhaustive switch, single h1), `renderMarkdown`, `padIndex`.
+- Tasks 1–7, 11 and 7a done (2026-11-23).
 
 ## Next
-- G5 Task 7 (section blocks) on the Task 7a rules.
+- G6: Task 8 (routes and SEO) ∥ Task 9 (quote page).
 - Owner: Sveltia step 6 manual check (runbook).
 - Build the Worker (`/api/quote`), Turnstile verification, mail builder.
 - Add `.github/CODEOWNERS`.
-- Remaining section blocks, pages and TR wrappers.
+- Pages and TR wrappers.
 - Resolve the "Left to the builder" verifications from the spec (section 14).
 - Verify: Lighthouse, headers scan, quote flow (JS, no JS, bad token), axe on every template.
 
@@ -47,3 +48,4 @@
 - 2026-11-23: Task 11 implemented: Sveltia admin at `public/admin` (editorial workflow, en/tr folders, settings singleton) with a config test. Fix round 1: nav `footer` and hero `actions` default to `[]`. Owner step 6 pending.
 - 2026-11-23: Task 7a implemented: 3 ui keys (`tallyProgram`, `tallyPreview`, `noSignal`), feature-list `duration` (schema, seed, CMS), ui seed parity test; gate green (78 tests); border audit, 360/768/1440 checked in the browser.
 - 2026-11-23: Task 7a fix round 1: TitleSafe inner inset (marks in the margin), TitleSafe limited to hero + ApplicationPage cover, footer first rows aligned, LowerThird `gap-2`, spec app-grid uses →.
+- 2026-11-23: Task 7 implemented: blocks + SectionRenderer, scaffold renders EN home/about/contact; ASCII tones made a monotonic duotone ramp; GridFrame hairline variant and `grid-hairline`/`cell` removed; gate green (83 tests); border audit, focus walk, FAQ keyboard toggle and 360/768/1440 checked in the browser.
