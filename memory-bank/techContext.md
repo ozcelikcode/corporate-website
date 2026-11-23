@@ -41,7 +41,7 @@ Dev dependencies:
 - `send_email` binding `QUOTE_MAILER` (no `destination_address`): reaches verified Email Routing destinations only; needs a domain on the account. Until then the endpoint redirects to the error state.
 - Turnstile: Managed widget, `data-action="quote"`, siteverify in the Worker.
 - R2 on a custom domain (`assets.<domain>`, `r2.dev` disabled, Cache Everything, CORS GET): large files (brochures) are linked, not embedded.
-- Workers Builds: production branch `main`, `pnpm build` then `npx wrangler deploy`; preview builds on for PR branches.
+- Workers Builds: production branch `main`, `pnpm build` then `npx wrangler deploy`; non-production branch builds OFF (security audit H1: branch code would run with the production deploy token and secrets); admins preview locally with `pnpm build` / `pnpm preview`. Secure previews (separate Worker, no secrets, Cloudflare Access) are an optional later step in the runbook.
 - Build vars (dashboard): `SITE_URL`, `PUBLIC_TURNSTILE_SITE_KEY` (via `astro:env`).
 
 ## CMS
@@ -93,6 +93,11 @@ Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fie
 - Production only when `WORKERS_CI_BRANCH === 'main'`: then `SITE_URL` (https, trailing slash stripped) and `PUBLIC_TURNSTILE_SITE_KEY` are required (empty counts as missing) or the build throws.
 - Any other branch or a local build ignores both vars: `siteUrl` = `PREVIEW_SITE_URL` (`http://localhost:4321`, interim, open §14 "Previews" item), Turnstile test key `1x00000000000000000000AA`.
 - `astro.config.ts` feeds `site` from it; `src/lib/env.ts` exposes `BUILD` from `astro:env`.
+
+## Security hardening (audit 2026-11-24)
+- `_headers`: `/admin/*` adds `X-Robots-Tag: noindex, nofollow`; `interest-cohort` removed from Permissions-Policy (spec §11 updated).
+- CMS: `ogImage` (settings and pages) and application `cover` have `accept: image/png,image/jpeg,image/webp` (field-level, as on the hero image); the schema also rejects `format === 'svg'` for them (`rasterImage`). Logo may stay SVG. `organization.url` is https-only.
+- GitHub/Cloudflare items (ruleset, ALLOWED_DOMAINS, WAF rate limit, `workers_dev`/`preview_urls` off, security features) are owner steps in `docs/runbook.md` ("Security checklist before the first editor", 3.4, 3.5, 3.11).
 
 ## Tooling notes
 - pnpm 12 blocks install scripts: `pnpm-workspace.yaml` has `allowBuilds` for esbuild and workerd, and `minimumReleaseAgeExclude` for `@cloudflare/workers-types@5.20261123.1`.

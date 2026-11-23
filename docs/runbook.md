@@ -64,13 +64,26 @@ Gate before every merge, in this order: `pnpm build && pnpm check && pnpm lint &
 
 **Order:** do 3.7 (Turnstile) and 3.8 (Email Routing) first, because 3.5 and 3.6 need the keys and addresses they produce. Then 3.1 to 3.6, 3.9 if needed, and 3.10.
 
+### Security checklist before the first editor
+
+Do these in order. None of them can be skipped: until they are done, anyone with Write access could publish to production or read the Worker's secrets without a review. Details are in the sections named.
+
+1. [ ] **Workers Builds: non-production branch builds OFF** (3.5). Branch code would otherwise run with the production deploy token and secrets.
+2. [ ] **The `main` ruleset exists** (3.4), with every option listed there. Create it **before** adding any collaborator.
+3. [ ] **`ALLOWED_DOMAINS` on the auth Worker** lists exact hosts only: no wildcard, never empty (3.1).
+4. [ ] **GitHub repository security features on** (3.4): secret scanning, push protection, Dependabot alerts and updates, private vulnerability reporting; Actions disabled or "selected actions only".
+5. [ ] **GitHub App** keeps "Expire user authorization tokens" on and is installed on this repository only (3.2).
+6. [ ] Only then add the first editor (Write role).
+
+After the custom domain exists, also do the hardening in 3.11 (rate-limit rule, `workers_dev` and `preview_urls` off).
+
 **Role model:** Editor = submit (Write role; opens PRs that need 1 Code Owner approval). Admin = review + publish (repo owner and Maintain role; on the bypass list, so admins can merge their own changes).
 
 ### 3.1 Auth Worker (`sveltia-cms-auth`)
 
 - [ ] Clone the official repository `sveltia/sveltia-cms-auth` into a separate folder (it is not vendored here). Read its README first: confirm the deploy steps and variable names are still the ones below.
 - [ ] Deploy it as its own Worker: `npx wrangler deploy` from that folder. Note the URL it prints, `https://<auth-worker>.<account-subdomain>.workers.dev`. This is `<auth-worker-url>` below.
-- [ ] Set `ALLOWED_DOMAINS` to the production site host(s), for example `<site-name>.<account-subdomain>.workers.dev` (known before the first site deploy: the site Worker name is `corporate-site` in `wrangler.jsonc`, so `corporate-site.<account-subdomain>.workers.dev`). Add the custom domain later (3.11).
+- [ ] **Mandatory:** set `ALLOWED_DOMAINS` to the exact production site host(s). The auth Worker uses it both to accept a login and as the only target it sends the GitHub token to. Unset, empty or a wildcard (such as `*.workers.dev`) lets any site that opens the login window receive a user's GitHub token. List full hostnames only, no wildcard, never blank. For example `<site-name>.<account-subdomain>.workers.dev` (known before the first site deploy: the site Worker name is `corporate-site` in `wrangler.jsonc`, so `corporate-site.<account-subdomain>.workers.dev`). Add the custom domain later (3.11).
 
 ### 3.2 GitHub App
 
@@ -84,6 +97,7 @@ Gate before every merge, in this order: `pnpm build && pnpm check && pnpm lint &
 npx wrangler secret put GITHUB_CLIENT_ID
 npx wrangler secret put GITHUB_CLIENT_SECRET
 ```
+- [ ] Keep **Expire user authorization tokens** on, and install the app on this repository only (not "All repositories").
 
 ### 3.3 One-time repo edits (commit before the first site deploy)
 
@@ -96,7 +110,14 @@ npx wrangler secret put GITHUB_CLIENT_SECRET
 The repo is public, so these are free.
 
 - [ ] `.github/CODEOWNERS` holds `* @<your-github-handle>`. Check the handle is yours and exists; change it if not. Add more admins on the same line if wanted.
-- [ ] Settings, Rules, Rulesets, new branch ruleset for `main`: require a pull request, require 1 approval, require review from Code Owners, block force pushes. Add the **bypass list**: Repository admin role and Maintain role (always allow). Without a bypass an admin cannot approve their own PR and nothing could ever be published by the owner.
+- [ ] Settings, Rules, Rulesets, new branch ruleset for `main` (Enforcement: Active, target: default branch). **Create it before adding any editor.** Turn on all of these:
+  - Restrict deletions and block force pushes.
+  - Require a pull request before merging: **1 required approval**, **require review from Code Owners**, **dismiss stale pull request approvals when new commits are pushed**, **require approval of the most recent reviewable push**, and **require conversation resolution before merging**.
+  - Without "dismiss stale approvals" and "most recent push", an editor could get an approval, push different commits and merge.
+  - Add the **bypass list**: Repository admin role and Maintain role (always allow). Without a bypass an admin cannot approve their own PR and nothing could ever be published by the owner.
+  - Do not add a required status check for Workers Builds: non-production builds are off (3.5), so no such check exists.
+- [ ] Settings, Code security: turn on **secret scanning**, **push protection**, **Dependabot alerts**, **Dependabot security updates** and **private vulnerability reporting** (all free on a public repo).
+- [ ] Settings, Actions, General: **Disable actions**, or choose "Allow select actions and reusable workflows" with nothing extra allowed. The repository has no workflows; a Write user could otherwise push one on a branch and run it.
 - [ ] Settings, Collaborators: add each editor with the **Write** role. Writers are not on the bypass list, so every editor PR needs 1 Code Owner approval.
 - [ ] Resulting model: Editor = submit, Admin = review + publish. GitHub, not the CMS, enforces it.
 
@@ -104,9 +125,12 @@ The repo is public, so these are free.
 
 - [ ] Cloudflare dashboard, Workers & Pages, Create, import this Git repository.
 - [ ] Worker name `corporate-site` (must match `wrangler.jsonc`).
-- [ ] Build command `pnpm build`; deploy command `npx wrangler deploy`; production branch `main`; preview builds on for pull request branches.
+- [ ] Build command `pnpm build`; deploy command `npx wrangler deploy`; production branch `main`; **non-production branch builds OFF** (Settings, Builds, Branch control: untick "Builds for non-production branches").
+- [ ] Why off: a build runs code from the pushed branch (`package.json`, `astro.config.ts`, `src/integrations/*`, even the `wrangler` binary from its lockfile) with the production deploy token, and a `versions upload` preview also gets the production secrets and the mail binding. Any editor with Write access could then deploy to production or read secrets without a review. Leave this off until you have set up the secure previews below.
+- [ ] To check a content PR, admins run `pnpm build` (and `pnpm preview`) locally on the PR branch.
 - [ ] Build variables (production, used on `main` only): `SITE_URL` = `https://<your-final-host>` (no trailing slash; use the `workers.dev` URL until a custom domain exists) and `PUBLIC_TURNSTILE_SITE_KEY` = the production site key from 3.7. A production build fails with a message naming the variable if either is missing or `SITE_URL` is not https.
-- [ ] Previews ignore both variables on purpose (`resolveBuildMode` only reads them when the branch is `main`): they use the Turnstile test key, `noindex` and `http://localhost:4321` canonicals. Previews are uploaded with the non-production deploy command `npx wrangler versions upload`; set it as the non-production branch deploy command if the dashboard asks. They are for visual review only; CMS login and quote submission are not expected to work there.
+- [ ] Note on the build modes: `resolveBuildMode` only reads `SITE_URL` and the site key when the branch is `main`; any other branch build (local or CI) uses the Turnstile test key, `noindex` and `http://localhost:4321` canonicals.
+- [ ] **Optional, later improvement: secure previews.** If you want hosted previews, use a separate preview Worker or environment that has no production secrets and no `send_email` binding, built with an API token that cannot deploy the production Worker, and put Cloudflare Access (a free policy limited to the owner and editors) in front of its URLs. Do not use `versions upload` on the production Worker.
 - [ ] Expect the first Workers Build to fail until both variables exist (production builds refuse to run without them); set them, then retry the build.
 - [ ] If the build fails on the Node or pnpm version, set the build variable `NODE_VERSION` to `24` as the fallback and record it in `memory-bank/techContext.md`.
 
@@ -153,13 +177,16 @@ Cloudflare requires a payment method on file to create any R2 bucket, even insid
 ### 3.11 Custom domain (optional, later)
 
 - [ ] Worker, Settings, Domains and Routes, add the custom domain (or add `"routes": [{ "pattern": "<domain>", "custom_domain": true }]` to `wrangler.jsonc`).
-- [ ] Then update, in this order: `SITE_URL` build variable (redeploy), the Turnstile widget hostnames, the auth Worker `ALLOWED_DOMAINS`, the R2 CORS origin.
+- [ ] Then update, in this order: `SITE_URL` build variable (redeploy), the Turnstile widget hostnames, the auth Worker `ALLOWED_DOMAINS` (exact hosts, no wildcard), the R2 CORS origin.
+- [ ] **Rate limit the quote endpoint.** Cloudflare dashboard, the zone, Security, WAF, Rate limiting rules (free plan: 1 rule): match `URI Path` equals `/api/quote` and `Method` equals `POST`, count per IP, for example 5 requests per 10 seconds, action Block for 10 seconds. Turnstile alone does not stop a human-solved flood. WAF rules only apply on the custom domain, so do the next step too.
+- [ ] **Close the other hosts.** In `wrangler.jsonc` set `"workers_dev": false` and `"preview_urls": false` (today both are `true`), commit to `main` and let Workers Builds deploy. Production is then reachable only on the custom domain, where the rate-limit rule applies. Before this, make sure every URL you use (Turnstile hostnames, `ALLOWED_DOMAINS`, `SITE_URL`) is the custom domain.
+- [ ] **Logs.** `observability` is on, which stores invocation logs (request URL and Cloudflare request metadata) next to the PII-free error lines. Decide: keep it and mention it on the privacy page, or set `"observability": { "enabled": true, "logs": { "invocation_logs": false } }` in `wrangler.jsonc`.
 
 ## 4. Editing flow
 
 1. An editor opens `/admin/`, signs in with GitHub and edits an entry. Saving creates a branch and a pull request (editorial workflow).
-2. Cloudflare builds a preview of the branch. The preview is for a visual check only (test Turnstile key, `noindex`, no CMS login).
-3. A code owner reviews and merges the PR on GitHub, or publishes it from the CMS "Ready" column.
+2. No hosted preview is built (non-production builds are off, 3.5). A code owner reads the YAML diff on GitHub and, for a visual check, runs `pnpm build` and `pnpm preview` on the PR branch locally. The build fails on an unsafe link, a bad value or a non-raster social image.
+3. A code owner reviews and merges the PR on GitHub, or publishes it from the CMS "Ready" column. Editors write Markdown only: raw HTML in rich text is dropped, and links must be site paths, `https:`, `mailto:`, `tel:` or `#fragments`.
 4. The merge to `main` triggers the production build and deploy.
 
 The accent colour must keep at least 3:1 contrast on the dark canvas; the build fails and names the field otherwise.
@@ -186,14 +213,14 @@ These could not be automated in the build environment.
 
 - [ ] **(a) CMS end to end (Chromium).** Open `https://<host>/admin/` in Chromium (the "Work with Local Repository" option needs Chromium; the GitHub login itself works in any browser). Log in with GitHub. Edit one page in EN and the same page in TR. As an editor, "Save" then "Ready for review": a PR appears. As an admin, publish it (or merge on GitHub) and confirm the production site updates. Also check: an empty hero actions list saves cleanly, and sorting in the Applications list works (both were unverified in Sveltia 0.271.2).
 
-  CMS parity checks (blank and partial values must never break the site). For each, save as an editor, open the PR and confirm its preview build passes (Workers Builds check green), then look at the saved YAML in the PR diff:
+  CMS parity checks (blank and partial values must never break the site). For each, save as an editor and open the PR, then check out its branch locally and confirm `pnpm build` passes (or run these after merge, on production), and look at the saved YAML in the PR diff:
   1. Save a feature-list item with no duration: the key is absent (or empty) and the row shows no duration.
   2. Save an application with no brochure: the key is absent (or empty) and the page shows no brochure button.
   3. Save a CTA section with no text: the CTA renders heading and button only.
   4. Create a new EN page: the PR adds `src/content/pages/en/<slug>.yaml` only, no half-empty `pages/tr/<slug>.yaml` (new entries start in EN only; TR is turned on from the editor's menu when translated).
   5. Save the TR interface strings with a few fields cleared: the build passes and those strings show in English on `/tr/`.
-  6. Try to upload an SVG or GIF as the hero image: the field refuses it (PNG, JPEG and WebP only).
-  7. Translate an existing page that has no TR version yet (turn TR on for it from the editor's menu): the PR adds `src/content/pages/tr/<slug>.yaml` only, its preview build passes, and on the preview every TR page's header, menu and footer link `/tr/<slug>/` with no navigation edit.
+  6. Try to upload an SVG or GIF as the hero image, a page's social image or an application cover: the field refuses it (PNG, JPEG and WebP only; only the logo may be an SVG).
+  7. Translate an existing page that has no TR version yet (turn TR on for it from the editor's menu): the PR adds `src/content/pages/tr/<slug>.yaml` only, `pnpm build` passes on the branch, and on the local preview every TR page's header, menu and footer link `/tr/<slug>/` with no navigation edit.
 
   Record the outcome of each (pass, or what the YAML looked like) in `memory-bank/techContext.md` under "CMS parity checks".
 - [ ] **(b) Turnstile in the real Workers runtime.**
@@ -224,7 +251,7 @@ Dates are the build dates, 2026-11-23.
 | CSP vs inline scripts | `dist/` has no inline executable script; `assetsInlineLimit` keeps script chunks external (dist script guard) | 2026-11-23 |
 | ASCII hero | 96-column grid plus a 48-column compact grid, seed figure about 18 KB (budget 30 KB), animated, static under reduced motion | 2026-11-23 |
 | Turkish glyphs | Both font families include them | 2026-11-23 |
-| Previews | Open: preview builds use `http://localhost:4321` canonicals (interim). Revisit only if Workers Builds exposes a preview-host variable | open |
+| Previews | Hosted previews are off (security: they would run branch code with production secrets). Admins preview locally; optional secure previews are described in 3.5 | decided |
 | Generated JSON | `check` after `build` | 2026-11-23 |
 | Auth Worker | Confirm the official repo's current steps and variable names at deploy time (3.1) | open |
 
@@ -241,4 +268,5 @@ Final local acceptance numbers (build, tests, bundle and page weight) are record
 - **Quote shows `#error-verify` for real visitors:** the Turnstile hostnames do not include the host they use, or the site key and secret are from different widgets.
 - **Production build fails naming `SITE_URL` or `PUBLIC_TURNSTILE_SITE_KEY`:** the variable is missing, empty, or `SITE_URL` is not https. Set it in Workers Builds for the production branch.
 - **CMS login window opens then fails:** the auth Worker `ALLOWED_DOMAINS` lacks the host, the GitHub App callback URL is not `<auth-worker-url>/callback`, or `base_url` in `config.yml` / `connect-src` in `_headers` is wrong.
-- **Preview deploys have `localhost` canonicals and no CMS login:** expected (previews are visual only).
+- **No hosted preview for a PR:** by design (3.5). Run `pnpm build` and `pnpm preview` on the PR branch locally.
+- **Build fails with "Unsafe URL in Markdown":** a rich-text or FAQ link or image uses a scheme or form that is not allowed (`javascript:`, `data:`, `http:`, a relative path, `//host`). Use a site path starting with `/`, `https:`, `mailto:`, `tel:` or `#fragment`. The message names the section and the URL.
