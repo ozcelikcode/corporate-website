@@ -34,3 +34,10 @@ collections, collections/singletons, collections/files, collections/entries, col
 ## Memory-bank delta
 - techContext "CMS": Sveltia 0.271.2 verified from docs: top-level `singletons` supported; `slug.editable` replaces deprecated `{{fields._slug}}`; list `types` + `typeKey` supported; field `pattern` is `[regex, message]`; `required: [en]` supported with i18n; `multiple_folders` layout `<folder>/<locale>/<slug>.yaml`; Biome lints/formats `public/admin/config.yml` (double quotes). Open: manual local-repo check pending for owner; `sortable_fields` and empty-list serialisation unverified.
 - progress: Task 11 done (config + test + index.html), step 6 pending owner.
+
+## Fix report (review round 1)
+- Schemas: nav `footer` now `.default([])` (content.config.ts); hero `actions` now `.max(2).default([])` (sections-schema.ts). New test: hero without `actions` parses to `[]`. `pnpm check` 0 errors, build ok, test 43/43. Biome's auto-fix rewrote `[\/\\]` to `[/\\]` in both files; reverted, so only the two defaults changed. Lint currently reports only the same 2 pre-existing infos about that escape.
+- Applications `slug`: docs list `readonly` but nothing for read-only-after-create, so added a hint (must equal the file name, do not change after creation).
+- Per-field `i18n: true` in `ui`/`navigation` kept: i18n docs say each field must opt in; collection-level `i18n: true` does not cover them.
+- Docs: sveltiacms.app/en/docs/fields, /en/docs/i18n.
+- Memory-bank delta: techContext: hero `actions` and nav `footer` default to `[]` so CMS may omit empty lists; Sveltia has `readonly` but no read-only-after-create; field i18n must be per-field.

@@ -435,6 +435,7 @@ collections:
       - name: slug
         label: Slug
         widget: string
+        hint: Must equal the file name and must not be changed after creation (the CMS has no read-only-after-create option).
         i18n: duplicate
         pattern: ["^[a-z0-9]+(?:-[a-z0-9]+)*$", "Lowercase letters, digits and single hyphens only"]
       - name: tagline

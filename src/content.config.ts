@@ -75,7 +75,7 @@ const ui = defineCollection({
 
 const navigation = defineCollection({
   loader: fromYaml('./src/content/navigation'),
-  schema: z.strictObject({ header: z.array(link).min(1), footer: z.array(link) }),
+  schema: z.strictObject({ header: z.array(link).min(1), footer: z.array(link).default([]) }),
 });
 
 const pages = defineCollection({

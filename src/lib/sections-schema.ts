@@ -32,7 +32,7 @@ export const sectionsSchema = ({ image }: SchemaContext) =>
         headline: z.string(),
         headlineAccent: z.string(),
         lede: z.string(),
-        actions: z.array(actionSchema).max(MAX_ACTIONS),
+        actions: z.array(actionSchema).max(MAX_ACTIONS).default([]),
         image: image(),
         imageAlt: z.string(),
       }),
