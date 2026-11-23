@@ -4,7 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, test } from 'node:test';
 import sharp from 'sharp';
-import { ASCII_RAMP, gridRows, renderAscii, toAsciiGrid } from './ascii.ts';
+import { gridRows, renderAscii, toAsciiGrid } from './ascii.ts';
+import { ASCII_RAMP } from './ascii-glyphs.ts';
 
 const HEIGHT = 2;
 const WHITE = 255;

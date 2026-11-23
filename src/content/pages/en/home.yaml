@@ -12,7 +12,7 @@ sections:
       - label: See applications
         href: /applications/
     image: ../../../assets/uploads/test-card.png
-    imageAlt: Broadcast test card with seven grey bars, a centred circle and a step wedge
+    imageAlt: A transmitter mast sending signal waves out from its top
   - type: statement
     label: Mission
     text: Live production runs on trust. We build software that does exactly what the operator expects, every time the red light comes on.

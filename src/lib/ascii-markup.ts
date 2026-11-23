@@ -15,11 +15,19 @@ function runHtml({ tone, text }: AsciiRun): string {
 }
 
 /**
- * Trailing blanks are dropped: the font size follows the column count, not the line length.
- * The leading newline is eaten by the HTML parser, so a blank first row survives.
+ * One row's runs, without the row wrapper. Trailing blanks are dropped: the font size follows the
+ * column count, not the line length. Shared with the client motion script, which rewrites rows.
+ */
+export function runsHtml(line: readonly AsciiRun[]): string {
+  return line.map(runHtml).join('').trimEnd();
+}
+
+/**
+ * Every row is its own span (an inline-block in AsciiImage), so a row can move on its own and the
+ * motion script can rewrite it; a blank row is an empty span and keeps its line.
  */
 export function asciiMarkup(grid: AsciiGrid): string {
-  return `\n${grid.lines.map((line) => line.map(runHtml).join('').trimEnd()).join('\n')}`;
+  return grid.lines.map((line) => `<span>${runsHtml(line)}</span>`).join('\n');
 }
 
 /** Fails the build when one figure's markup outgrows the budget. */

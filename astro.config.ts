@@ -64,6 +64,15 @@ const MARTIAN_WEIGHT = '100 800';
 
 const buildMode = resolveBuildMode(process.env);
 
+/**
+ * Astro inlines a component script whose chunk is under Vite's asset inline limit (4 KiB). The
+ * CSP (`script-src 'self'`) blocks inline scripts, so script chunks always ship as files;
+ * other assets keep Vite's default (`undefined`).
+ */
+function inlineAsset(file: string): false | undefined {
+  return file.endsWith('.js') ? false : undefined;
+}
+
 export default defineConfig({
   output: 'static',
   trailingSlash: 'always',
@@ -145,5 +154,5 @@ export default defineConfig({
       i18n: { defaultLocale: 'en', locales: { en: 'en', tr: 'tr' } },
     }),
   ],
-  vite: { plugins: [tailwindcss()] },
+  vite: { plugins: [tailwindcss()], build: { assetsInlineLimit: inlineAsset } },
 });

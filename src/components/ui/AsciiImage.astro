@@ -1,14 +1,24 @@
 ---
 /**
- * The signature image: an upload rendered as coloured ASCII at build time (zero runtime cost).
- * Two grids are rendered (`cols` and a coarser compact one); a container query on the figure
- * shows the one whose glyphs stay legible. Same-tone runs become one span. Screen readers get
- * `alt` from the figure; both grids are hidden. Spans come from a string (`set:html`), so they
- * carry no scoped-style attributes: smaller HTML. The build fails if the markup is over budget.
+ * The signature image: an upload rendered as coloured ASCII at build time. Two grids are rendered
+ * (`cols` and a coarser compact one); a container query on the figure shows the one whose glyphs
+ * stay legible. Each row is a span of same-tone run spans. Screen readers get `alt` from the
+ * figure; both grids are hidden. Spans come from a string (`set:html`), so they carry no
+ * scoped-style attributes: smaller HTML. The build fails if the markup is over budget.
+ *
+ * Live signal, only under `prefers-reduced-motion: no-preference` (the build-time render is the
+ * no-JS and reduced-motion picture). CSS: a hum bar rolls down, rows now and then slip sync (a
+ * sideways tear with a dropout dip), and without JS the brightest tone breathes. The module
+ * script (`ascii-motion.ts` logic) tunes in: static resolves into the picture when it first
+ * scrolls into view; then rings of brightness travel out from the transmitter (`waveOrigin`,
+ * default top centre), with a little glyph grain. Nothing changes the grid's box: transforms,
+ * opacity and same-width glyphs only.
  */
 import type { ImageMetadata } from 'astro';
-import { ASCII_COLUMNS, ASCII_COLUMNS_COMPACT, CHAR_ASPECT, renderAscii } from '../../lib/ascii.ts';
+import { ASCII_COLUMNS, ASCII_COLUMNS_COMPACT, renderAscii } from '../../lib/ascii.ts';
+import { CHAR_ASPECT } from '../../lib/ascii-glyphs.ts';
 import { asciiMarkup, assertAsciiBudget } from '../../lib/ascii-markup.ts';
+import type { Origin } from '../../lib/ascii-motion.ts';
 import { resolveUploadPath } from '../../lib/ascii-source.ts';
 
 interface Props {
@@ -16,9 +26,11 @@ interface Props {
   alt: string;
   /** Columns of the wide grid. */
   cols?: number;
+  /** Where the broadcast rings start, as fractions of the picture; default `WAVE_ORIGIN`. */
+  waveOrigin?: Origin;
 }
 
-const { image, alt, cols = ASCII_COLUMNS } = Astro.props;
+const { image, alt, cols = ASCII_COLUMNS, waveOrigin } = Astro.props;
 const source = resolveUploadPath(image);
 const [wide, compact] = await Promise.all([
   renderAscii(source, cols),
@@ -28,7 +40,13 @@ const wideHtml = asciiMarkup(wide);
 const compactHtml = asciiMarkup(compact);
 assertAsciiBudget([wideHtml, compactHtml], source);
 ---
-<figure role="img" aria-label={alt} data-ascii style={{ '--ascii-aspect': CHAR_ASPECT }}>
+<figure
+  role="img"
+  aria-label={alt}
+  data-ascii
+  data-wave-origin={waveOrigin && `${waveOrigin.x} ${waveOrigin.y}`}
+  style={{ '--ascii-aspect': CHAR_ASPECT }}
+>
   <pre
     class="ascii-wide font-mono"
     aria-hidden="true"
@@ -49,21 +67,42 @@ assertAsciiBudget([wideHtml, compactHtml], source);
     --ascii-advance: 0.7;
 
     /*
-     * Shimmer: an alpha band (peak opaque, edges at the floor) on a mask much wider than the
-     * figure. The mask slides its full travel once per period; the band is on screen for only
-     * part of it, so the size sets the rest between sweeps.
+     * Motion: documented exceptions to the 240ms rule (ambient signal, not UI feedback); all of it
+     * sits under `prefers-reduced-motion: no-preference`.
+     *
+     * Hum bar: a soft band that brightens the glyphs (colour-dodge barely lifts the dark canvas)
+     * while it rolls down, like mains hum on a monitor. It travels `travel` figure heights per
+     * period; only `1 + band` of that crosses the picture, the rest is rest between passes.
      */
-    --ascii-shimmer-duration: 9s;
-    --ascii-shimmer-floor: 78%;
-    --ascii-shimmer-angle: 100deg;
-    --ascii-shimmer-band-start: 45%;
-    --ascii-shimmer-band-peak: 50%;
-    --ascii-shimmer-band-end: 55%;
-    --ascii-shimmer-size: 600%;
-    --ascii-shimmer-edge: color-mix(in srgb, black var(--ascii-shimmer-floor), transparent);
+    --ascii-roll-duration: 9s;
+    --ascii-roll-band: 0.45;
+    --ascii-roll-travel: 2;
+    /* Dodge divides by (1 - glow): a dim, opaque glow lifts bright glyphs and leaves the canvas. */
+    --ascii-roll-glow: color-mix(in oklab, var(--color-ink) 28%, black);
+    /*
+     * Sync slip: two bands of rows tear sideways by a fraction of a glyph and dip (a dropout)
+     * for two frames, then snap back. The periods share no rhythm, so a slip comes every 8 to
+     * 20 s at uneven gaps.
+     */
+    --ascii-track-shift: 0.45ch;
+    --ascii-track-dip: 0.55;
+    --ascii-track-a: 13.1s;
+    --ascii-track-b: 19.7s;
+    --ascii-track-delay-b: -6.3s;
+    /*
+     * Breath (no-JS picture only; with JS the rings carry the light): the brightest tone dims
+     * and recovers in coarse steps, so it repaints a few times a second, not every frame.
+     */
+    --ascii-breath-duration: 2.6s;
+    --ascii-breath-floor: 0.8;
+    --ascii-breath-steps: 8;
 
+    position: relative;
+    overflow: clip;
     container-type: inline-size;
     margin: 0;
+    /* The hum bar blends with what is under it, and the frame isolates: give it the canvas. */
+    background-color: var(--color-canvas);
   }
 
   pre {
@@ -75,6 +114,15 @@ assertAsciiBudget([wideHtml, compactHtml], source);
     letter-spacing: 0;
     font-kerning: none;
     font-variant-ligatures: none;
+  }
+
+  /*
+   * A row is an inline-block on its own line: same line box as plain text, and it can move. Full
+   * width, so a row whose text grows or shrinks never moves the line break after it (no CLS).
+   */
+  pre > :global(span) {
+    display: inline-block;
+    inline-size: 100%;
   }
 
   .ascii-compact {
@@ -116,25 +164,208 @@ assertAsciiBudget([wideHtml, compactHtml], source);
     color: var(--color-tone-5);
   }
 
-  /* Documented exception to "no gradients": an alpha-only mask band, only when motion is welcome. */
   @media (prefers-reduced-motion: no-preference) {
-    pre {
-      mask-image: linear-gradient(
-        var(--ascii-shimmer-angle),
-        var(--ascii-shimmer-edge) var(--ascii-shimmer-band-start),
-        black var(--ascii-shimmer-band-peak),
-        var(--ascii-shimmer-edge) var(--ascii-shimmer-band-end)
-      );
-      mask-size: var(--ascii-shimmer-size) 100%;
-      mask-position: 100% 0;
-      animation: ascii-shimmer var(--ascii-shimmer-duration) linear infinite;
+    /* Documented exception to "no gradients": the hum bar's soft band. Transform only. */
+    [data-ascii]::after {
+      content: "";
+      position: absolute;
+      inset-inline: 0;
+      inset-block-start: 0;
+      block-size: calc(var(--ascii-roll-band) * 100%);
+      background-image: linear-gradient(to bottom, transparent, var(--ascii-roll-glow), transparent);
+      mix-blend-mode: color-dodge;
+      pointer-events: none;
+      transform: translateY(-100%);
+      animation: ascii-roll var(--ascii-roll-duration) linear infinite;
+    }
+
+    pre > :global(span:nth-child(n + 5):nth-child(-n + 6)) {
+      animation: ascii-track var(--ascii-track-a) step-end infinite;
+    }
+
+    pre > :global(span:nth-child(n + 10):nth-child(-n + 12)) {
+      animation: ascii-track var(--ascii-track-b) step-end var(--ascii-track-delay-b) infinite
+        reverse;
+    }
+
+    [data-ascii]:not([data-live]) pre :global(.t5) {
+      animation: ascii-breath var(--ascii-breath-duration) steps(var(--ascii-breath-steps)) infinite
+        alternate;
     }
   }
 
-  /* From the right end of the mask to the left end: the band crosses left to right. */
-  @keyframes ascii-shimmer {
+  /* From just above the figure, `travel` figure heights down (the band is `band` of the figure). */
+  @keyframes ascii-roll {
     to {
-      mask-position: 0 0;
+      transform: translateY(
+        calc(100% * var(--ascii-roll-travel) / var(--ascii-roll-band) - 100%)
+      );
+    }
+  }
+
+  /* Held values (step-end): still, then a dimmed tear one way, a smaller kick back, still again. */
+  @keyframes ascii-track {
+    96% {
+      transform: translateX(var(--ascii-track-shift));
+      opacity: var(--ascii-track-dip);
+    }
+
+    97% {
+      transform: translateX(calc(var(--ascii-track-shift) / -2));
+      opacity: 1;
+    }
+
+    98% {
+      transform: none;
+    }
+  }
+
+  @keyframes ascii-breath {
+    to {
+      opacity: var(--ascii-breath-floor);
     }
   }
 </style>
+
+<script>
+  /*
+   * Thin DOM glue for the live signal; the logic is `lib/ascii-motion.ts`. Per figure, the grid
+   * the container query shows (the one that intersects) tunes in once, then runs live frames.
+   * Everything stops offscreen, in a hidden tab and under reduced motion, and the rows go back
+   * to the build-time markup, which stays the source of truth.
+   */
+  import type { AsciiRun } from '../../lib/ascii.ts';
+  import { runsHtml } from '../../lib/ascii-markup.ts';
+  import {
+    ACQUIRE_DURATION_MS,
+    ACQUIRE_FRAME_MS,
+    acquisitionRuns,
+    LIVE_FRAME_MS,
+    liveRuns,
+    parseOrigin,
+    revealThresholds,
+    toneFromClass,
+  } from '../../lib/ascii-motion.ts';
+
+  const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
+  const COLS_PROPERTY = '--ascii-cols';
+  /** Set while the script drives the figure; CSS hands the light from the breath to the rings. */
+  const LIVE_ATTRIBUTE = 'data-live';
+
+  type Grid = {
+    rows: HTMLElement[];
+    markup: string[];
+    source: AsciiRun[][];
+    cols: number;
+    visible: boolean;
+  };
+
+  function readRun(node: ChildNode): AsciiRun {
+    const text = node.textContent ?? '';
+    return node instanceof Element ? { tone: toneFromClass(node.className), text } : { tone: 0, text };
+  }
+
+  function readGrid(pre: HTMLElement): Grid {
+    const rows = [...pre.children].filter((row) => row instanceof HTMLElement);
+    const cols = Number(pre.style.getPropertyValue(COLS_PROPERTY));
+    if (!Number.isInteger(cols) || cols < 1) throw new Error('ASCII grid without a column count');
+    return {
+      rows,
+      markup: rows.map((row) => row.innerHTML),
+      source: rows.map((row) => [...row.childNodes].map(readRun)),
+      cols,
+      visible: false,
+    };
+  }
+
+  /** Rewrites a grid row by row, skipping rows whose markup did not change. */
+  function paint(grid: Grid, row: (y: number) => AsciiRun[]): void {
+    grid.rows.forEach((element, y) => {
+      const html = runsHtml(row(y));
+      if (element.innerHTML !== html) element.innerHTML = html;
+    });
+  }
+
+  function animate(figure: HTMLElement, reduced: MediaQueryList): void {
+    const pres = [...figure.querySelectorAll('pre')];
+    const grids = pres.map(readGrid);
+    const origin = parseOrigin(figure.dataset.waveOrigin);
+    let active: Grid | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let acquired = false;
+
+    const live = (grid: Grid) => {
+      const start = performance.now();
+      const rows = grid.rows.length;
+      const frame = () => {
+        const time = performance.now() - start;
+        paint(grid, (y) =>
+          liveRuns(grid.source[y] ?? [], grid.cols, y, rows, origin, time, Math.random),
+        );
+        timer = setTimeout(frame, LIVE_FRAME_MS);
+      };
+      frame();
+    };
+
+    const acquire = (grid: Grid) => {
+      const start = performance.now();
+      const thresholds = revealThresholds(grid.rows.length, grid.cols, Math.random);
+      const frame = () => {
+        const progress = (performance.now() - start) / ACQUIRE_DURATION_MS;
+        if (progress >= 1) {
+          acquired = true;
+          live(grid);
+          return;
+        }
+        paint(grid, (y) =>
+          acquisitionRuns(
+            grid.source[y] ?? [],
+            grid.cols,
+            thresholds,
+            y * grid.cols,
+            progress,
+            Math.random,
+          ),
+        );
+        timer = setTimeout(frame, ACQUIRE_FRAME_MS);
+      };
+      frame();
+    };
+
+    /** Stops the current grid and puts it back exactly as built. */
+    const settle = () => {
+      clearTimeout(timer);
+      figure.removeAttribute(LIVE_ATTRIBUTE);
+      active?.rows.forEach((row, y) => {
+        row.innerHTML = active?.markup[y] ?? '';
+      });
+    };
+
+    const update = () => {
+      const next = reduced.matches || document.hidden ? undefined : grids.find((g) => g.visible);
+      if (next === active) return;
+      settle();
+      active = next;
+      if (!active) return;
+      figure.setAttribute(LIVE_ATTRIBUTE, '');
+      if (acquired) live(active);
+      else acquire(active);
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const grid = grids[pres.indexOf(entry.target as HTMLPreElement)];
+        if (grid) grid.visible = entry.isIntersecting;
+      }
+      update();
+    });
+    for (const pre of pres) observer.observe(pre);
+    reduced.addEventListener('change', update);
+    document.addEventListener('visibilitychange', update);
+  }
+
+  const reduced = matchMedia(REDUCED_MOTION);
+  for (const figure of document.querySelectorAll<HTMLElement>('[data-ascii]')) {
+    animate(figure, reduced);
+  }
+</script>

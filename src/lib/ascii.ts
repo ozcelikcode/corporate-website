@@ -4,13 +4,8 @@
  * becomes a single `<span>` in AsciiImage. Pure except `renderAscii`, which reads a file.
  */
 import sharp from 'sharp';
+import { ASCII_RAMP, CHAR_ASPECT, TONE_COUNT } from './ascii-glyphs.ts';
 
-/** Sparse to dense. No HTML-special characters, so runs can be inlined as markup. */
-export const ASCII_RAMP = ' .:-=+*#%@';
-/** Tones map to `--color-tone-0…5`. */
-export const TONE_COUNT = 6;
-/** Glyph cell width ÷ height. Rows are scaled by it so the image keeps its aspect. */
-export const CHAR_ASPECT = 0.5;
 export const ASCII_COLUMNS = 96;
 /** The second, coarser grid AsciiImage swaps in on narrow containers. */
 export const ASCII_COLUMNS_COMPACT = 48;
