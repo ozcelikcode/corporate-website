@@ -4,7 +4,8 @@
  * layer; Esc or the close button (placed exactly over the open button) closes it, and focus
  * returns to the button. The sheet fades on opacity only; `transition-discrete` keeps it
  * rendered while it fades out. Hidden from `lg` up, where SiteHeader shows the inline nav.
- * Row focus rings are inset (negative offset), so the scrolling sheet never clips them.
+ * Row focus rings are inset (negative offset), so the scrolling sheet never clips them. The sheet's
+ * top bar repeats the header's bottom rule; rows are set apart by height and tone, not lines.
  */
 import Button from '../ui/Button.astro';
 import Glyph from '../ui/Glyph.astro';
@@ -44,7 +45,7 @@ const { links, quote, navLabel, openLabel, closeLabel } = Astro.props;
         {closeLabel}
       </button>
     </div>
-    <ul class="divide-y divide-line border-b border-line">
+    <ul class="py-4">
       {
         links.map(({ label, href, current, active }, index) => (
           <li>

@@ -37,6 +37,19 @@
   --color-tone-4: var(--color-accent-dim);
   --color-tone-5: var(--color-accent);
 
+  /*
+   * SMPTE 75% colour bars, left to right (fixed broadcast standard, not brand colours).
+   * Documented exception to the accent-only rule: used only by BarsStrip (aria-hidden) and
+   * NoSignal (one labelled image), both decorative.
+   */
+  --color-bars-white: rgb(75% 75% 75%);
+  --color-bars-yellow: rgb(75% 75% 0%);
+  --color-bars-cyan: rgb(0% 75% 75%);
+  --color-bars-green: rgb(0% 75% 0%);
+  --color-bars-magenta: rgb(75% 0% 75%);
+  --color-bars-red: rgb(75% 0% 0%);
+  --color-bars-blue: rgb(0% 0% 75%);
+
   /* Type scale (fluid) */
   --text-label: 0.75rem;
   --text-label--line-height: 1.4;

@@ -1,0 +1,59 @@
+---
+/**
+ * Media frame (hero image, application cover): one hairline edge plus four L-shaped corner marks
+ * on the broadcast title-safe area, the inner 90% of the picture (5% in from each edge, so the
+ * marks follow the frame's own proportions). The marks are a monitor overlay drawn over the media,
+ * decorative and hidden from assistive tech. `scanlines` adds the hero raster (hero only).
+ */
+
+interface Props {
+  scanlines?: boolean;
+}
+
+/** Corner name → the two edges it draws (block, inline), in logical directions. */
+const CORNERS = ['start-start', 'start-end', 'end-start', 'end-end'] as const;
+
+const { scanlines = false } = Astro.props;
+---
+<div class:list={['title-safe relative border border-line', { scanlines }]}>
+  <slot />
+  {CORNERS.map((corner) => <span class="title-safe-mark" data-corner={corner} aria-hidden="true" />)}
+</div>
+
+<style>
+  .title-safe {
+    /* Title-safe area: 90% of the picture, i.e. 5% in from each edge. */
+    --title-safe-inset: 5%;
+    --title-safe-arm: calc(var(--spacing) * 5);
+    --title-safe-stroke: var(--border-hairline);
+  }
+
+  .title-safe-mark {
+    position: absolute;
+    z-index: 1;
+    inline-size: var(--title-safe-arm);
+    block-size: var(--title-safe-arm);
+    border: 0 solid var(--color-ink-muted);
+    pointer-events: none;
+  }
+
+  [data-corner^="start"] {
+    inset-block-start: var(--title-safe-inset);
+    border-block-start-width: var(--title-safe-stroke);
+  }
+
+  [data-corner^="end"] {
+    inset-block-end: var(--title-safe-inset);
+    border-block-end-width: var(--title-safe-stroke);
+  }
+
+  [data-corner$="-start"] {
+    inset-inline-start: var(--title-safe-inset);
+    border-inline-start-width: var(--title-safe-stroke);
+  }
+
+  [data-corner$="-end"] {
+    inset-inline-end: var(--title-safe-inset);
+    border-inline-end-width: var(--title-safe-stroke);
+  }
+</style>

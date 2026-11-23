@@ -1,6 +1,7 @@
 ---
 // Temporary atom showcase (Tasks 1–7) inside the real layout with the EN `home` entry's SEO data;
 // replaced by real routes in Task 8. Literal copy allowed here only.
+import AsciiImage from '../components/ui/AsciiImage.astro';
 import Button from '../components/ui/Button.astro';
 import Checkbox from '../components/ui/Checkbox.astro';
 import Field from '../components/ui/Field.astro';
@@ -9,17 +10,27 @@ import Heading from '../components/ui/Heading.astro';
 import { hintId } from '../components/ui/hint-id.ts';
 import Input from '../components/ui/Input.astro';
 import Label from '../components/ui/Label.astro';
+import LowerThird from '../components/ui/LowerThird.astro';
+import NoSignal from '../components/ui/NoSignal.astro';
 import Prose from '../components/ui/Prose.astro';
 import Select from '../components/ui/Select.astro';
 import Tally from '../components/ui/Tally.astro';
 import Textarea from '../components/ui/Textarea.astro';
 import Timecode from '../components/ui/Timecode.astro';
+import TitleSafe from '../components/ui/TitleSafe.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { availableLocales, getPage } from '../lib/content.ts';
 
 const HOME_SLUG = 'home';
 const home = await getPage('en', HOME_SLUG);
 const homeLocales = await availableLocales('pages', HOME_SLUG);
+const hero = home.data.sections.find((section) => section.type === 'hero');
+if (hero === undefined) throw new Error('The EN home page needs a hero section');
+
+/** Section divider: the one hairline allowed between major sections (border budget). */
+const SECTION = 'mt-24 border-t border-line pt-12';
+/** Tone card for spaced grids: surface on canvas, no border. */
+const TILE = 'bg-surface p-6';
 
 const COLOURS = [
   { name: 'canvas', swatch: 'bg-canvas' },
@@ -40,22 +51,21 @@ const COLOURS = [
   { name: 'tone-5', swatch: 'bg-tone-5' },
 ] as const;
 
-/** GridFrame specimens: column count and a cell count that leaves an incomplete last row. */
+/** Spaced GridFrame specimens (tone tiles): column count and a cell count with a short last row. */
 const GRID_SPECIMENS = [
-  { columns: 1, cells: 2 },
   { columns: 2, cells: 3 },
   { columns: 3, cells: 4 },
-  { columns: 3, cells: 5 },
-  { columns: 4, cells: 5 },
-  { columns: 4, cells: 7 },
+  { columns: 4, cells: 6 },
 ] as const;
 
-const TWELVE_COLUMN_ROWS = [
-  { span: 'lg:col-span-7', text: 'Span 7' },
-  { span: 'lg:col-span-5', text: 'Span 5' },
-  { span: 'lg:col-span-3', text: 'Span 3' },
-  { span: 'lg:col-span-9', text: 'Span 9' },
+/** Rundown specimen for the feature-list look (Task 7 builds the block). */
+const RUNDOWN = [
+  { title: 'Predictable under load', duration: '00:01:30' },
+  { title: 'Open formats', duration: '00:00:45' },
+  { title: 'Audit-ready', duration: '00:02:15' },
 ] as const;
+/** Width of the zero-padded rundown row number. */
+const ROW_DIGITS = 2;
 
 const SOLUTION_OPTIONS = [
   { value: 'general', label: 'General enquiry' },
@@ -83,200 +93,197 @@ const indexes = (count: number) => Array.from({ length: count }, (_, i) => i + 1
   ogImage={home.data.ogImage}
   availableLocales={homeLocales}
 >
-    <div class="mx-auto max-w-page px-4 py-12 md:px-8">
-      <GridFrame as="section" crosshairs>
-        <div class="cell flex flex-wrap items-center gap-x-8 gap-y-2">
-          <Tally text="Live" />
-          <Timecode prefix="TC" />
-          <Tally text="CH 01 · PGM" tone="muted" dot={false} />
+  <div class="mx-auto max-w-page px-4 py-12 md:px-8">
+    <GridFrame as="section" columns={12}>
+      <div class="flex flex-col items-start gap-8 lg:col-span-7 lg:py-8">
+        <Label text="Atoms" index={0} />
+        <Heading level={1} text="Software that keeps" accent="every newsroom on air." />
+        <p class="max-w-[60ch] text-lede text-ink-muted">
+          Hierarchy from spacing, tone and type. Hairlines only on the header and footer edges,
+          section dividers, form controls and the media frame.
+        </p>
+        <div class="flex flex-wrap gap-4">
+          <Button href="#buttons-title">Explore applications</Button>
+          <Button href="https://example.com/" intent="secondary">Request a quote</Button>
         </div>
-        <div class="cell py-12">
-          <Label text="Atoms" index={0} />
-          <div class="mt-6">
-            <Heading level={1} text="Software that keeps" accent="every newsroom on air." />
+      </div>
+      <div class="min-w-0 lg:col-span-5">
+        <TitleSafe scanlines>
+          <AsciiImage image={hero.image} alt={hero.imageAlt} />
+        </TitleSafe>
+      </div>
+    </GridFrame>
+
+    <section class={SECTION} aria-labelledby="buttons-title">
+      <h2 id="buttons-title" class="mb-8"><Label as="span" text="Buttons" index={1} /></h2>
+      <GridFrame columns={3}>
+        <div class="flex flex-col items-start gap-4">
+          <Label text="Primary · md" />
+          <Button href="#forms-title">Explore applications</Button>
+          <Button href="https://example.com/">Request a quote</Button>
+          <Button glyph={null}>No glyph</Button>
+        </div>
+        <div class="flex flex-col items-start gap-4">
+          <Label text="Secondary · md" />
+          <Button href="#forms-title" intent="secondary">Explore applications</Button>
+          <Button href="https://example.com/" intent="secondary">Brochure</Button>
+          <Button intent="secondary" glyph={null}>No glyph</Button>
+        </div>
+        <div class="flex flex-col items-start gap-4">
+          <Label text="Small" />
+          <div class="flex flex-wrap gap-4">
+            <Button href="#forms-title" size="sm">Quote</Button>
+            <Button href="https://example.com/" size="sm" intent="secondary">Site</Button>
+            <Button size="sm" intent="secondary" glyph="↗">Forced external</Button>
+            <Button size="sm" glyph={null}>Plain</Button>
           </div>
         </div>
       </GridFrame>
+    </section>
 
-      <section class="mt-16" aria-labelledby="buttons-title">
-        <h2 id="buttons-title" class="mb-4"><Label as="span" text="Buttons" index={1} /></h2>
-        <GridFrame columns={2} crosshairs>
-          <div class="cell flex flex-col items-start gap-4">
-            <Label text="Primary · md" />
-            <Button href="#forms-title">Explore applications</Button>
-            <Button href="https://example.com/">Request a quote</Button>
-            <Button glyph={null}>No glyph</Button>
-          </div>
-          <div class="cell flex flex-col items-start gap-4">
-            <Label text="Secondary · md" />
-            <Button href="#forms-title" intent="secondary">Explore applications</Button>
-            <Button href="https://example.com/" intent="secondary">Brochure</Button>
-            <Button intent="secondary" glyph={null}>No glyph</Button>
-          </div>
-          <div class="cell flex flex-col items-start gap-4">
-            <Label text="Small" />
-            <div class="flex flex-wrap gap-4">
-              <Button href="#forms-title" size="sm">Quote</Button>
-              <Button href="https://example.com/" size="sm" intent="secondary">Site</Button>
-              <Button size="sm" intent="secondary" glyph="↗">Forced external</Button>
-              <Button size="sm" glyph={null}>Plain</Button>
-            </div>
-          </div>
-        </GridFrame>
-      </section>
-
-      <section class="mt-16" aria-labelledby="labels-title">
-        <h2 id="labels-title" class="mb-4"><Label as="span" text="Labels, tallies, timecode" index={2} /></h2>
-        <GridFrame columns={3} crosshairs>
-          <div class="cell flex flex-col gap-3">
-            <Label text="Applications" index={2} />
-            <Label text="Without index" />
-            <p><Label as="span" text="Inline span" index={12} /></p>
-          </div>
-          <div class="cell flex flex-col items-start gap-3">
-            <Tally text="On air" />
-            <Tally text="Standby" tone="muted" />
-            <Tally text="Fault" tone="critical" />
-            <Tally text="No lamp" dot={false} />
-          </div>
-          <div class="cell flex flex-col items-start gap-3">
-            <Timecode prefix="TC" />
-            <Timecode prefix="REC" />
-          </div>
-        </GridFrame>
-      </section>
-
-      <section class="mt-16" aria-labelledby="headings-title">
-        <h2 id="headings-title" class="mb-4"><Label as="span" text="Headings" index={3} /></h2>
-        <GridFrame columns={2} crosshairs>
-          <div class="cell">
-            <Label text="Level 2 · h2" />
-            <div class="mt-4"><Heading level={2} text="Playout that never blinks." /></div>
-          </div>
-          <div class="cell">
-            <Label text="Level 3 · h2" />
-            <div class="mt-4"><Heading level={3} text="Newsroom, rundown, graphics." /></div>
-          </div>
-          <div class="cell">
-            <Label text="Level 2 · display" />
-            <div class="mt-4"><Heading level={2} size="display" text="One signal." /></div>
-          </div>
-        </GridFrame>
-      </section>
-
-      <section class="mt-16" aria-labelledby="grid-title">
-        <h2 id="grid-title" class="mb-4"><Label as="span" text="Grid frames" index={4} /></h2>
-        <div class="flex flex-col gap-8">
-          {
-            GRID_SPECIMENS.map(({ columns, cells }) => (
-              <div class="flex flex-col gap-3">
-                <Label text={`${columns} col · ${cells} cells`} />
-                <GridFrame as="ul" columns={columns} crosshairs>
-                  {indexes(cells).map((n) => (
-                    <li class="cell">
-                      <Label text="Cell" index={n} />
-                    </li>
-                  ))}
-                </GridFrame>
-              </div>
-            ))
-          }
-          <div class="flex flex-col gap-3">
-            <Label text="12 col · spans 7+5, 3+9" />
-            <GridFrame columns={12} crosshairs>
-              {
-                TWELVE_COLUMN_ROWS.map(({ span, text }, i) => (
-                  <div class:list={['cell', span]}>
-                    <Label text={text} index={i + 1} />
-                  </div>
-                ))
-              }
-            </GridFrame>
-          </div>
-          <div class="flex flex-col gap-3">
-            <Label text="3 col · no crosshairs" />
-            <GridFrame columns={3}>
-              {
-                indexes(3).map((n) => (
-                  <div class="cell">
-                    <Label text="Cell" index={n} />
-                  </div>
-                ))
-              }
-            </GridFrame>
-          </div>
+    <section class={SECTION} aria-labelledby="labels-title">
+      <h2 id="labels-title" class="mb-8"><Label as="span" text="Labels, tallies, timecode" index={2} /></h2>
+      <GridFrame columns={3}>
+        <div class="flex flex-col items-start gap-3">
+          <Label text="Applications" index={2} />
+          <Label text="Without index" />
+          <Label text="Strap" index={7} strap />
         </div>
-      </section>
+        <div class="flex flex-col items-start gap-3">
+          <Tally text="PGM" />
+          <Tally text="PVW" tone="muted" />
+          <Tally text="Fault" tone="critical" />
+          <Tally text="No lamp" dot={false} />
+        </div>
+        <div class="flex flex-col items-start gap-3">
+          <Timecode prefix="TC" />
+          <Timecode prefix="REC" />
+        </div>
+      </GridFrame>
+    </section>
 
-      <section class="mt-16" aria-labelledby="forms-title">
-        <h2 id="forms-title" class="mb-4"><Label as="span" text="Form controls" index={5} /></h2>
-        <form action="#forms-title" method="get">
-          <GridFrame columns={2} crosshairs>
-            <div class="cell">
-              <Field id="demo-name" label="Name">
-                <Input id="demo-name" name="name" required maxlength={120} autocomplete="name" />
-              </Field>
-            </div>
-            <div class="cell">
-              <Field
-                id="demo-email"
-                label="Email"
-                hint="We reply within one working day."
-                optionalLabel="Optional"
-              >
-                <Input
-                  id="demo-email"
-                  name="email"
-                  type="email"
-                  maxlength={254}
-                  autocomplete="email"
-                  describedBy={hintId('demo-email')}
-                />
-              </Field>
-            </div>
-            <div class="cell">
-              <Field id="demo-solution" label="Solution">
-                <Select id="demo-solution" name="solution" required options={SOLUTION_OPTIONS} />
-              </Field>
-            </div>
-            <div class="cell">
-              <Field id="demo-message" label="Message" hint="Up to 2000 characters.">
-                <Textarea
-                  id="demo-message"
-                  name="message"
-                  required
-                  maxlength={2000}
-                  describedBy={hintId('demo-message')}
-                />
-              </Field>
-            </div>
-            <div class="cell flex flex-col items-start gap-6">
-              <Checkbox id="demo-consent" name="consent" value="yes" required>
-                I agree to the <a href="#prose-title">privacy notice</a>.
-              </Checkbox>
-              <Button type="submit">Send request</Button>
-            </div>
-          </GridFrame>
-        </form>
-      </section>
-
-      <section class="mt-16" aria-labelledby="prose-title">
-        <h2 id="prose-title" class="mb-4"><Label as="span" text="Prose" index={6} /></h2>
-        <div><Prose html={PROSE_HTML} /></div>
-      </section>
-
-      <section class="mt-16" aria-labelledby="colour-title">
-        <h2 id="colour-title" class="mb-4"><Label as="span" text="Colour" index={7} /></h2>
-        <GridFrame as="ul" columns={4} crosshairs>
-          {
-            COLOURS.map(({ name, swatch }) => (
-              <li class="cell">
-                <span class:list={['block h-16 border border-line-strong', swatch]} />
-                <code class="label-mono mt-3 block text-ink-muted">--color-{name}</code>
-              </li>
-            ))
-          }
+    <section class={SECTION} aria-labelledby="headings-title">
+      <LowerThird level={2} text="Lower thirds and headings" label="Headings" index={3} />
+      <div class="mt-12">
+        <GridFrame columns={2}>
+          <LowerThird level={3} text="Newsroom Desk" label="Newsroom · Stable" />
+          <div class="flex flex-col gap-4">
+            <Label text="Level 2 · display" />
+            <Heading level={2} size="display" text="One signal." />
+          </div>
         </GridFrame>
-      </section>
-    </div>
+      </div>
+      <ol class="mt-16 flex flex-col gap-8">
+        {
+          RUNDOWN.map(({ title, duration }, i) => (
+            <li class="grid grid-cols-[auto_1fr_auto] items-baseline gap-6">
+              <span class="label-mono text-ink">{String(i + 1).padStart(ROW_DIGITS, '0')}</span>
+              <span class="text-h2 font-semibold">{title}</span>
+              <span class="label-mono text-ink-muted">{duration}</span>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section class={SECTION} aria-labelledby="grid-title">
+      <h2 id="grid-title" class="mb-8"><Label as="span" text="Grid frames" index={4} /></h2>
+      <div class="flex flex-col gap-12">
+        {
+          GRID_SPECIMENS.map(({ columns, cells }) => (
+            <div class="flex flex-col gap-4">
+              <Label text={`Spaced · ${columns} col · ${cells} tiles`} />
+              <GridFrame as="ul" columns={columns}>
+                {indexes(cells).map((n) => (
+                  <li class={TILE}>
+                    <Label text="Tile" index={n} />
+                  </li>
+                ))}
+              </GridFrame>
+            </div>
+          ))
+        }
+        <div class="flex flex-col gap-4">
+          <Label text="Hairline · 3 col · 4 cells (budget-limited)" />
+          <GridFrame as="ul" columns={3} variant="hairline">
+            {
+              indexes(4).map((n) => (
+                <li class="cell">
+                  <Label text="Cell" index={n} />
+                </li>
+              ))
+            }
+          </GridFrame>
+        </div>
+      </div>
+    </section>
+
+    <section class={SECTION} aria-labelledby="signal-title">
+      <h2 id="signal-title" class="mb-8"><Label as="span" text="No signal" index={5} /></h2>
+      <div class="max-w-2xl"><NoSignal text="No signal" /></div>
+    </section>
+
+    <section class={SECTION} aria-labelledby="forms-title">
+      <h2 id="forms-title" class="mb-8"><Label as="span" text="Form controls" index={6} /></h2>
+      <form action="#forms-title" method="get">
+        <GridFrame columns={2}>
+          <Field id="demo-name" label="Name">
+            <Input id="demo-name" name="name" required maxlength={120} autocomplete="name" />
+          </Field>
+          <Field
+            id="demo-email"
+            label="Email"
+            hint="We reply within one working day."
+            optionalLabel="Optional"
+          >
+            <Input
+              id="demo-email"
+              name="email"
+              type="email"
+              maxlength={254}
+              autocomplete="email"
+              describedBy={hintId('demo-email')}
+            />
+          </Field>
+          <Field id="demo-solution" label="Solution">
+            <Select id="demo-solution" name="solution" required options={SOLUTION_OPTIONS} />
+          </Field>
+          <Field id="demo-message" label="Message" hint="Up to 2000 characters.">
+            <Textarea
+              id="demo-message"
+              name="message"
+              required
+              maxlength={2000}
+              describedBy={hintId('demo-message')}
+            />
+          </Field>
+          <div class="flex flex-col items-start gap-6">
+            <Checkbox id="demo-consent" name="consent" value="yes" required>
+              I agree to the <a href="#prose-title">privacy notice</a>.
+            </Checkbox>
+            <Button type="submit">Send request</Button>
+          </div>
+        </GridFrame>
+      </form>
+    </section>
+
+    <section class={SECTION} aria-labelledby="prose-title">
+      <h2 id="prose-title" class="mb-8"><Label as="span" text="Prose" index={7} /></h2>
+      <Prose html={PROSE_HTML} />
+    </section>
+
+    <section class={SECTION} aria-labelledby="colour-title">
+      <h2 id="colour-title" class="mb-8"><Label as="span" text="Colour" index={8} /></h2>
+      <GridFrame as="ul" columns={4}>
+        {
+          COLOURS.map(({ name, swatch }) => (
+            <li>
+              <span class:list={['block h-16 border border-line-strong', swatch]} />
+              <code class="label-mono mt-3 block text-ink-muted">--color-{name}</code>
+            </li>
+          ))
+        }
+      </GridFrame>
+    </section>
+  </div>
 </BaseLayout>

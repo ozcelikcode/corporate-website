@@ -53,7 +53,10 @@
   }
 }
 
-/* Shared hairline grid: the gap shows the line colour, so neighbouring cells share one line. */
+/*
+ * Hairline cell matrix, budget-limited (see spec §8 "Border budget"): the gap shows the line
+ * colour, so neighbouring cells share one line. Content grids use GridFrame's spaced variant.
+ */
 @utility grid-hairline {
   display: grid;
   gap: var(--border-hairline);
@@ -67,33 +70,35 @@
   padding: --spacing(6);
 }
 
-/* A "+" mark centred on the element's top-left grid intersection; empty alt text hides it from AT. */
-@utility crosshair {
-  position: relative;
-
-  &::before {
-    content: "+";
-    /* biome-ignore lint/suspicious/noDuplicateProperties: plain fallback for browsers without alt text */
-    content: "+" / "";
-    position: absolute;
-    inset-block-start: calc(var(--border-hairline) / -2);
-    inset-inline-start: calc(var(--border-hairline) / -2);
-    z-index: 1;
-    translate: -50% -50%;
-    font-family: --theme(--font-mono);
-    font-size: var(--text-label);
-    line-height: 1;
-    color: var(--color-line-strong);
-    pointer-events: none;
-  }
-}
-
 @utility label-mono {
   font-family: --theme(--font-mono);
   font-size: var(--text-label);
   line-height: var(--text-label--line-height);
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
+}
+
+/*
+ * On-air name strap (lower third): a tinted band with a solid accent key on its leading edge.
+ * The band is a translucent ink wash, so it reads on both canvas and surface. The key is a
+ * graphic (3:1 suffices); the strap text keeps its own colour.
+ */
+@utility lower-third {
+  --lower-third-band: color-mix(in oklab, var(--color-ink) 6%, transparent);
+
+  display: inline-flex;
+  align-items: center;
+  gap: --spacing(3);
+  padding-block: --spacing(1);
+  padding-inline-end: --spacing(3);
+  background-color: var(--lower-third-band);
+
+  &::before {
+    content: "";
+    align-self: stretch;
+    inline-size: --spacing(1);
+    background-color: var(--color-accent);
+  }
 }
 
 /* Documented exception: hard-stop raster lines, hero only. Static, so no motion concerns. */
