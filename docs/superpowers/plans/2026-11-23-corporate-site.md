@@ -79,6 +79,7 @@ grep -rhoE '<script[^>]*>' dist --include='*.html' --exclude-dir=admin | grep -v
 grep -rhoE '<script(\s[^>]*)?>[^<]' dist --include='*.html' --exclude-dir=admin | grep -v 'application/ld+json'   # prints nothing: no inline executable script
 diff <(grep -rlE '<script type="module" src="/_astro/' dist --include='*.html' | sort) <(grep -rl 'data-ascii' dist --include='*.html' | sort)   # prints nothing: the module ships exactly where AsciiImage renders
 for f in $(grep -rlE 'data-ascii' dist --include='*.html'); do test "$(grep -oE '<script type="module" src="/_astro/' "$f" | wc -l)" -eq 1 || echo "MODULES $f"; done   # prints nothing: one module per such page
+for f in $(find dist -name '*.html' -not -path 'dist/admin/*'); do test "$(grep -o 'data-motion-hold' "$f" | wc -l)" -eq 1 || echo "HOLD $f"; done   # prints nothing: the HOLD key (motion pause) is on every page (Task 7b fix round 1)
 ```
 
 **VA checklist** (spec §8; run in `pnpm dev` at 360, 768 and 1440 CSS px):
@@ -87,7 +88,7 @@ for f in $(grep -rlE 'data-ascii' dist --include='*.html'); do test "$(grep -oE 
 - VA3 Labels are uppercase tracked Martian Mono with an index, e.g. `[02] APPLICATIONS`; at most one two-tone headline per page.
 - VA4 Accent comes only through `accent` / `accent-dim` / `accent-wash` / `tone-*` tokens, only on large text, graphics, tallies and the lower-third key, never on body text; `critical` only for errors. The `bars-*` tokens (SMPTE standard) appear only in `BarsStrip` and `NoSignal`.
 - VA5 Typographic glyphs (→ ↗ + ● −), no icons, no emoji.
-- VA6 Motion only on opacity/transform, ≤ 240ms, except the Timecode counter and the AsciiImage live signal (Task 7b: hum bar, sync slips, breath, and the module's tune-in, rings and grain; all fully static under reduced motion, no layout shift); with DevTools `prefers-reduced-motion: reduce` nothing moves (timecode static, ASCII shows the build-time render).
+- VA6 Motion only on opacity/transform, ≤ 240ms, except the Timecode counter and the AsciiImage live signal (Task 7b: hum bar, sync slips, breath, and the module's tune-in, rings and grain; all fully static under reduced motion, no layout shift); with DevTools `prefers-reduced-motion: reduce` nothing moves (timecode static, ASCII shows the build-time render). The TallyStrip HOLD key (every page, every breakpoint, keyboard-reachable) pauses all of it and restores the static ASCII (WCAG 2.2.2).
 - VA7 At 360px: `document.documentElement.scrollWidth <= 360` (no horizontal scroll); tap targets ≥ 24×24 CSS px.
 - VA8 AA contrast: body ≥ 4.5:1, large text/UI ≥ 3:1; a visible focus ring on every interactive element during a Tab walk; DOM order matches visual order.
 
@@ -202,7 +203,7 @@ Model: Sonnet 5.5 · Group G3 · Spec §6 (content tree), §7, §15 items 11–1
 
 **Files:**
 - Create: `src/content.config.ts`, `src/lib/{i18n,entries,content,sections-schema,color,assert-never}.ts`
-- Create seed: `src/content/settings/site.yaml`; `src/content/ui/{en,tr}/strings.yaml`; `src/content/navigation/{en,tr}/main.yaml`; `src/content/pages/en/{home,about,contact,privacy,applications,quote,not-found}.yaml`; `src/content/pages/tr/home.yaml`; `src/content/applications/en/{newsroom-desk,playout-control,archive-search}.yaml`; `src/assets/uploads/{test-card.png,cover-newsroom-desk.png,cover-playout-control.png,cover-archive-search.png,og-default.png,logo.svg}`
+- Create seed: `src/content/settings/site.yaml`; `src/content/ui/{en,tr}/strings.yaml`; `src/content/navigation/{en,tr}/main.yaml`; `src/content/pages/en/{home,about,contact,privacy,applications,quote,not-found}.yaml`; `src/content/pages/tr/home.yaml`; `src/content/applications/en/{newsroom-desk,playout-control,archive-search}.yaml`; `src/assets/uploads/{test-card.png (renamed `transmitter.png` and redrawn in Task 7b),cover-newsroom-desk.png,cover-playout-control.png,cover-archive-search.png,og-default.png,logo.svg}`
 - Test: `src/lib/{i18n,entries,sections-schema,color}.test.ts`
 
 **Interfaces:**
@@ -257,7 +258,7 @@ assert.match(readFileSync(new URL('../styles/tokens.css', import.meta.url), 'utf
 - [ ] **Step 4: Run the tests.** Expected: all pass.
 - [ ] **Step 5: Write `content.config.ts` and `content.ts`.**
 - [ ] **Step 6: Generate the seed images.** Use a throwaway script in the scratchpad (not committed) that renders inline SVG to PNG with sharp. Each image ≤ 200 KB.
-  - `test-card.png`, 1280×720 (RGBA, as sharp renders it; Task 6 must handle alpha): broadcast test card with 7 vertical bars of distinct luminance, a centred circle, a "+" grid and a greyscale step wedge.
+  - `test-card.png`, 1280×720 (RGBA, as sharp renders it; Task 6 must handle alpha): broadcast test card with 7 vertical bars of distinct luminance, a centred circle, a "+" grid and a greyscale step wedge. *(Task 7b replaced it with `transmitter.png`, a transmitter mast with signal arcs.)*
   - 3 covers, 1200×750: abstract hairline geometry.
   - `og-default.png`, 1200×630.
   - `logo.svg`: a geometric mark with the word `Brand`.
@@ -373,7 +374,7 @@ Model: Opus 5.5 · Group G4 (∥ T5, T11) · Spec §8 (AsciiImage), §14 (ASCII 
 - Test: `src/lib/ascii.test.ts`
 
 **Interfaces:**
-- Consumes: Task 2 `--color-tone-0…5`, `font-mono`; Task 3 `src/assets/uploads/test-card.png`.
+- Consumes: Task 2 `--color-tone-0…5`, `font-mono`; Task 3 `src/assets/uploads/test-card.png` (now `transmitter.png`, Task 7b).
 - Produces:
   - `ascii.ts`: `ASCII_RAMP = ' .:-=+*#%@'`, `TONE_COUNT = 6`, `CHAR_ASPECT = 0.5`, `ASCII_COLUMNS = 96`; `type Tone = 0 | 1 | 2 | 3 | 4 | 5`; `type AsciiRun = { tone: Tone; text: string }`; `type AsciiGrid = { cols: number; rows: number; lines: AsciiRun[][] }`; `gridRows(cols: number, width: number, height: number): number` = `max(1, round(cols × height / width × CHAR_ASPECT))`; `toAsciiGrid(luma: Uint8Array, cols: number, rows: number): AsciiGrid`; `renderAscii(filePath: string, cols?: number): Promise<AsciiGrid>`.
   - `toAsciiGrid` mapping: glyph = `ASCII_RAMP[min(9, floor(l × 10 / 256))]`, tone = `min(5, floor(l × 6 / 256))`, neighbouring same-tone glyphs merge into one run. It throws when `luma.length !== cols × rows`. Bright pixels become dense glyphs (dark canvas).

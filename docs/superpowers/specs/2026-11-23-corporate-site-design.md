@@ -95,7 +95,7 @@ EDITOR ──► /admin (Sveltia, static) ──► sveltia-cms-auth Worker (Git
 │  ├─ assets/
 │  │  ├─ fonts/                      # 2 variable woff2 families (consumed by the fonts API)
 │  │  └─ uploads/                    # CMS image uploads → AVIF/WebP at build;
-│  │                                 #   seed: transmitter-mast hero (ASCII source; file test-card.png)
+│  │                                 #   seed: transmitter-mast hero (ASCII source; transmitter.png)
 │  ├─ styles/
 │  │  ├─ tokens.css                  # @theme: every design token
 │  │  └─ global.css                  # base, prose, grid, lower-third, scanline, reduced-motion
@@ -203,7 +203,7 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
 **v1 seed content.** The repo ships brand-neutral, realistic placeholder content:
 - EN: `settings`, `ui`, `navigation`, all pages, and 3 sample applications.
 - TR: `ui`, `navigation` and the home page only, to prove the plumbing and the EN fallback.
-- A bold broadcast motif is included as the ASCII source: a transmitter mast with signal waves radiating from its top (file name `test-card.png`, kept from the first seed; owner direction 2026-11-23: the look must evoke broadcasting to anyone).
+- A bold broadcast motif is included as the ASCII source: a transmitter mast with signal waves radiating from its top (`src/assets/uploads/transmitter.png`; owner direction 2026-11-23: the look must evoke broadcasting to anyone).
 - Real tenant content is entered later by admins through the CMS.
 
 ## 8. Design system
@@ -277,12 +277,13 @@ A VU meter was considered and dropped: a second perpetual animation beside the r
   - Same-tone runs merge into one `<span>`.
   - Output is a `<pre aria-hidden>` inside a `<figure role="img" aria-label>`, sized with container query units.
   - **Signature moment: a live broadcast signal** (Task 7b; owner: "ASCII effects must be animated", and the effect must evoke broadcasting to anyone). Only under `prefers-reduced-motion: no-preference`; the build-time render is the no-JS and reduced-motion picture. Zero layout shift: rows are full-width inline-blocks, motion is transform, opacity and same-width glyphs only. Each effect maps to a broadcast idea:
-    - *Tuning in* (module): when the figure first scrolls into view, the frame is static noise that resolves glyph by glyph into the picture over about 1.2 s (random order, rolling roughly top-down; tones settle with their glyphs).
-    - *Transmission* (module): rings of brightness travel outward from the transmitter (`waveOrigin`, a `data-wave-origin` "x y" on the figure; default top centre, the seed's mast top). Glyphs under a ring step up in tone, a dotted front crosses empty sky, and the signal fades with distance. A little glyph grain (rare ramp-neighbour flicker) rides on top.
+    - *Tuning in* (module): when the figure first scrolls into view, the frame is static noise that resolves glyph by glyph into the picture over about 1.2 s (random order, rolling roughly top-down; tones settle with their glyphs). On a cold load, a figure already in view whose first report comes more than 300 ms after navigation start has already painted the still picture, so it skips the tune-in and goes straight to live.
+    - *Transmission* (module): a ring of brightness leaves the transmitter every 2.5 s (`WAVE_CADENCE_MS`) and travels outward (`waveOrigin`, a `data-wave-origin` "x y" on the figure; default top centre, the seed's mast top). Glyphs under a ring step up in tone, a dotted front crosses empty sky, and the signal fades with distance. A little glyph grain (rare ramp-neighbour flicker) rides on top.
     - *Hum bar* (CSS): a soft colour-dodge band rolls slowly down the picture, like mains hum on a monitor.
-    - *Sync slip* (CSS): every 8 to 20 s, at uneven gaps, a band of rows tears sideways by a fraction of a glyph and dips for two frames (a dropout).
+    - *Sync slip* (CSS): both slip bands share one 36 s cycle with slips at 4 s (rows 5–6), 13 s (rows 10–12) and 26 s (rows 5–6), so the gaps are 9, 13 and 14 s (never under 8 s). Each slip tears a band sideways by a fraction of a glyph and dips it for about two frames (a dropout).
     - *Breath* (CSS, no-JS picture only): the brightest tone dims and recovers in coarse steps.
-  - The module (`lib/ascii-motion.ts` pure logic, thin glue in the component) is one Astro-bundled `/_astro/*.js` file (≤ 2 KB gzipped, CSP `script-src 'self'`). It runs only on the visible grid, pauses offscreen and in hidden tabs, never runs under reduced motion (and follows changes to it), and restores the build-time markup whenever it stops.
+  - **HOLD key** (WCAG 2.2.2 pause, no extra JS): a native checkbox styled as a broadcast key at the end of `TallyStrip`, on every page and breakpoint, outside the strip's `aria-hidden` status segments, 44px tall, labelled by `ui.motionHold` (EN "Hold", TR "Beklet") and described by `ui.motionHoldHint`. Off by default (the site moves). Checked, `global.css` sets `animation-play-state: paused` on everything (timecode, hum bar, slips, breath), its lamp lights, and the ASCII module stops and restores the static markup.
+  - The module (`lib/ascii-motion.ts` pure logic, thin glue in the component) is one Astro-bundled `/_astro/*.js` file (≤ 2 KB gzipped, CSP `script-src 'self'`). It runs only on the visible grid, pauses offscreen and in hidden tabs, never runs under reduced motion (and follows changes to it) or while HOLD is checked, and restores the build-time markup whenever it stops. It caches each row's last markup, so frames never read `innerHTML`. `waveOrigin` is parsed at build too, so a bad value fails the build.
 - **`TallyStrip`:** `■ LIVE` plus SMPTE timecode `HH:MM:SS:FF`, made with a CSS `@property` counter (no JS), channel, `■ PGM ■ PVW` and the format. Static under reduced motion.
 
 ```

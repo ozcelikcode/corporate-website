@@ -9,7 +9,7 @@
 ## Current focus
 - G6 done: Task 8 (routes, SEO, 404s, robots, sitemap, build outputs) and Task 9 (quote page, shared quote schema).
 - G7 done: Task 10 (Worker `/api/quote`, Turnstile, mail, `_headers`, extended `build-outputs.ts`), awaiting review. Next: Task 12 (runbook, acceptance).
-- Task 7b done (inserted after owner feedback "ASCII effects must be animated" and "the effect and look must evoke broadcasting to anyone"): the ASCII hero is a live broadcast signal (tune-in, transmission rings, hum bar, sync slips, grain); seed image is now a transmitter mast. Client JS constraint amended (one ≤ 2 KB module on pages with `AsciiImage`).
+- Task 7b done (inserted after owner feedback "ASCII effects must be animated" and "the effect and look must evoke broadcasting to anyone"): the ASCII hero is a live broadcast signal (tune-in, transmission rings, hum bar, sync slips, grain); seed image is now a transmitter mast (`transmitter.png`). Client JS constraint amended (one ≤ 2 KB module on pages with `AsciiImage`). Fix round 1: shared 36 s slip cycle (gaps 9/13/14 s), HOLD key in TallyStrip pausing all motion (WCAG 2.2.2), cold-load tune-in skip, build-time `waveOrigin` check, per-row write cache, rings every 2.5 s.
 - Plan: `docs/superpowers/plans/2026-11-23-corporate-site.md` (12 tasks, dispatch groups G1–G8, subagent-driven execution).
 
 ## Design direction (owner feedback, 2026-11-23; implemented in Task 7a)
