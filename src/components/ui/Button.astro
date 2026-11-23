@@ -1,0 +1,78 @@
+---
+/**
+ * Action as a hardware key. `md` carries the arrow in its own square indicator segment
+ * (accent-filled on primary); `sm` sets the arrow inline. Label text stays ink in every state,
+ * so it keeps 4.5:1 for any valid accent; only borders, the fill wash and the segment use accent.
+ */
+import { cva } from 'class-variance-authority';
+import Glyph from './Glyph.astro';
+
+type GlyphName = '→' | '↗';
+
+interface Props {
+  href?: string;
+  type?: 'button' | 'submit';
+  intent?: 'primary' | 'secondary';
+  size?: 'md' | 'sm';
+  glyph?: GlyphName | null;
+}
+
+/** Hrefs with this prefix leave the site and default to the ↗ glyph. */
+const EXTERNAL_PREFIX = 'https://';
+
+const button = cva(
+  'group inline-flex min-h-11 max-w-full items-stretch border label-mono text-ink select-none',
+  {
+    variants: {
+      intent: {
+        primary: 'border-accent bg-accent-wash',
+        secondary: 'border-line-strong hover:border-ink hover:bg-surface',
+      },
+    },
+  },
+);
+
+const caption = cva('flex items-center', {
+  variants: {
+    size: {
+      md: 'px-5 py-3',
+      sm: 'gap-3 px-3 py-2',
+    },
+  },
+});
+
+const segment = cva('flex w-11 shrink-0 items-center justify-center overflow-hidden border-s', {
+  variants: {
+    intent: {
+      primary: 'border-accent bg-accent text-canvas',
+      secondary: 'border-line-strong group-hover:border-ink',
+    },
+  },
+});
+
+/** The arrow nudges along its own direction on hover and keyboard focus (transform only). */
+const NUDGE = {
+  '→': 'transition-transform group-hover:translate-x-1 group-focus-visible:translate-x-1',
+  '↗': 'transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-focus-visible:translate-x-0.5 group-focus-visible:-translate-y-0.5',
+} as const satisfies Record<GlyphName, string>;
+
+const { href, type = 'button', intent = 'primary', size = 'md', glyph } = Astro.props;
+
+const resolvedGlyph: GlyphName | null =
+  glyph === undefined ? (href?.startsWith(EXTERNAL_PREFIX) ? '↗' : '→') : glyph;
+const Tag = href === undefined ? 'button' : 'a';
+const tagAttributes = href === undefined ? { type } : { href };
+---
+<Tag class={button({ intent })} {...tagAttributes}>
+  <span class={caption({ size })}>
+    <slot />
+    {size === 'sm' && resolvedGlyph !== null && <Glyph name={resolvedGlyph} class={NUDGE[resolvedGlyph]} />}
+  </span>
+  {
+    size === 'md' && resolvedGlyph !== null && (
+      <span class={segment({ intent })} aria-hidden="true">
+        <Glyph name={resolvedGlyph} class={NUDGE[resolvedGlyph]} />
+      </span>
+    )
+  }
+</Tag>

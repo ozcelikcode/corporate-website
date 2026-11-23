@@ -1,0 +1,48 @@
+---
+/**
+ * Hairline cell matrix. The gap shows the `line` colour, so neighbouring cells share one line.
+ * Children are `cell`s. For 2, 3 and 4 columns the last cell spans the rest of its row at every
+ * breakpoint (`:last-child:nth-child(…)`), so no empty track shows as a line-coloured hole.
+ * The rules are disjoint per breakpoint range (`md:max-lg:` vs `lg:`), because Tailwind does not
+ * order stacked arbitrary variants by breakpoint, so they must never rely on overriding each other.
+ * For 12 columns, children set `lg:col-span-*` and each row's spans must add up to 12.
+ * `crosshairs` puts a "+" on every cell's top-left corner, i.e. on each intersection.
+ */
+import { cva } from 'class-variance-authority';
+
+interface Props {
+  as?: 'div' | 'section' | 'ul';
+  columns?: 1 | 2 | 3 | 4 | 12;
+  crosshairs?: boolean;
+}
+
+const frame = cva('grid-hairline', {
+  variants: {
+    columns: {
+      1: '',
+      2: 'md:grid-cols-2 md:[&>:last-child:nth-child(odd)]:col-span-full',
+      3: [
+        'md:grid-cols-2 lg:grid-cols-3',
+        'md:max-lg:[&>:last-child:nth-child(odd)]:col-span-full',
+        'lg:[&>:last-child:nth-child(3n+1)]:col-span-full',
+        'lg:[&>:last-child:nth-child(3n+2)]:col-span-2',
+      ],
+      4: [
+        'md:grid-cols-2 lg:grid-cols-4',
+        'md:max-lg:[&>:last-child:nth-child(odd)]:col-span-full',
+        'lg:[&>:last-child:nth-child(4n+1)]:col-span-full',
+        'lg:[&>:last-child:nth-child(4n+2)]:col-span-3',
+        'lg:[&>:last-child:nth-child(4n+3)]:col-span-2',
+      ],
+      12: 'lg:grid-cols-12',
+    },
+    crosshairs: {
+      true: '[&>*]:crosshair',
+      false: '',
+    },
+  },
+});
+
+const { as: Tag = 'div', columns = 1, crosshairs = false } = Astro.props;
+---
+<Tag class={frame({ columns, crosshairs })}><slot /></Tag>

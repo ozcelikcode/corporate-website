@@ -1,0 +1,10 @@
+---
+/** Long-form copy column for trusted, build-time rendered Markdown HTML. */
+
+interface Props {
+  html: string;
+}
+
+const { html } = Astro.props;
+---
+<div class="prose" set:html={html} />

@@ -1,0 +1,39 @@
+---
+/**
+ * Page and section heading. `accent` adds the two-tone second line in accent (large text only,
+ * so 3:1 suffices). At most one two-tone heading per page.
+ */
+import { cva } from 'class-variance-authority';
+
+interface Props {
+  level: 1 | 2 | 3;
+  text: string;
+  accent?: string;
+  size?: 'display' | 'h2';
+}
+
+const heading = cva('font-semibold wrap-break-word', {
+  variants: {
+    size: {
+      display: 'text-display tracking-tight',
+      h2: 'text-h2',
+    },
+  },
+});
+
+const TAGS = { 1: 'h1', 2: 'h2', 3: 'h3' } as const;
+
+const { level, text, accent, size = level === 1 ? 'display' : 'h2' } = Astro.props;
+const Tag = TAGS[level];
+---
+<Tag class={heading({ size })}>
+  {
+    accent === undefined ? (
+      text
+    ) : (
+      <>
+        <span class="block">{text}</span> <span class="block text-accent">{accent}</span>
+      </>
+    )
+  }
+</Tag>

@@ -1,6 +1,18 @@
 ---
-// Temporary token swatch (Tasks 1–7); replaced by real routes in Task 8.
+// Temporary atom showcase (Tasks 1–7); replaced by real routes in Task 8. Literal copy allowed here only.
 import { Font } from 'astro:assets';
+import Button from '../components/ui/Button.astro';
+import Checkbox from '../components/ui/Checkbox.astro';
+import Field from '../components/ui/Field.astro';
+import GridFrame from '../components/ui/GridFrame.astro';
+import Heading from '../components/ui/Heading.astro';
+import Input from '../components/ui/Input.astro';
+import Label from '../components/ui/Label.astro';
+import Prose from '../components/ui/Prose.astro';
+import Select from '../components/ui/Select.astro';
+import Tally from '../components/ui/Tally.astro';
+import Textarea from '../components/ui/Textarea.astro';
+import Timecode from '../components/ui/Timecode.astro';
 import '../styles/global.css';
 
 const COLOURS = [
@@ -22,100 +34,244 @@ const COLOURS = [
   { name: 'tone-5', swatch: 'bg-tone-5' },
 ] as const;
 
-const TEXT_SCALE = [
-  { name: 'display', className: 'text-display font-semibold' },
-  { name: 'h2', className: 'text-h2 font-semibold' },
-  { name: 'lede', className: 'text-lede text-ink-muted' },
-  { name: 'body', className: 'text-body' },
-  { name: 'label', className: 'label-mono text-ink-muted' },
+/** GridFrame specimens: column count and a cell count that leaves an incomplete last row. */
+const GRID_SPECIMENS = [
+  { columns: 1, cells: 2 },
+  { columns: 2, cells: 3 },
+  { columns: 3, cells: 4 },
+  { columns: 3, cells: 5 },
+  { columns: 4, cells: 5 },
+  { columns: 4, cells: 7 },
 ] as const;
 
-const FAMILIES = [
-  { name: 'Schibsted Grotesk', className: 'font-sans' },
-  { name: 'Schibsted Grotesk italic', className: 'font-sans italic' },
-  { name: 'Martian Mono', className: 'font-mono' },
+const TWELVE_COLUMN_ROWS = [
+  { span: 'lg:col-span-7', text: 'Span 7' },
+  { span: 'lg:col-span-5', text: 'Span 5' },
+  { span: 'lg:col-span-3', text: 'Span 3' },
+  { span: 'lg:col-span-9', text: 'Span 9' },
 ] as const;
 
-const TURKISH_SAMPLE = 'ÇĞİıÖŞÜ çğıöşü';
-const GLYPHS = '→ ↗ + ● − × ·';
+const SOLUTION_OPTIONS = [
+  { value: 'general', label: 'General enquiry' },
+  { value: 'playout', label: 'Playout automation' },
+  { value: 'newsroom', label: 'Newsroom system' },
+] as const;
+
+const PROSE_HTML = `
+<h2>Prose heading</h2>
+<p>Body copy in ink on canvas. <a href="#prose-title">An inline link</a> uses a hairline underline. <strong>Strong text</strong> and <code>mono code</code>.</p>
+<h3>A mono subheading</h3>
+<ul><li>First list item</li><li>Second list item</li></ul>
+<ol><li>First step</li><li>Second step</li></ol>
+<blockquote><p>A quiet blockquote with a hairline rule.</p></blockquote>
+`;
+
+const indexes = (count: number) => Array.from({ length: count }, (_, i) => i + 1);
 ---
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>Scaffold · tokens</title>
+    <title>Scaffold · atoms</title>
     <Font cssVariable="--font-grotesk" preload />
     <Font cssVariable="--font-martian" preload />
   </head>
   <body>
-    <main class="mx-auto max-w-page px-4 py-12">
-      <header class="scanlines grid-hairline">
-        <div class="cell">
-          <p class="label-mono text-accent">[00] Tokens</p>
-          <h1 class="mt-4 text-display font-semibold">
-            Signal <span class="text-accent">on air.</span>
-          </h1>
+    <main class="mx-auto max-w-page px-4 py-12 md:px-8">
+      <GridFrame as="section" crosshairs>
+        <div class="cell flex flex-wrap items-center gap-x-8 gap-y-2">
+          <Tally text="Live" />
+          <Timecode prefix="TC" />
+          <Tally text="CH 01 · PGM" tone="muted" dot={false} />
         </div>
-      </header>
+        <div class="cell py-12">
+          <Label text="Atoms" index={0} />
+          <div class="mt-6">
+            <Heading level={1} text="Software that keeps" accent="every newsroom on air." />
+          </div>
+        </div>
+      </GridFrame>
 
-      <section class="mt-12" aria-labelledby="colour-title">
-        <h2 id="colour-title" class="label-mono text-ink-muted">[01] Colour</h2>
-        <ul class="grid-hairline mt-4 grid-cols-2 md:grid-cols-4">
+      <section class="mt-16" aria-labelledby="buttons-title">
+        <h2 id="buttons-title" class="mb-4"><Label as="span" text="Buttons" index={1} /></h2>
+        <GridFrame columns={2} crosshairs>
+          <div class="cell flex flex-col items-start gap-4">
+            <Label text="Primary · md" />
+            <Button href="#forms-title">Explore applications</Button>
+            <Button href="https://example.com/">Request a quote</Button>
+            <Button glyph={null}>No glyph</Button>
+          </div>
+          <div class="cell flex flex-col items-start gap-4">
+            <Label text="Secondary · md" />
+            <Button href="#forms-title" intent="secondary">Explore applications</Button>
+            <Button href="https://example.com/" intent="secondary">Brochure</Button>
+            <Button intent="secondary" glyph={null}>No glyph</Button>
+          </div>
+          <div class="cell flex flex-col items-start gap-4">
+            <Label text="Small" />
+            <div class="flex flex-wrap gap-4">
+              <Button href="#forms-title" size="sm">Quote</Button>
+              <Button href="https://example.com/" size="sm" intent="secondary">Site</Button>
+              <Button size="sm" intent="secondary" glyph="↗">Forced ↗</Button>
+              <Button size="sm" glyph={null}>Plain</Button>
+            </div>
+          </div>
+        </GridFrame>
+      </section>
+
+      <section class="mt-16" aria-labelledby="labels-title">
+        <h2 id="labels-title" class="mb-4"><Label as="span" text="Labels, tallies, timecode" index={2} /></h2>
+        <GridFrame columns={3} crosshairs>
+          <div class="cell flex flex-col gap-3">
+            <Label text="Applications" index={2} />
+            <Label text="Without index" />
+            <p><Label as="span" text="Inline span" index={12} /></p>
+          </div>
+          <div class="cell flex flex-col items-start gap-3">
+            <Tally text="On air" />
+            <Tally text="Standby" tone="muted" />
+            <Tally text="Fault" tone="critical" />
+            <Tally text="No lamp" dot={false} />
+          </div>
+          <div class="cell flex flex-col items-start gap-3">
+            <Timecode prefix="TC" />
+            <Timecode prefix="REC" />
+          </div>
+        </GridFrame>
+      </section>
+
+      <section class="mt-16" aria-labelledby="headings-title">
+        <h2 id="headings-title" class="mb-4"><Label as="span" text="Headings" index={3} /></h2>
+        <GridFrame columns={2} crosshairs>
+          <div class="cell">
+            <Label text="Level 2 · h2" />
+            <div class="mt-4"><Heading level={2} text="Playout that never blinks." /></div>
+          </div>
+          <div class="cell">
+            <Label text="Level 3 · h2" />
+            <div class="mt-4"><Heading level={3} text="Newsroom, rundown, graphics." /></div>
+          </div>
+          <div class="cell">
+            <Label text="Level 2 · display" />
+            <div class="mt-4"><Heading level={2} size="display" text="One signal." /></div>
+          </div>
+        </GridFrame>
+      </section>
+
+      <section class="mt-16" aria-labelledby="grid-title">
+        <h2 id="grid-title" class="mb-4"><Label as="span" text="Grid frames" index={4} /></h2>
+        <div class="flex flex-col gap-8">
+          {
+            GRID_SPECIMENS.map(({ columns, cells }) => (
+              <div class="flex flex-col gap-3">
+                <Label text={`${columns} col · ${cells} cells`} />
+                <GridFrame as="ul" columns={columns} crosshairs>
+                  {indexes(cells).map((n) => (
+                    <li class="cell">
+                      <Label text="Cell" index={n} />
+                    </li>
+                  ))}
+                </GridFrame>
+              </div>
+            ))
+          }
+          <div class="flex flex-col gap-3">
+            <Label text="12 col · spans 7+5, 3+9" />
+            <GridFrame columns={12} crosshairs>
+              {
+                TWELVE_COLUMN_ROWS.map(({ span, text }, i) => (
+                  <div class:list={['cell', span]}>
+                    <Label text={text} index={i + 1} />
+                  </div>
+                ))
+              }
+            </GridFrame>
+          </div>
+          <div class="flex flex-col gap-3">
+            <Label text="3 col · no crosshairs" />
+            <GridFrame columns={3}>
+              {
+                indexes(3).map((n) => (
+                  <div class="cell">
+                    <Label text="Cell" index={n} />
+                  </div>
+                ))
+              }
+            </GridFrame>
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-16" aria-labelledby="forms-title">
+        <h2 id="forms-title" class="mb-4"><Label as="span" text="Form controls" index={5} /></h2>
+        <form action="#forms-title" method="get">
+          <GridFrame columns={2} crosshairs>
+            <div class="cell">
+              <Field id="demo-name" label="Name">
+                <Input id="demo-name" name="name" required maxlength={120} autocomplete="name" />
+              </Field>
+            </div>
+            <div class="cell">
+              <Field
+                id="demo-email"
+                label="Email"
+                hint="We reply within one working day."
+                optionalLabel="Optional"
+              >
+                <Input
+                  id="demo-email"
+                  name="email"
+                  type="email"
+                  maxlength={254}
+                  autocomplete="email"
+                  describedBy="demo-email-hint"
+                />
+              </Field>
+            </div>
+            <div class="cell">
+              <Field id="demo-solution" label="Solution">
+                <Select id="demo-solution" name="solution" required options={SOLUTION_OPTIONS} />
+              </Field>
+            </div>
+            <div class="cell">
+              <Field id="demo-message" label="Message" hint="Up to 2000 characters.">
+                <Textarea
+                  id="demo-message"
+                  name="message"
+                  required
+                  maxlength={2000}
+                  describedBy="demo-message-hint"
+                />
+              </Field>
+            </div>
+            <div class="cell flex flex-col items-start gap-6">
+              <Checkbox id="demo-consent" name="consent" value="yes" required>
+                I agree to the <a href="#prose-title">privacy notice</a>.
+              </Checkbox>
+              <Button type="submit">Send request</Button>
+            </div>
+          </GridFrame>
+        </form>
+      </section>
+
+      <section class="mt-16" aria-labelledby="prose-title">
+        <h2 id="prose-title" class="mb-4"><Label as="span" text="Prose" index={6} /></h2>
+        <div><Prose html={PROSE_HTML} /></div>
+      </section>
+
+      <section class="mt-16" aria-labelledby="colour-title">
+        <h2 id="colour-title" class="mb-4"><Label as="span" text="Colour" index={7} /></h2>
+        <GridFrame as="ul" columns={4} crosshairs>
           {
             COLOURS.map(({ name, swatch }) => (
-              <li class="cell crosshair">
+              <li class="cell">
                 <span class:list={['block h-16 border border-line-strong', swatch]} />
                 <code class="label-mono mt-3 block text-ink-muted">--color-{name}</code>
               </li>
             ))
           }
-        </ul>
-      </section>
-
-      <section class="mt-12" aria-labelledby="type-title">
-        <h2 id="type-title" class="label-mono text-ink-muted">[02] Type scale</h2>
-        <ul class="grid-hairline mt-4">
-          {
-            TEXT_SCALE.map(({ name, className }) => (
-              <li class="cell">
-                <span class="label-mono text-ink-muted">text-{name}</span>
-                <p class:list={['mt-2', className]}>Every newsroom stays on air.</p>
-              </li>
-            ))
-          }
-        </ul>
-      </section>
-
-      <section class="mt-12" aria-labelledby="glyph-title">
-        <h2 id="glyph-title" class="label-mono text-ink-muted">[03] Turkish and glyphs</h2>
-        <ul class="grid-hairline mt-4 md:grid-cols-3">
-          {
-            FAMILIES.map(({ name, className }) => (
-              <li class:list={['cell', className]}>
-                <span class="label-mono text-ink-muted">{name}</span>
-                <p class="mt-2 text-h2" lang="tr">{TURKISH_SAMPLE}</p>
-                <p class="mt-2 text-h2">{GLYPHS}</p>
-              </li>
-            ))
-          }
-        </ul>
-      </section>
-
-      <section class="mt-12" aria-labelledby="prose-title">
-        <h2 id="prose-title" class="label-mono text-ink-muted">[04] Prose</h2>
-        <div class="prose mt-4">
-          <p>
-            Body copy in ink on canvas. <a href="#prose-title">An inline link</a> uses a
-            hairline underline. <strong>Strong text</strong> and <code>mono code</code>.
-          </p>
-          <h3>A mono subheading</h3>
-          <ul>
-            <li>First list item</li>
-            <li>Second list item</li>
-          </ul>
-          <p class="text-critical">Critical: shown only for errors.</p>
-        </div>
+        </GridFrame>
       </section>
     </main>
   </body>

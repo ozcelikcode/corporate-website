@@ -1,0 +1,29 @@
+---
+/**
+ * Status tally: a solid square lamp plus a mono label. Only the lamp takes the tone colour
+ * (a graphic, 3:1 suffices); the text stays ink so it keeps 4.5:1 for any valid accent.
+ */
+import { cva } from 'class-variance-authority';
+
+interface Props {
+  text: string;
+  tone?: 'accent' | 'muted' | 'critical';
+  dot?: boolean;
+}
+
+const lamp = cva('size-2 shrink-0', {
+  variants: {
+    tone: {
+      accent: 'bg-accent',
+      muted: 'bg-ink-muted',
+      critical: 'bg-critical',
+    },
+  },
+});
+
+const { text, tone = 'accent', dot = true } = Astro.props;
+---
+<span class="inline-flex items-center gap-2 label-mono text-ink">
+  {dot && <span class={lamp({ tone })} aria-hidden="true" />}
+  {text}
+</span>

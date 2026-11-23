@@ -1,0 +1,34 @@
+---
+/** Single-line text or email control; wrap it in `Field`. */
+import { CONTROL_CLASS } from './control-class.ts';
+
+interface Props {
+  id: string;
+  name: string;
+  type?: 'text' | 'email';
+  required?: boolean;
+  maxlength: number;
+  autocomplete: string;
+  describedBy?: string;
+}
+
+const {
+  id,
+  name,
+  type = 'text',
+  required = false,
+  maxlength,
+  autocomplete,
+  describedBy,
+} = Astro.props;
+---
+<input
+  class={CONTROL_CLASS}
+  id={id}
+  name={name}
+  type={type}
+  required={required}
+  maxlength={maxlength}
+  autocomplete={autocomplete}
+  aria-describedby={describedBy}
+/>

@@ -1,0 +1,49 @@
+---
+/**
+ * Arrow glyphs drawn as inline SVG: the font subsets lack → and ↗, so the marks never fall back
+ * to a system font. Square caps and mitred joins match the 0-radius language; the stroke takes
+ * the surrounding text colour.
+ */
+import { cva } from 'class-variance-authority';
+
+type GlyphName = '→' | '↗';
+
+interface Props {
+  name: GlyphName;
+  size?: 'label' | 'body' | 'h2';
+  class?: string;
+}
+
+/** Drawing box and stroke, in SVG user units (scale with the rendered size). */
+const VIEWBOX_SIZE = 16;
+const STROKE_WIDTH = 1.5;
+
+/** Shaft plus head for each arrow, inside the VIEWBOX_SIZE square. */
+const PATHS = {
+  '→': 'M2 8H14M9 3L14 8L9 13',
+  '↗': 'M4 12L12 4M5 4H12V11',
+} as const satisfies Record<GlyphName, string>;
+
+const glyph = cva('inline-block shrink-0', {
+  variants: {
+    size: {
+      label: 'size-(--text-label)',
+      body: 'size-(--text-body)',
+      h2: 'size-(--text-h2)',
+    },
+  },
+});
+
+const { name, size = 'label', class: className } = Astro.props;
+---
+<svg
+  class:list={[glyph({ size }), className]}
+  viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`}
+  fill="none"
+  stroke="currentColor"
+  stroke-width={STROKE_WIDTH}
+  stroke-linecap="square"
+  stroke-linejoin="miter"
+  aria-hidden="true"
+  focusable="false"
+><path d={PATHS[name]} /></svg>

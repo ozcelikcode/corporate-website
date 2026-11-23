@@ -1,0 +1,26 @@
+---
+/**
+ * Native checkbox tinted with the accent through `accent-color`. The label content goes in the
+ * default slot, so it can hold a link.
+ */
+
+interface Props {
+  id: string;
+  name: string;
+  value: string;
+  required?: boolean;
+}
+
+const { id, name, value, required = false } = Astro.props;
+---
+<div class="flex items-start gap-3">
+  <input
+    class="m-0 size-6 shrink-0 accent-accent"
+    type="checkbox"
+    id={id}
+    name={name}
+    value={value}
+    required={required}
+  />
+  <label for={id} class="min-h-6 [&_a]:underline [&_a]:decoration-line-strong [&_a]:underline-offset-4 [&_a:hover]:decoration-ink"><slot /></label>
+</div>
