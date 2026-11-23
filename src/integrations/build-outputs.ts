@@ -5,13 +5,16 @@
  * - `writeSolutionsAllowList`: the Worker's quote allow-list (every application slug plus
  *   `general`), generated from the built pages, so there is no runtime lookup.
  * - `appendNoindex`: non-production builds add `X-Robots-Tag: noindex` to `dist/_headers`.
+ * - `findCrossLocaleLinks`: a page of a non-default locale must not link to the EN URL of a page
+ *   that exists in its own locale (TR content linking `/quote/` while `/tr/quote/` is built). The
+ *   language toggle is exempt: its links carry `hreflang`. The build fails and names each link.
  * - `pruneUnreferencedImages`: a content image that never goes through `<Image>`, `<Picture>` or
  *   `getImage` (the ASCII source) is emitted as an original, EXIF included. Optimized images are
  *   referenced by the built pages, so any raster file in `_astro` that no page, stylesheet or
  *   feed mentions is such an original and is deleted.
  */
 import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
-import { basename, dirname, extname, join } from 'node:path';
+import { basename, dirname, extname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { AstroIntegration } from 'astro';
 import { DEFAULT_LOCALE, LOCALES } from '../lib/i18n.ts';
@@ -28,11 +31,17 @@ export const APPLICATION_PATH = new RegExp(
   `^/?(?:(?:${NON_DEFAULT_LOCALES.join('|')})/)?applications/([^/]+)/$`,
 );
 const NOT_FOUND_DIR = '404';
-const NOT_FOUND_INDEX = 'index.html';
+const INDEX_FILE = 'index.html';
 const NOT_FOUND_FILE = '404.html';
 const ASSETS_DIR = '_astro';
 const RASTER_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif']);
 const REFERENCING_EXTENSIONS = new Set(['.html', '.css', '.xml', '.txt', '.json', '.js']);
+const HTML_EXTENSION = '.html';
+const ANCHOR_TAG = /<a\s[^>]*>/g;
+const HREF_ATTRIBUTE = /\shref="([^"]*)"/;
+const HREFLANG_ATTRIBUTE = /\shreflang=/;
+/** A site path: one leading slash, not `//host`; query and fragment are cut off. */
+const SITE_PATH = /^(\/(?!\/)[^?#]*)/;
 
 async function exists(path: string): Promise<boolean> {
   return stat(path).then(
@@ -49,7 +58,7 @@ export async function relocateLocale404(dist: URL): Promise<void> {
   for (const locale of LOCALES) {
     if (locale === DEFAULT_LOCALE) continue;
     const directory = join(root, locale, NOT_FOUND_DIR);
-    const source = join(directory, NOT_FOUND_INDEX);
+    const source = join(directory, INDEX_FILE);
     if (!(await exists(source))) continue;
     await rename(source, join(root, locale, NOT_FOUND_FILE));
     await rm(directory, { recursive: true });
@@ -61,6 +70,38 @@ async function listFiles(directory: string): Promise<string[]> {
   return entries
     .filter((entry) => entry.isFile())
     .map((entry) => join(entry.parentPath, entry.name));
+}
+
+/** Site paths of a locale's page that should carry the locale prefix; messages name page and link. */
+export async function findCrossLocaleLinks(dist: URL): Promise<string[]> {
+  const root = fileURLToPath(dist);
+  const problems: string[] = [];
+  for (const locale of NON_DEFAULT_LOCALES) {
+    const localeRoot = join(root, locale);
+    if (!(await exists(localeRoot))) continue;
+    const pages = (await listFiles(localeRoot)).filter((file) => extname(file) === HTML_EXTENSION);
+    for (const page of pages.sort()) {
+      const html = await readFile(page, 'utf8');
+      for (const [tag] of html.matchAll(ANCHOR_TAG)) {
+        if (HREFLANG_ATTRIBUTE.test(tag)) continue;
+        const href = HREF_ATTRIBUTE.exec(tag)?.[1];
+        const path = href === undefined ? undefined : SITE_PATH.exec(href)?.[1];
+        if (href === undefined || path === undefined || path.startsWith(`/${locale}/`)) continue;
+        const twin = join(localeRoot, path);
+        if (!(await exists(join(twin, INDEX_FILE)))) continue;
+        const pagePath = `/${relative(root, page).split(sep).join('/')}`;
+        problems.push(`${pagePath} links to ${href} instead of /${locale}${path}`);
+      }
+    }
+  }
+  return problems;
+}
+
+async function assertLocalizedLinks(dist: URL): Promise<void> {
+  const problems = await findCrossLocaleLinks(dist);
+  if (problems.length > 0) {
+    throw new Error(`Links to the wrong language (use the localized URL):\n${problems.join('\n')}`);
+  }
 }
 
 export async function pruneUnreferencedImages(dist: URL): Promise<string[]> {
@@ -139,6 +180,7 @@ export function buildOutputs(options: { isProduction: boolean }): AstroIntegrati
           pages.map((page) => page.pathname),
         );
         await relocateLocale404(dir);
+        await assertLocalizedLinks(dir);
         await pruneUnreferencedImages(dir);
         if (!options.isProduction) await markNoindex(dir);
       },

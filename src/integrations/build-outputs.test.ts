@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url';
 import { DEFAULT_LOCALE, LOCALES } from '../lib/i18n.ts';
 import {
   appendNoindex,
+  findCrossLocaleLinks,
   pruneUnreferencedImages,
   relocateLocale404,
   solutionSlugs,
@@ -107,4 +108,37 @@ test('APPLICATION_PATH is built from LOCALES', () => {
     assert.deepEqual(solutionSlugs([`${prefix}applications/x/`]), ['x', 'general']);
   }
   assert.deepEqual(solutionSlugs(['de/applications/x/']), ['general']);
+});
+
+test('findCrossLocaleLinks flags a TR page linking the EN URL of a page TR has', async () => {
+  await withDist(async (root, dist) => {
+    await mkdir(join(root, 'quote'), { recursive: true });
+    await mkdir(join(root, 'tr', 'quote'), { recursive: true });
+    await writeFile(join(root, 'quote', 'index.html'), '<a href="/about/">en</a>');
+    await writeFile(join(root, 'tr', 'quote', 'index.html'), 'tr quote');
+    await writeFile(
+      join(root, 'tr', 'index.html'),
+      [
+        '<a class="x" href="/quote/#form">wrong</a>',
+        '<a href="/tr/quote/">right</a>',
+        '<a href="/about/">untranslated</a>',
+        '<a href="/quote/" hreflang="en" lang="en">EN</a>',
+        '<a href="https://example.com/quote/">outbound</a>',
+        '<a href="//quote/">protocol-relative</a>',
+      ].join(''),
+    );
+    await writeFile(join(root, 'tr', '404.html'), '<a href="/">home</a>');
+    await mkdir(join(root, 'tr', '404'), { recursive: true });
+    assert.deepEqual(await findCrossLocaleLinks(dist), [
+      '/tr/404.html links to / instead of /tr/',
+      '/tr/index.html links to /quote/#form instead of /tr/quote/',
+    ]);
+  });
+});
+
+test('findCrossLocaleLinks passes a dist without locale pages', async () => {
+  await withDist(async (root, dist) => {
+    await writeFile(join(root, 'index.html'), '<a href="/quote/">q</a>');
+    assert.deepEqual(await findCrossLocaleLinks(dist), []);
+  });
 });
