@@ -1,8 +1,8 @@
 ---
 /**
  * The page's closing rule (full-bleed hairline, the SMPTE bars strip laid on it at the content
- * edge), then four spaced columns (brand and legal address, indexed footer nav, contacts,
- * socials; the Follow column only when there are socials) and a rights line. No boxed cells:
+ * edge), then spaced columns (brand and legal address, indexed footer nav, contacts, socials;
+ * the Follow column only when there are socials, so three columns without) and a rights line. No boxed cells:
  * the columns are set apart by spacing only.
  * Contacts keep their own `mailto:` / `tel:` / `https:` hrefs; outbound links get ↗.
  */
@@ -22,12 +22,16 @@ interface Props {
   logoAlt: string;
   legalName: string;
   address?: string | undefined;
+  /** Footer nav, hrefs already localized by BaseLayout. */
   links: readonly Link[];
   contacts: readonly { value: string; href: string }[];
   socials: readonly Link[];
   labels: { nav: string; contact: string; social: string; rights: string };
 }
 
+/** Brand, nav, contacts and (only when there are socials) Follow. */
+const COLUMNS_WITH_SOCIALS = 4;
+const COLUMNS_WITHOUT_SOCIALS = 3;
 /** `[NN]` indexes count from 1. */
 const FIRST_INDEX = 1;
 /** Stamped at build time; the site rebuilds on every content change. */
@@ -47,11 +51,12 @@ const { homeHref, logo, logoAlt, legalName, address, links, contacts, socials, l
 /** One running `[NN]` sequence: the nav rows first, then the Contact and Follow labels. */
 const contactIndex = links.length + FIRST_INDEX;
 const socialIndex = contactIndex + 1;
+const hasSocials = socials.length > 0;
 ---
 <footer class="mt-24 border-t border-line">
   <div class="mx-auto max-w-page px-4 pb-8 md:px-8">
     <BarsStrip class="-mt-(--border-hairline) mb-12" />
-    <GridFrame columns={4}>
+    <GridFrame columns={hasSocials ? COLUMNS_WITH_SOCIALS : COLUMNS_WITHOUT_SOCIALS}>
       <div class="flex flex-col gap-6">
         <a href={homeHref} class="flex min-h-11 items-center self-start">
           <Image src={logo} alt={logoAlt} class="h-6 w-auto" />
@@ -95,7 +100,7 @@ const socialIndex = contactIndex + 1;
       </div>
 
       {
-        socials.length > 0 && (
+        hasSocials && (
           <div class="flex flex-col gap-2">
             <div class={FIRST_ROW}>
               <Label text={labels.social} index={socialIndex} />
