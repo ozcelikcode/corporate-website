@@ -46,7 +46,7 @@ Pre-flight rulings 1–21 (2026-11-23) are integrated below.
 | G1 | T1 Toolchain (Sonnet 5.5) | — | |
 | G2 | T2 Tokens & fonts (Opus 5.5) | G1 | |
 | G3 | T3 Content (Sonnet 5.5) ∥ T4 UI atoms (Opus 5.5) | G2 | T4 alone owns the scaffold page |
-| G4 | T5 Layout (Opus 5.5) ∥ T6 ASCII (Opus 5.5) ∥ T11 Sveltia (Sonnet 5.5) | G3 | T6 needs T3's test card; T5 alone owns the scaffold page |
+| G4 | T5 Layout (Opus 5.5) ∥ T6 ASCII (Opus 5.5) ∥ T11 Sveltia (Sonnet 5.5) | G3 | T6 needs T3's seed image (now `transmitter.png`); T5 alone owns the scaffold page |
 | G5 | T7 Sections (Opus 5.5) | G4 | |
 | G6 | T8 Routes & SEO (Sonnet 5.5) ∥ T9 Quote page (Opus 5.5) | G5 | T8 alone owns `astro.config.ts` and `seo.ts` |
 | G7 | T10 Worker & outputs (Sonnet 5.5) | G6 | reviewer: Opus 5.5 (security path) |
@@ -262,7 +262,7 @@ assert.match(readFileSync(new URL('../styles/tokens.css', import.meta.url), 'utf
   - 3 covers, 1200×750: abstract hairline geometry.
   - `og-default.png`, 1200×630.
   - `logo.svg`: a geometric mark with the word `Brand`.
-- [ ] **Step 7: Write the seed YAML.** Realistic, neutral copy for press software. Brand `Brand` on `example.com`. `accent: '#ffb000'`. The applications page holds one `app-grid` with `apps: []`. Home uses hero (image = test card), statement, app-grid, feature-list and cta. TR `ui` deliberately omits `tallyFormat` and `footerRights` (proves the fallback). TR navigation, and the TR `home.yaml` hero and cta action hrefs, point to EN URLs for pages that have no TR version (no `/tr/applications/` or `/tr/about/` links, or the Task 8 broken-link scan fails). Seed image paths use the exact relative forms of the admin `public_folder` values (`../../assets/uploads/…` in settings, `../../../assets/uploads/…` in collections).
+- [ ] **Step 7: Write the seed YAML.** Realistic, neutral copy for press software. Brand `Brand` on `example.com`. `accent: '#ffb000'`. The applications page holds one `app-grid` with `apps: []`. Home uses hero (image = the seed image, `transmitter.png` since Task 7b), statement, app-grid, feature-list and cta. TR `ui` deliberately omits `tallyFormat` and `footerRights` (proves the fallback). TR navigation, and the TR `home.yaml` hero and cta action hrefs, point to EN URLs for pages that have no TR version (no `/tr/applications/` or `/tr/about/` links, or the Task 8 broken-link scan fails). Seed image paths use the exact relative forms of the admin `public_folder` values (`../../assets/uploads/…` in settings, `../../../assets/uploads/…` in collections).
 - [ ] **Step 8: Verify.**
   - Gate passes.
   - Set `accent: '#1a1a1a'` temporarily: `pnpm build` fails, and the output contains `settings.accent`. Revert.
@@ -449,7 +449,7 @@ node -e "const h=require('fs').readFileSync('dist/index.html','utf8');const m=h.
   - FAQ "+"/"−" toggles by keyboard.
   - Prose stays ≤ 68ch with mono h3.
   - The CTA "ON AIR" tally is accent.
-  - Tune the ASCII columns, ramp and tones against the test card while staying < 30 KB.
+  - Tune the ASCII columns, ramp and tones against the seed image (`transmitter.png` since Task 7b) while staying < 30 KB.
 - [ ] **Step 6: Memory bank.** `systemPatterns.md`: block props and the heading-level rule. `progress.md`.
 - [ ] **Step 7: Commit.** `feat: add section blocks and renderer`.
 
