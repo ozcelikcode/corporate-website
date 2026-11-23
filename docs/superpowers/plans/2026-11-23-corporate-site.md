@@ -69,13 +69,15 @@ grep -rEn '[0-9]px\b' src/components src/layouts                   # raw px
 grep -rEn '\b(rounded|shadow|blur|backdrop|purple|violet|emoji)' src/components src/layouts src/styles | grep -vE -- '--[a-z-]+-\*:\s*initial'   # the `tokens.css` reset lines are allowed
 grep -rEn 'gradient' src/components src/layouts src/styles         # allowed: only the `scanlines` utility and AsciiImage shimmer mask
 grep -rEn 'console\.log|:\s*any\b|as any\b|<any>' src worker
+grep -rEn 'bars-' src/components src/layouts src/pages | grep -vE 'ui/(BarsStrip|NoSignal)\.astro|ui/bar-tones\.ts'   # SMPTE bar tokens only in the bars components
+grep -rEn 'crosshair' src                                          # retired in Task 7a
 ```
 
 **VA checklist** (spec §8; run in `pnpm dev` at 360, 768 and 1440 CSS px):
 - VA1 0 radius, no shadows, no blur/glass, no gradients except hero scanlines and the ASCII shimmer mask.
-- VA2 One shared 1px hairline grid in `line`, never doubled (neighbouring cells share one line); "+" crosshairs at `GridFrame` cell corners (the intersections).
+- VA2 Border budget (spec §8): 1px hairlines only on the header bottom / footer top edges, section dividers, form controls and the `TitleSafe` media frame; never doubled. Content grids, cards, feature lists, FAQ and the CTA use spacing and `surface` vs `canvas` tone, no boxed cells; no "+" crosshairs. Broadcast details used sparingly: TallyStrip PGM/PVW, title-safe marks on media only, lower thirds on section headings and card titles only, one bars strip (footer).
 - VA3 Labels are uppercase tracked Martian Mono with an index, e.g. `[02] APPLICATIONS`; at most one two-tone headline per page.
-- VA4 Accent comes only through `accent` / `accent-dim` / `accent-wash` / `tone-*` tokens, only on large text, graphics and tallies, never on body text; `critical` only for errors.
+- VA4 Accent comes only through `accent` / `accent-dim` / `accent-wash` / `tone-*` tokens, only on large text, graphics, tallies and the lower-third key, never on body text; `critical` only for errors. The `bars-*` tokens (SMPTE standard) appear only in `BarsStrip` and `NoSignal`.
 - VA5 Typographic glyphs (→ ↗ + ● −), no icons, no emoji.
 - VA6 Motion only on opacity/transform, ≤ 240ms, except the Timecode counter and the AsciiImage shimmer (both fully static under reduced motion); with DevTools `prefers-reduced-motion: reduce` nothing moves (timecode static, shimmer off).
 - VA7 At 360px: `document.documentElement.scrollWidth <= 360` (no horizontal scroll); tap targets ≥ 24×24 CSS px.
@@ -83,7 +85,7 @@ grep -rEn 'console\.log|:\s*any\b|as any\b|<any>' src worker
 
 ### Files beyond the spec §6 tree
 
-`src/lib/{build-mode,env,entries,routes,assert-never,ascii-source}.ts`; `src/components/quote/{QuoteForm,QuoteStatus}.astro`; colocated `*.test.ts`; `src/lib/admin-config.test.ts`; `docs/runbook.md`; the temporary `src/pages/index.astro` (deleted in Task 8).
+`src/lib/{build-mode,env,entries,routes,assert-never,ascii-source}.ts`; `src/components/ui/{TitleSafe,LowerThird,BarsStrip,NoSignal}.astro` and `bar-tones.ts` (Task 7a); `src/components/quote/{QuoteForm,QuoteStatus}.astro`; colocated `*.test.ts`; `src/lib/admin-config.test.ts`; `docs/runbook.md`; the temporary `src/pages/index.astro` (deleted in Task 8).
 
 ---
 
@@ -272,11 +274,11 @@ Model: Opus 5.5 · Group G3 (∥ T3) · Spec §8 (Do/Don't, typography), §6 `co
 - Consumes: Task 2 utilities and tokens only.
 - Produces (props are exact):
   - `Button`: `{ href?: string; type?: 'button' | 'submit'; intent?: 'primary' | 'secondary'; size?: 'md' | 'sm'; glyph?: '→' | '↗' | null }`, with variants from `cva`. Renders `<a>` when `href` is set. The default glyph is `↗` for `https://` hrefs and `→` otherwise. The glyph is `aria-hidden`. Min height `h-11`.
-  - `Label`: `{ text: string; index?: number; as?: 'p' | 'span' }` renders `[02] TEXT` (`LABEL_INDEX_DIGITS = 2`) with `label-mono`.
+  - `Label`: `{ text: string; index?: number; as?: 'p' | 'span' }` renders `[02] TEXT` (`LABEL_INDEX_DIGITS = 2`) with `label-mono`. *(Task 7a adds `strap?: boolean`, the lower-third strap.)*
   - `Heading`: `{ level: 1 | 2 | 3; text: string; accent?: string; size?: 'display' | 'h2' }`. `accent` renders as a second line in `text-accent` (the two-tone headline).
   - `Tally`: `{ text: string; tone?: 'accent' | 'muted' | 'critical'; dot?: boolean }` renders `● TEXT` in mono. Only the `●` glyph takes the tone colour (a graphic, 3:1 suffices); the text is always `ink`, so small tally text keeps 4.5:1 for any valid accent.
   - `Timecode`: `{ prefix: string }` renders `PREFIX HH:MM:SS:FF` at `FRAME_RATE = 25` (the 25, 24, 60, 3600 and 86400 values are named CSS custom properties or `define:vars` from `FRAME_RATE`, never literals in rules). It is built from four `@property` integers (`--tc-h/m/s/f`, `syntax: '<integer>'`) animated with `steps()` (1s/60s/3600s/86400s) and drawn with `counter()` with `decimal-leading-zero`. It is `aria-hidden="true"` and shows a static `00:00:00:00` under reduced motion.
-  - `GridFrame`: `{ as?: 'div' | 'section' | 'ul'; columns?: 1 | 2 | 3 | 4 | 12; crosshairs?: boolean }`. Uses the `grid-hairline` utility. Fixed responsive ramp: `2` → 1 / `md`:2; `3` → 1 / `md`:2 / `lg`:3; `4` → 1 / `md`:2 / `lg`:4; `12` → 1 / `lg`:12. Children are `cell`s and may carry `lg:col-span-*`. Last-row span rules (`:last-child:nth-child(…)` per breakpoint) make the final cell fill the row, so the gap-as-hairline background never shows an empty `line`-coloured hole.
+  - `GridFrame`: `{ as?: 'div' | 'section' | 'ul'; columns?: 1 | 2 | 3 | 4 | 12; crosshairs?: boolean }`. Uses the `grid-hairline` utility. Fixed responsive ramp: `2` → 1 / `md`:2; `3` → 1 / `md`:2 / `lg`:3; `4` → 1 / `md`:2 / `lg`:4; `12` → 1 / `lg`:12. Children are `cell`s and may carry `lg:col-span-*`. Last-row span rules (`:last-child:nth-child(…)` per breakpoint) make the final cell fill the row, so the gap-as-hairline background never shows an empty `line`-coloured hole. *(Superseded in Task 7a: `variant?: 'spaced' | 'hairline'`, spaced by default; `crosshairs` and the `crosshair` utility removed.)*
   - `Field`: `{ id: string; label: string; hint?: string; optionalLabel?: string }` with the control in the default slot. The hint id is `${id}-hint`.
   - `Input`: `{ id: string; name: string; type?: 'text' | 'email'; required?: boolean; maxlength: number; autocomplete: string; describedBy?: string }`.
   - `Textarea`: `{ id; name; required?; maxlength: number; rows?: number; describedBy? }`.
@@ -290,7 +292,7 @@ Model: Opus 5.5 · Group G3 (∥ T3) · Spec §8 (Do/Don't, typography), §6 `co
 - [ ] **Step 4: Visual acceptance.** VA1–VA8, plus:
   - The timecode advances 25 frames a second and is static under reduced motion.
   - Form controls are ≥ 44px tall.
-  - `GridFrame` at 1, 2, 3, 4 and 12 columns shows single hairlines, no empty gap cell in an incomplete last row, and crosshairs on the cell corners (the intersections).
+  - `GridFrame` at 1, 2, 3, 4 and 12 columns shows single hairlines, no empty gap cell in an incomplete last row, and crosshairs on the cell corners (the intersections). *(Task 7a retired the crosshairs.)*
   - The two-tone Heading wraps cleanly at 360px.
 - [ ] **Step 5: Memory bank.** `systemPatterns.md`: the atom list and props summary. `progress.md`.
 - [ ] **Step 6: Commit.** `feat: add ui primitives`.
@@ -403,24 +405,24 @@ Model: Opus 5.5 · Group G5 · Spec §7 (sections schema), §8 (block table, wir
 - Modify: `src/pages/index.astro` (BaseLayout + SectionRenderer for EN `home`, then EN `about` below it)
 
 **Interfaces:**
-- Consumes: `BaseLayout` (Task 5, for the scaffold page); `Section`, `SectionOf`, `assertNever`, `listApplications`, `selectApps`, `localizePath`, `applicationPath`, `getUiDictionary`, `t` (Task 3); atoms (Task 4); `AsciiImage` (Task 6).
+- Consumes: `BaseLayout` (Task 5, for the scaffold page); `Section`, `SectionOf`, `assertNever`, `listApplications`, `selectApps`, `localizePath`, `applicationPath`, `getUiDictionary`, `t` (Task 3); atoms (Task 4); `AsciiImage` (Task 6); `GridFrame` (spaced default), `TitleSafe`, `LowerThird` (Task 7a).
 - Produces:
   - `markdown.ts`: `renderMarkdown(source: string): Promise<string>`. One memoized `createMarkdownProcessor({ syntaxHighlight: false })` promise from `@astrojs/markdown-remark`.
   - Block props: `{ section: SectionOf<'<type>'>; index: number; locale: Locale; headingLevel: 1 | 2 }`.
-  - `SectionRenderer` props: `{ sections: readonly Section[]; locale: Locale; pageTitle?: string }`. Index = array position + 1. An exhaustive `switch (section.type)` ends in `default: return assertNever(section)`. This is the single owner of the page h1: a hero at position 0 gets `headingLevel` 1; otherwise, when `pageTitle` is set, SectionRenderer first renders a title band with `pageTitle` as the h1 (display size); when `pageTitle` is absent there is no h1 (ApplicationPage renders its own). All other blocks use `headingLevel` 2.
+  - `SectionRenderer` props: `{ sections: readonly Section[]; locale: Locale; pageTitle?: string }`. Index = array position + 1. It owns the section dividers (border budget): every section after the first opens with one full-width `border-t border-line` rule and generous top padding; blocks never draw their own outer borders. An exhaustive `switch (section.type)` ends in `default: return assertNever(section)`. This is the single owner of the page h1: a hero at position 0 gets `headingLevel` 1; otherwise, when `pageTitle` is set, SectionRenderer first renders a title band with `pageTitle` as the h1 (display size); when `pageTitle` is absent there is no h1 (ApplicationPage renders its own). All other blocks use `headingLevel` 2.
 
-Block specs (§8 table, made concrete):
-- `Hero`: split `GridFrame` with `columns={12}` (stacked below `lg`; text cell `lg:col-span-7`, image cell `lg:col-span-5`).
+Block specs (§8 table and border budget, made concrete; no block draws boxed cells):
+- `Hero`: spaced `GridFrame` with `columns={12}` (stacked below `lg`; text `lg:col-span-7`, media `lg:col-span-5 min-w-0`).
   - Left: `Label`, two-tone `Heading` (`headline` + `headlineAccent`, display size), lede (≤ 60ch, ink-muted), ≤ 2 `Button`s (first primary).
-  - Right: `AsciiImage` (`image`, `imageAlt`) with the `scanlines` utility overlay. Scanlines appear only here.
-- `Statement`: `GridFrame` with `columns={12}`: `Label` in a `lg:col-span-3` gutter cell, display text in ink in a `lg:col-span-9` cell; stacked on mobile.
-- `AppGrid`: `GridFrame` with `columns={3}` (ramp 1 / md 2 / lg 3; the last-row span rules hide any empty gap cell), showing `selectApps(listApplications(locale), apps)`. Each cell is one link: `[0N]` index, status `Tally`, name, tagline, a duotone cover and `↗`.
+  - Right: `<TitleSafe scanlines>` around `AsciiImage` (`image`, `imageAlt`). The hairline frame and title-safe marks are the hero's only lines; scanlines appear only here.
+- `Statement`: spaced `GridFrame` with `columns={12}`: `Label` in a `lg:col-span-3` gutter, display text in ink in `lg:col-span-9`; stacked on mobile. Plain indexed label, no lower third.
+- `AppGrid`: `LowerThird` section heading (`heading`, strap = `label` with the section index), then a spaced `GridFrame` with `columns={3}` (ramp 1 / md 2 / lg 3; spaced grids need no last-row fill) of `surface` tiles (padding, no border), showing `selectApps(listApplications(locale), apps)`. Each tile is one link: `[0N]` index, status `Tally`, the name as a `LowerThird` (level 3, strap = category), tagline, a duotone cover in `TitleSafe` (no scanlines) and `→` (internal link, via `Glyph`).
   - Cover: `<Picture formats={['avif','webp']}>`, greyscale, with an accent `mix-blend-mode` layer and no gradient.
   - Link href: `localizePath(applicationPath(slug), resolved.locale)`.
-- `FeatureList`: numbered rows (`01` …), title on the left, body on the right, hairline dividers.
+- `FeatureList` (rundown): `LowerThird` section heading, then an `<ol>` of rows: mono running number `01` …, title, body (ink-muted) and a mono `duration` column (`HH:MM:SS`, ink-muted, end-aligned; left out for a row without `duration`). Rows are set apart by spacing, never by rules; below `md` the number and duration share one line above the title.
 - `RichText`: `Prose` with `renderMarkdown(body)`.
-- `Cta`: one bordered band with heading, optional text, a single `Button` and a `Tally` (`tallyOnAir`, accent).
-- `Faq`: native `<details>` rows. The summary shows "+" which becomes "−" via `details[open]`. The answer uses `renderMarkdown`.
+- `Cta`: one `surface` band (no border) with heading, optional text, a single `Button` and a `Tally` (`tallyOnAir`, accent).
+- `Faq`: native `<details>` rows set apart by spacing (no rules). The summary shows "+" which becomes "−" via `details[open]`. The answer uses `renderMarkdown`.
 
 - [ ] **Step 1: Implement `markdown.ts` and the 7 blocks.**
 - [ ] **Step 2: Implement `SectionRenderer`.** Temporarily add a non-union `type` to a fixture cast and confirm `pnpm check` fails (exhaustiveness), then remove it.
@@ -431,8 +433,10 @@ node -e "const h=require('fs').readFileSync('dist/index.html','utf8');const m=h.
 ```
 - [ ] **Step 5: Visual acceptance.** VA1–VA8, plus:
   - The hero matches the §8 wireframe at 1440px, and the ASCII stays legible and scales with its container at 360/768/1440.
-  - Scanlines appear on the hero only.
-  - The app-grid hairlines stay single across rows and columns, and the whole cell is one link with a focus ring.
+  - Scanlines appear on the hero only; title-safe marks only on media frames.
+  - Borders only within the budget. Border audit in the console: every element with a computed border width is a header/footer edge, a section divider, a control or a `TitleSafe` frame/mark.
+  - App tiles are `surface` tone without borders, the whole tile is one link with a focus ring, and its name is a lower third.
+  - Rundown rows show the mono duration column when `duration` is set.
   - FAQ "+"/"−" toggles by keyboard.
   - Prose stays ≤ 68ch with mono h3.
   - The CTA "ON AIR" tally is accent.
@@ -468,8 +472,8 @@ export const getStaticPaths = () => pageStaticPaths('tr');
 ```
 - Behaviour:
   - `GenericPage`: passes `pageTitle={title}` to `SectionRenderer`, which owns the h1 rule (Task 7). `jsonLd` is set only for `home`, from settings (logo via `getImage`, `sameAs` = socials, email/phone from contacts).
-  - `ApplicationPage`: header with category `Label`, h1 `name`, status `Tally`, `summary` lede, duotone cover, `links` and `brochure` as ↗ links, then `SectionRenderer` with no `pageTitle` (the page header above already holds the h1).
-  - `NotFoundPage`: `not-found` entry with EN fallback, `noindex`; passes `pageTitle` to `SectionRenderer`.
+  - `ApplicationPage`: header with category `Label`, h1 `name`, status `Tally`, `summary` lede, duotone cover in `TitleSafe` (no scanlines), `links` and `brochure` as ↗ links (internal links →), then `SectionRenderer` with no `pageTitle` (the page header above already holds the h1). The h1 stays a plain display `Heading`: lower thirds are for section headings and card titles only.
+  - `NotFoundPage`: `not-found` entry with EN fallback, `noindex`; passes `pageTitle` to `SectionRenderer` and shows the `NoSignal` test pattern (`text` = `t(dict, locale, 'noSignal')`, width capped around `max-w-3xl`) between the title band and the sections.
   - `tr/404.astro` always builds; with no TR entry it renders EN content under the fallback rule (Task 5).
   - Sitemap: `@astrojs/sitemap` with `i18n: { defaultLocale: 'en', locales: { en: 'en', tr: 'tr' } }`. The filter drops `/404/`, `/tr/404/`, `/admin/`, and `/tr/quote/` unless `existsSync('src/content/pages/tr/quote.yaml')`.
 
@@ -496,7 +500,7 @@ grep -rhoE '<script[^>]*>' dist --include=*.html --exclude-dir=admin | grep -v '
 grep -rhoE 'href="/[^"#]*' dist --include=*.html | sed 's/href="//' | sort -u | while read p; do [ -f "dist${p}index.html" ] || [ -f "dist${p}" ] || echo "BROKEN $p"; done | grep -vE '^BROKEN /(tr/)?quote/$'   # prints nothing; the filter is for the G6 worktree only (T9's pages are not there yet); the manager re-runs this unfiltered on the merged tree
 ```
 - [ ] **Step 6: TR 404 location.** `test -f dist/tr/404.html`. If Astro emitted `dist/tr/404/index.html` instead, create `src/integrations/build-outputs.ts` with `relocateLocale404(dist: URL): Promise<void>`, run on `astro:build:done`, and register it in `astro.config.ts`. Add `src/integrations/build-outputs.test.ts` with a case on a temp dir (`tr/404/index.html` → `tr/404.html`, idempotent). Task 10 extends that file and keeps `relocateLocale404` and its test.
-- [ ] **Step 7: Visual acceptance.** VA1–VA8 on every template (home, about, contact, privacy, applications index, one application, 404, TR home). Each page has exactly one h1. The toggle on `/about/` goes to `/tr/`, and on `/tr/` it goes to `/`.
+- [ ] **Step 7: Visual acceptance.** VA1–VA8 on every template (home, about, contact, privacy, applications index, one application, 404, TR home). Each page has exactly one h1. The 404 shows the NO SIGNAL pattern (TR: `SİNYAL YOK`). The toggle on `/about/` goes to `/tr/`, and on `/tr/` it goes to `/`.
 - [ ] **Step 8: Memory bank.** `systemPatterns.md`: route map, reserved slugs, sitemap filter, TR 404 handling. `techContext.md`: §14 i18n fallback resolved by manual routing. `progress.md`.
 - [ ] **Step 9: Commit.** `feat: add page routes, tr wrappers, robots and sitemap`.
 
@@ -546,7 +550,8 @@ assert.deepEqual(formDataToInput(fd).solutions, ['a', 'b']); assert.ok(!(TURNSTI
   - Consent: `Checkbox` with a localized privacy link.
   - Turnstile: `<div class="cf-turnstile" data-sitekey data-action="quote" data-theme="dark" data-size="flexible" data-language={locale}>`.
   - `<noscript>` shows `quoteNoScript` plus the settings email.
-  - `QuoteStatus`: four `<section id={state} tabindex="-1">` panels, hidden by `:not(:target)`, each with an h2 and body. Error panels use a `critical` `Tally`. `error-verify` adds a mailto link to the first `kind: 'email'` contact.
+  - Layout (border budget): fields sit in a spaced `GridFrame` (no hairline cells); only the controls carry borders.
+  - `QuoteStatus`: four `<section id={state} tabindex="-1">` panels, hidden by `:not(:target)`, each a `surface` band (no border) with an h2 and body. Error panels use a `critical` `Tally`. `error-verify` adds a mailto link to the first `kind: 'email'` contact.
   - `QuotePage`: `getPage(locale, 'quote')` (EN fallback). The BaseLayout `head` slot carries `<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>`. Order: SectionRenderer, QuoteStatus, QuoteForm.
 - [ ] **Step 4: Gate and guard greps, plus `dist` assertions.**
 ```bash

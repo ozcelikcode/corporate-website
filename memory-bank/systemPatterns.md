@@ -36,7 +36,8 @@
 - Entry ids come from the file path via `generateId`: `<locale>/<slug>` (settings `site`, ui `<locale>/strings`, navigation `<locale>/main`). An application's `slug` field never sets the id; `assertSlugMatches` fails the build on mismatch.
 - Internal href pattern `^\/(?![\/\\])`: rejects protocol-relative `//host` and a backslash after the leading slash. Used by `actionSchema` and `LINK_HREF_PATTERN`.
 - Fallback: `resolveLocalized` returns TR if present, else EN. `mergeByLocale` yields one entry per EN slug (sorted by `order`, then slug) and throws on a TR entry with no EN twin (`assertEnglishTwins`). `getPage` throws if EN is missing. Untranslated TR links point to EN URLs.
-- `UI_KEYS` (46) lives in `lib/i18n.ts`: EN ui must be exhaustive, TR may be partial.
+- `UI_KEYS` (49) lives in `lib/i18n.ts`: EN ui must be exhaustive, TR may be partial. `i18n.test.ts` checks the seed files: EN keys equal `UI_KEYS`, TR keys are a subset.
+- `feature-list` items take an optional `duration` (`DURATION_PATTERN` `^\d{2}:[0-5]\d:[0-5]\d$`, display only, quoted in YAML so it never parses as a sexagesimal number); the CMS field carries the same pattern (checked by `admin-config.test.ts`).
 - `settings.accent` is checked by `accentContrast` (`lib/color.ts`): >= 3:1 against canvas.
 - Seed slugs: EN pages `home about contact privacy applications quote not-found`; TR page `home`; applications `newsroom-desk playout-control archive-search`.
 - Markdown rendered by `@astrojs/markdown-remark` via `lib/markdown.ts`.
@@ -48,23 +49,24 @@
 - Colours (OKLCH): canvas `0.17 0.008 255`, surface `0.21 0.008 255`, ink `0.95 0.005 255`, ink-muted `0.74 0.01 255`, line `0.32 0.01 255` (decorative grid only), line-strong `0.52 0.012 255` (control borders), critical `0.70 0.17 30`.
 - `accent` = `var(--accent-seed)` (default `oklch(0.80 0.16 75)` on `:root`; BaseLayout overrides on `<html>`). `accent-dim` = 55 %, `accent-wash` = 12 % accent on canvas, mixed **in oklab** (oklch mixing swings the hue toward canvas hue 255: amber turned green).
 - `tone-0…5` (ASCII): ink-muted 30 % / 60 % on canvas (oklab), ink-muted, ink, accent-dim, accent.
+- `bars-white … bars-blue`: SMPTE 75% bars as `rgb(75% …)`; documented exception to the accent-only rule, used only by `BarsStrip`/`NoSignal` (via `ui/bar-tones.ts`; guard grep).
 - Measured on canvas (default accent): ink 16.5, ink-muted 8.3, line-strong 3.45 (3.19 on surface), accent 10.0, accent-dim 3.35, critical 6.6, line 1.5.
 - `tracking-display` -0.02em (display headings); `tracking-label` 0.12em.
 - Type: `text-label` 0.75rem/1.4, `text-body` clamp(1rem…1.125rem)/1.55, `text-lede` clamp(1.125…1.375rem)/1.45, `text-h2` clamp(1.5…2.25rem)/1.1, `text-display` clamp(2.5…5.5rem)/0.98; `tracking-label` 0.12em; `font-sans`/`font-mono` via `@theme inline` → `--font-grotesk`/`--font-martian`. Fluid body size sits on `body` (not `html`) so rem stays 16px.
 - Other: `--spacing` 0.25rem, `max-w-page` (`--container-page` 90rem). Plain vars on `:root` (no utilities): `--border-hairline` 1px, `--border-focus` 0.125rem, `--z-header/popover/dialog` 10/20/30, `--duration-fast/base` 120/240ms, `--ease-signal` cubic-bezier(0.2, 0, 0, 1).
 - Base: canvas bg, ink text; `:focus-visible` = `--border-focus` solid accent, offset `--border-focus`; `::selection` accent-wash; global reduced-motion block zeroes animation/transition durations and delays (`!important` in base layer, Biome-ignored with reason).
-- Utilities (`@utility` in `global.css`): `grid-hairline` (grid, gap = hairline, line bg, outer hairline border; children use `cell`), `cell` (canvas bg, padding `--spacing(6)`, relative), `crosshair` ("+" `::before` centred on the element's top-left intersection, `content: "+" / ""` so AT ignores it), `label-mono` (mono, label size, tracking, uppercase), `scanlines` (hero only), `prose` (≤ 68ch, mono uppercase h3+).
+- Utilities (`@utility` in `global.css`): `grid-hairline` (budget-limited cell matrix: gap = hairline, line bg, outer hairline border; children use `cell`), `cell` (canvas bg, padding `--spacing(6)`, relative), `lower-third` (inline-flex strap: 6 % ink wash band, works on canvas and surface; `::before` accent key, full height, `--spacing(1)` wide), `label-mono` (mono, label size, tracking, uppercase), `scanlines` (hero only), `prose` (≤ 68ch, mono uppercase h3+).
 - `grid-hairline` needs complete last rows: the line-coloured background shows through any empty track, so pad the last row with empty `cell`s or span the last item across the remaining columns (Task 7 relies on this).
 - `scanlines` goes on the ASCII media cell only, never over text.
 - Motion defaults: `--animate-*` reset (no `animate-*` utilities); bare `transition*` utilities default to `--duration-fast` + `--ease-signal`. `ring-*`/`inset-ring-*` still emit `box-shadow` (bare-number widths, no theme namespace to reset): never use them; focus uses `outline`.
-- `crosshair` declares `content: "+"` then `content: "+" / ""`, so browsers without alt-text support still draw the mark. `prose` h3+ reuse `label-mono` via `@apply`; weights use `--font-weight-semibold`.
+- The `crosshair` utility was removed in Task 7a. `prose` h3+ reuse `label-mono` via `@apply`; weights use `--font-weight-semibold`.
 - Exceptions to "no gradients": `scanlines` (hard-stop `repeating-linear-gradient` overlay, static) and the AsciiImage shimmer mask (Task 6).
 - Biome parses Tailwind CSS via `css.parser.tailwindDirectives: true`.
 - Font glyph gaps: the Fontsource latin/latin-ext subsets lack `→ ↗ ●` in both families. Arrows are drawn by the `Glyph` SVG atom and the `●` is replaced by a CSS square lamp in `Tally`. Turkish `ÇĞİıÖŞÜ çğıöşü` is fully covered.
 
 ## Visual language
 Do:
-- Hairlines in moderation, as set out in "Design direction" below.
+- Hairlines only within the border budget ("Design direction" below).
 - Uppercase tracked mono labels with index, e.g. `[02] APPLICATIONS`.
 - One two-tone headline per page.
 - Typographic glyphs (→ ↗ + ●) instead of icons.
@@ -81,7 +83,12 @@ Don't:
 - `Heading {level: 1|2|3, text, accent?, size?: display|h2}`: `size` defaults to display for h1, h2 otherwise. `accent` is a second block line in accent.
 - `Tally {text, tone?: accent|muted|critical, dot?}`: lamp is a CSS square (`size-2`), never a `●` character.
 - `Timecode {prefix}`: `@property` integer counters with `steps()`. Constants reach CSS as `--tc-*` custom properties via one root `style` object. Animates only under `prefers-reduced-motion: no-preference`; `aria-hidden`.
-- `GridFrame {as?, columns?: 1|2|3|4|12, crosshairs?}`: children are `cell`s. For 2/3/4 columns the last cell fills its row. For 12 columns the children's `lg:col-span-*` must sum to 12 per row.
+- `GridFrame {as?, columns?: 1|2|3|4|12, variant?: 'spaced'|'hairline'}`: `spaced` (default) = `gap-x-8 gap-y-12 lg:gap-x-12`, no lines, free children (tone cards set `bg-surface p-6`). `hairline` (budget-limited) = `grid-hairline`, children are `cell`s, and for 2/3/4 columns the last cell fills its row (cva `compoundVariants`). For 12 columns the children's `lg:col-span-*` must sum to 12 per row.
+- `Label` `strap` → `lower-third` utility; content is wrapped in one inner span so the flex gap never splits `[NN]` from the text. `index?: number | undefined`.
+- `LowerThird {level: 2|3, text, label, index?}`: `<hgroup>` with `Heading` above and the strap `Label` below. Section headings (`app-grid`, `feature-list`) and app card titles only.
+- `TitleSafe {scanlines?}`: media frame. Hairline border in `line` plus four `aria-hidden` corner spans (`data-corner` = block-inline, logical props) at `--title-safe-inset: 5%` (top/bottom % resolve against height, so the marks follow the frame), arm `--spacing * 5`, hairline stroke in `ink-muted`, `z-index: 1` over the scanlines.
+- `BarsStrip {class?}`: `h-1 w-42` flex row of the 7 bars, `aria-hidden`. Footer only.
+- `NoSignal {text}`: `role="img" aria-label={text}`, 16:9 7-column bars, centred canvas slate with a muted `Tally`. For the 404 (Task 8).
 - Tailwind v4 does not order stacked arbitrary variants by breakpoint: keep breakpoint rules disjoint (`md:max-lg:`).
 - `Field {id, label, hint?, optionalLabel?}`: hint id via `hintId(id)` (`hint-id.ts`, tested), used for `aria-describedby`.
 - `Input`, `Textarea`, `Select` share `CONTROL_CLASS` (`control-class.ts`): line-strong border, surface fill, `min-h-11`, `user-invalid:border-critical`.
@@ -99,8 +106,9 @@ Don't:
 - Header: sticky `z-(--z-header)`. The logo is a wordmark only; `settings.logoAlt` names the home link and no brand text is printed beside it. Inline nav ≥ lg. Quote key ≥ md in the bar (before Menu); below md it sits in the sheet. MobileNav (`popover` `#site-menu`) below lg, opacity fade only. Nav hrefs are used verbatim from `navigation`.
 - Nav state lives in `lib/nav-state.ts` (pure): `isCurrentPage` → `aria-current="page"`; `isSectionActive` → visual-only `data-active` (whole path segments, never the root, locale prefix included). SiteHeader computes `navItems` once and passes `current`/`active` to MobileNav.
 - Menu rows use an inset focus ring (negative `--border-focus` offset).
-- TallyStrip: `aria-hidden`, hairline segments, no crosshairs (the sticky header would cover them); channel ≥ sm, format ≥ md.
-- Footer: `GridFrame columns={4} crosshairs`; indexed nav; Contact and Follow continue the numbering (`[05]`, `[06]`); contacts in `<address>`; ↗ on https links via Glyph; rights line `© BUILD_YEAR legalName footerRights`.
+- TallyStrip: `aria-hidden` `surface` band, no rules (segments split by `gap-6 md:gap-8`), `px-4 md:px-8` to align with the header. `■ LIVE`, timecode; channel ≥ sm; `■ PGM` (accent) `■ PVW` (muted) and format ≥ md. Props `program`/`preview` from `tallyProgram`/`tallyPreview`.
+- MobileNav sheet: top bar keeps the header rule; rows have no dividers (height and hover/active `surface` tone).
+- Footer: full-bleed `border-t border-line`; `BarsStrip` at the content edge pulled up by `-mt-(--border-hairline)` so it lies on the rule; then spaced `GridFrame columns={4}`; indexed nav; Contact and Follow continue the numbering (`[05]`, `[06]`); contacts in `<address>`; ↗ on https links via Glyph; rights line `© BUILD_YEAR legalName footerRights`.
 
 ## ASCII (Task 6, fix round 1)
 - Constants in `lib/ascii.ts`: `ASCII_RAMP = ' .:-=+*#%@'`, `TONE_COUNT = 6`, `CHAR_ASPECT = 0.5`, `ASCII_COLUMNS = 96`, `ASCII_COLUMNS_COMPACT = 48`.
@@ -111,21 +119,14 @@ Don't:
 - Budget: `ASCII_HTML_BUDGET = 30 * 1024` per figure; `assertAsciiBudget` fails the build. Seed figure is 16.5 KB.
 - Upload source: `resolveUploadPath` lists `src/assets/uploads` on disk and matches the emitted file name (build `<stem>.<hash>.<ext>`, dev `<stem>.<ext>?…`). Never `import.meta.glob` (importing ships the original) and never `fsPath`. Upload names must be unique across subfolders; ambiguity throws.
 - Shimmer: alpha-only mask band, 600% size, 45/50/55 band, 78% floor, 9 s linear. Declared only under `prefers-reduced-motion: no-preference`.
-- Hero media cell: give the figure a definite track (`minmax(0, 1fr)` / `min-w-0`); `scanlines` goes on the media cell only.
+- Hero media cell: give the figure a definite track (`minmax(0, 1fr)` / `min-w-0`); wrap it in `<TitleSafe scanlines>` (no AsciiImage change needed).
 - Seed `test-card.png` is a generated card (seven grey bars, ringed disc with crosshair, amber inner ring, 10-step wedge) that matches `imageAlt`.
 
-## Design direction (owner feedback, 2026-11-23)
-- Borders in moderation: hairlines only on header/footer edges, section dividers, form controls and the hero media frame. Content grids use spacing and surface tone, not boxed cells.
-- Broadcast details, used sparingly:
-  - Tally plus PGM/PVW labels.
-  - Title-safe corner brackets on media, instead of crosshairs everywhere.
-  - Lower-third headings and card titles.
-  - Rundown-style feature list with timecode durations.
-  - SMPTE colour-bar micro strip as a section divider (check it against the accent-only rule).
-  - "NO SIGNAL" test-pattern 404.
-  - Optional VU meter.
-- This supersedes the earlier "one shared hairline grid, '+' crosshairs at intersections" rule. The footer's `crosshairs` and other crosshair use are reviewed in Task 7a.
-- Build order: Task 7a (design refinement) before Task 7 (G5 section blocks).
+## Design direction (owner feedback 2026-11-23, implemented in Task 7a)
+- Border budget: hairlines only on (1) header bottom / footer top edges, (2) section dividers (`SectionRenderer` owns one `border-t border-line` rule per section after the first), (3) form controls (incl. buttons and the menu key), (4) the `TitleSafe` media frame. Content grids, cards, feature lists, FAQ, CTA: spacing + `surface` vs `canvas` tone, no boxed cells. Crosshairs retired.
+- Broadcast details, used sparingly: TallyStrip PGM/PVW; title-safe marks on media only; lower thirds on section headings and app card titles only; rundown `feature-list` with `duration`; one SMPTE bars strip (footer rule); `NoSignal` on the 404. VU meter dropped (clutter, a second perpetual animation next to the timecode).
+- Scaffold-only exceptions (deleted in Task 8): colour swatches keep a `line-strong` border; one hairline GridFrame specimen. Prose keeps its blockquote rule and `hr` (typographic, inside rich text).
+- Seed `test-card.png` kept (grey bars): the ASCII render is luminance-only, so SMPTE colour bars would look the same.
 
 ## Coding standards
 - No `any`; strict TypeScript.

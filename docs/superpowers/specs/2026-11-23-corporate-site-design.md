@@ -9,7 +9,7 @@ This is a static, brand-agnostic corporate showcase. The first tenant builds sof
 Principles:
 
 1. **Small beats feature-rich.** Every file, dependency and block must earn its place.
-2. **Hand-crafted, not templated.** The look of a control-room monitor wall: hairline grids, sharp corners, mono tally labels, one two-tone headline, one ASCII hero image.
+2. **Hand-crafted, not templated.** The look of a control-room monitor wall: calm editorial spacing with hairlines in moderation, sharp corners, a few broadcast details, mono tally labels, one two-tone headline, one ASCII hero image.
 3. **Platform first.** Use forms, `<dialog>`, Popover API and `<details>` before any JS.
 4. **Content is data.** Every user-facing string lives in typed content.
 
@@ -98,7 +98,7 @@ EDITOR ──► /admin (Sveltia, static) ──► sveltia-cms-auth Worker (Git
 │  │                                 #   seed: neutral test-card hero (ASCII source)
 │  ├─ styles/
 │  │  ├─ tokens.css                  # @theme: every design token
-│  │  └─ global.css                  # base, prose, grid/crosshair, scanline, reduced-motion
+│  │  └─ global.css                  # base, prose, grid, lower-third, scanline, reduced-motion
 │  ├─ lib/
 │  │  ├─ i18n.ts                     # locales, localizePath, alternates, t() with en fallback
 │  │  ├─ content.ts                  # getPage/getApplications/getSettings with locale fallback
@@ -213,6 +213,7 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
 | Group | Tokens |
 |---|---|
 | Color (OKLCH) | `canvas`, `surface`, `ink`, `ink-muted`, `line`, `line-strong`, `critical`; `accent` = `var(--accent-seed)` (the only value injected from settings, on `<html>`); `accent-dim` and `accent-wash` derived via `color-mix(in oklab, …)` (oklab: oklch hue path runs through green) |
+| Bars | `bars-white … bars-blue`: the seven SMPTE 75% bars (`rgb(75% 75% 75%)` …). A fixed broadcast standard, not brand colour: the documented exception to the accent-only rule, used only by `BarsStrip` and `NoSignal` (decorative, `aria-hidden` / one `role="img"`) |
 | Type | `--font-sans`, `--font-mono`; `--text-label`, `-body`, `-lede`, `-h2`, `-display` (fluid `clamp`); `--tracking-label` |
 | Space | `--spacing: 0.25rem` (4px base) |
 | Line | `--border-hairline: 1px` |
@@ -226,9 +227,29 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
 - **Martian Mono** (labels/data): its wide, instrument-like forms read like broadcast hardware labelling.
 - Both are OFL and loaded via `fontProviders.local()`. Swappable, but never for Inter, Geist, Space Grotesk, Poppins or Montserrat.
 
+**Border budget (binding, owner feedback 2026-11-23):** borders in moderation. 1px hairlines appear only on:
+1. the header's bottom edge and the footer's top edge;
+2. section dividers (one rule between major sections; it may carry a label);
+3. form controls (inputs, selects, textareas, buttons, the menu key);
+4. the hero / application media frame (`TitleSafe`).
+
+Everything else (content grids, cards, feature lists, FAQ, CTA) gets its hierarchy from spacing, `surface` vs `canvas` tone and type: no boxed cells. `GridFrame` is `spaced` by default; its `hairline` cell matrix is budget-limited. The "+" crosshairs are retired.
+
+**Broadcast details (CSS only, no client JS, static under reduced motion), used sparingly:**
+
+| Detail | Where | Notes |
+|---|---|---|
+| Tally + PGM/PVW | `TallyStrip` | `surface` band under the header, segments split by spacing. LIVE and PGM lamps accent, PVW muted; labels from `ui` (`tallyProgram`, `tallyPreview`) |
+| Title-safe corner brackets | media frames only (hero ASCII, application cover) | `TitleSafe`: hairline frame + four L-shaped marks at the title-safe area (5% in from each edge), drawn over the picture like a monitor overlay |
+| Lower third | section headings (`app-grid`, `feature-list`) and application card titles | `LowerThird`: heading above, mono label strap below (translucent ink band, accent key on its leading edge), in an `<hgroup>` |
+| Rundown rows | `feature-list` | numbered rows, title, body and a mono duration column `HH:MM:SS` from the item's optional `duration` (display only) |
+| SMPTE colour-bar micro strip | one signature divider: laid on the footer's top rule at the content edge | `BarsStrip`, `bars-*` tokens, `aria-hidden` |
+| "NO SIGNAL" test pattern | 404 page | `NoSignal`: bars filling a 16:9 frame, canvas slate with a muted tally and `ui.noSignal` |
+
+A VU meter was considered and dropped: a second perpetual animation beside the running timecode added clutter.
+
 **Do:**
-- One shared 1px hairline grid, never doubled.
-- "+" crosshairs at grid intersections.
+- Hairlines only within the border budget above, never doubled.
 - Uppercase tracked mono labels with an index, e.g. `[02] APPLICATIONS`.
 - One two-tone headline per page.
 - Typographic glyphs (→ ↗ + ●) instead of icons.
@@ -236,17 +257,17 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
 - Scanlines on the hero only.
 - Accent for large text and graphics only.
 
-**Don't:** radius, shadows, gradients (except the ASCII shimmer mask), blur/glass, purple, emoji, icon packs, stock photos, centered three-icon feature rows.
+**Don't:** radius, shadows, gradients (except the ASCII shimmer mask and the hero scanlines), blur/glass, purple (the SMPTE magenta bar is the standard's own, not decoration), boxed content grids, emoji, icon packs, stock photos, centered three-icon feature rows.
 
 | Block | Visual |
 |---|---|
-| `hero` | Split grid: label, two-tone headline, lede, ≤2 actions left; ASCII render right |
+| `hero` | Spaced split (no cell borders): label, two-tone headline, lede, ≤2 actions left; ASCII render right in `TitleSafe` with scanlines |
 | `statement` | Full-width mission sentence in display type, mono label in the gutter |
-| `app-grid` | Hairline cell matrix: index, status tally, name, tagline, duotone cover, ↗ |
-| `feature-list` | Numbered rows, title left, body right, hairline dividers |
+| `app-grid` | Spaced `surface` tiles (no borders): index, status tally, lower-third name, tagline, duotone cover in `TitleSafe`, ↗ |
+| `feature-list` | Rundown: numbered rows, title, body, mono `HH:MM:SS` duration column; spacing between rows, no rules |
 | `rich-text` | `Prose` column ≤68ch, mono h3+ |
-| `cta` | One bordered band: heading, single action, accent "ON AIR" tally |
-| `faq` | Native `<details>` rows, "+" ↔ "−" |
+| `cta` | One `surface` band (no border): heading, single action, accent "ON AIR" tally |
+| `faq` | Native `<details>` rows, "+" ↔ "−"; spacing between rows, no rules |
 
 **Signature components:**
 
@@ -256,26 +277,29 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
   - Same-tone runs merge into one `<span>`.
   - Output is a `<pre aria-hidden>` inside a `<figure role="img" aria-label>`, sized with container query units.
   - Optional CSS shimmer, only under `prefers-reduced-motion: no-preference`.
-- **`TallyStrip`:** `● LIVE` plus SMPTE timecode `HH:MM:SS:FF`, made with a CSS `@property` counter (no JS). Static under reduced motion.
+- **`TallyStrip`:** `■ LIVE` plus SMPTE timecode `HH:MM:SS:FF`, made with a CSS `@property` counter (no JS), channel, `■ PGM ■ PVW` and the format. Static under reduced motion.
 
 ```
-+------------------------------------------------------------------------------+
-| [LOGO] BRAND            APPLICATIONS   ABOUT   CONTACT     EN / TR  [QUOTE ↗] |
-+-------------------------------+----------------------------------------------+
-| ● LIVE   TC 00:14:07:12   CH 01 · PGM                     1920×1080 · 25p    |
-+-------------------------------+----------------------------------------------+
-| [01] MISSION                  |  ..::--==++**##%%@@@@%%##**++==--::..         |
-|                               |  .:-=+*#%@@@@@@@@@@@@@@@@@@@@%#*+=-:.         |
-| Software that keeps           |  :=*#%@@@@%#*+=-::::-=+*#%@@@@%#*=:           |
-| every newsroom on air.        |  -+#@@@%*=:.   ASCII render   .:=*%@@@#+-     |
-| ^ ink        ^ accent line    |  :=*#%@@@@%#*+=-::::-=+*#%@@@@%#*=:           |
-|                               |  .:-=+*#%@@@@@@@@@@@@@@@@@@@@%#*+=-:.         |
-| Lede, max 60ch, ink-muted.    |  ..::--==++**##%%@@@@%%##**++==--::..         |
-|                               |                                               |
-| [ EXPLORE APPLICATIONS → ]    |                                               |
-| [ REQUEST A QUOTE ↗ ]         |                                               |
-+-------------------------------+----------------------------------------------+
+ [LOGO]                 APPLICATIONS   ABOUT   CONTACT     EN / TR  [QUOTE →]
+──────────────────────────────────────────────────────────────────────────────  header rule
+ ■ LIVE  TC 00:14:07:12  CH 01  ■ PGM ■ PVW                            1080i50   surface band
+
+ [01] MISSION                   ┌──────────────────────────────────────────────┐
+                                │   ┌─                                    ─┐   │
+ Software that keeps            │    ..::--==++**##%%@@@@%%##**++==--::..      │
+ every newsroom on air.         │    :=*#%@@@@%#*+=-::::-=+*#%@@@@%#*=:        │
+ ^ ink        ^ accent line     │    -+#@@@%*=:.   ASCII render   .:=*%@@@     │
+                                │    :=*#%@@@@%#*+=-::::-=+*#%@@@@%#*=:        │
+ Lede, max 60ch, ink-muted.     │   └─                                    ─┘   │
+                                └──────────────────────────────────────────────┘
+ [ EXPLORE APPLICATIONS → ]       ^ TitleSafe: hairline frame, title-safe marks, scanlines
+ [ REQUEST A QUOTE → ]
+──────────────────────────────────────────────────────────────────────────────  section divider
+ ...
+▀▀▀▀▀▀▀────────────────────────────────────────────────────────────────────────  footer rule + bars strip
 ```
+
+Internal links (the quote key included) use →, outbound links ↗, both drawn by `Glyph`.
 
 ## 9. `wrangler.jsonc` (draft)
 

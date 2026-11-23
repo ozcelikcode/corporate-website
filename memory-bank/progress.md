@@ -11,10 +11,11 @@
 - 2026-11-23: Task 3 done: content schemas, i18n/content libs, seed content and images.
 - 2026-11-23: Task 4 done: 12 UI atoms + Glyph, atom showcase on the scaffold page.
 - 2026-11-23: Tasks 5 (layout shell and SEO head), 6 (ASCII pipeline and AsciiImage) and 11 (Sveltia admin config) done, including fix rounds.
-- Tasks 1–6 and 11 done (2026-11-23).
+- 2026-11-23: Task 7a design refinement done: border budget, spaced GridFrame, TitleSafe, LowerThird, BarsStrip, NoSignal, TallyStrip PGM/PVW, rundown `duration`.
+- Tasks 1–6, 11 and 7a done (2026-11-23).
 
 ## Next
-- Task 7a design refinement (rules in `systemPatterns.md`, "Design direction"), then G5 Task 7 (section blocks).
+- G5 Task 7 (section blocks) on the Task 7a rules.
 - Owner: Sveltia step 6 manual check (runbook).
 - Build the Worker (`/api/quote`), Turnstile verification, mail builder.
 - Add `.github/CODEOWNERS`.
@@ -44,3 +45,4 @@
 - 2026-11-23: Task 5 implemented: BaseLayout, SeoHead, SiteHeader, MobileNav (popover), LanguageToggle, TallyStrip, SiteFooter, `seo.ts` and `nav-state.ts`. Fix rounds 1–2: quote key never hidden (md in bar, always in menu), nav at lg, whole-segment nav state. Checked at 360/768/1024/1440.
 - 2026-11-23: Task 6 implemented: build-time ASCII renderer (`ascii.ts`, `ascii-source.ts`, `ascii-markup.ts`) and `AsciiImage`. Fix round 1: 48-column compact grid, normalise, 30 KB budget, disk-based upload lookup (no leaked originals), new seed card. Seed figure 16.5 KB.
 - 2026-11-23: Task 11 implemented: Sveltia admin at `public/admin` (editorial workflow, en/tr folders, settings singleton) with a config test. Fix round 1: nav `footer` and hero `actions` default to `[]`. Owner step 6 pending.
+- 2026-11-23: Task 7a implemented: 3 ui keys (`tallyProgram`, `tallyPreview`, `noSignal`), feature-list `duration` (schema, seed, CMS), ui seed parity test; gate green (78 tests); border audit, 360/768/1440 checked in the browser.
