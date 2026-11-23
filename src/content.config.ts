@@ -10,7 +10,7 @@ const TAGLINE_MAX = 120;
 const CONTRAST_DECIMALS = 2;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const CONTACT_HREF_PATTERN = /^(mailto:|tel:|https:\/\/)/;
-const LINK_HREF_PATTERN = /^(\/(?!\/)|https:\/\/|mailto:)/;
+const LINK_HREF_PATTERN = /^(\/(?![\/\\])|https:\/\/|mailto:)/;
 
 // Ids come from the file path (`<locale>/<slug>`), never from a `slug` field: slugs repeat across locales.
 const fromYaml = (base: string) =>

@@ -78,6 +78,7 @@ test('feature-list rejects 0 and 9 items', () => {
 test('rejects protocol-relative hrefs and accepts site-relative ones', () => {
   const withHref = (href: string) => parse({ ...fixtures.hero, actions: [{ label: 'Go', href }] });
   assert.equal(withHref('//evil.com').success, false);
+  assert.equal(withHref('/\\evil.com').success, false);
   assert.equal(withHref('/about/').success, true);
 });
 

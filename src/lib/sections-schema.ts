@@ -17,7 +17,7 @@ export const LABEL_MAX = 32;
 const label = z.string().max(LABEL_MAX); // mono tally label, e.g. "MISSION"
 export const actionSchema = z.strictObject({
   label,
-  href: z.string().regex(/^(\/(?!\/)|https:\/\/)/),
+  href: z.string().regex(/^(\/(?![\/\\])|https:\/\/)/),
 });
 const md = z.string(); // Markdown, rendered by lib/markdown.ts
 
