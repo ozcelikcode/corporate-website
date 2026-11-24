@@ -1,7 +1,8 @@
 ---
 /**
  * Page and section heading. `accent` adds the two-tone second line in accent (large text only,
- * so 3:1 suffices). At most one two-tone heading per page.
+ * so 3:1 suffices). At most one two-tone heading per page. Size follows the level (h1 display,
+ * h2, h3) unless `size` overrides it (the hero keeps display when it is not the page's h1).
  */
 import { cva } from 'class-variance-authority';
 
@@ -9,19 +10,26 @@ interface Props {
   level: 1 | 2 | 3;
   text: string;
   accent?: string;
-  size?: 'display' | 'h2';
+  size?: 'display' | 'h2' | 'h3';
 }
 
 const SIZE = {
   display: 'text-display tracking-display',
   h2: 'text-h2',
+  h3: 'text-h3',
 } as const satisfies Record<NonNullable<Props['size']>, string>;
 
 const heading = cva('font-semibold wrap-break-word', { variants: { size: SIZE } });
 
 const TAGS = { 1: 'h1', 2: 'h2', 3: 'h3' } as const satisfies Record<Props['level'], string>;
 
-const { level, text, accent, size = level === 1 ? 'display' : 'h2' } = Astro.props;
+/** Default size per level. */
+const LEVEL_SIZE = { 1: 'display', 2: 'h2', 3: 'h3' } as const satisfies Record<
+  Props['level'],
+  NonNullable<Props['size']>
+>;
+
+const { level, text, accent, size = LEVEL_SIZE[level] } = Astro.props;
 const Tag = TAGS[level];
 ---
 <Tag class={heading({ size })}>

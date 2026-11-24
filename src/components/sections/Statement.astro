@@ -1,8 +1,9 @@
 ---
 /**
- * Mission statement: the indexed label in a three-column gutter, the sentence in display type
- * (ink) across the other nine. Regular weight, so it reads as a quiet statement next to the
- * semibold headlines. Stacked below `lg`. A plain label, no lower third.
+ * Mission statement: the indexed label in a three-column gutter, the sentence as a large
+ * pull-quote (ink, `text-quote`, at most the `quote` measure) in the other nine. Regular weight,
+ * so it reads as a quiet statement next to the semibold headlines, not as a headline itself.
+ * Stacked below `lg`. A plain label, no lower third.
  */
 import GridFrame from '../ui/GridFrame.astro';
 import Label from '../ui/Label.astro';
@@ -16,7 +17,7 @@ const { section, index } = Astro.props;
   <div class="lg:col-span-3">
     <Label text={section.label} index={index} />
   </div>
-  <p class="text-display font-normal tracking-display text-ink wrap-break-word lg:col-span-9">
+  <p class="max-w-quote text-quote font-normal text-ink wrap-break-word lg:col-span-9">
     {section.text}
   </p>
 </GridFrame>

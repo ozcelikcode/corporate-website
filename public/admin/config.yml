@@ -11,8 +11,12 @@ backend:
 # Editors submit a branch + PR per entry; only users who can merge to main publish.
 publish_mode: editorial_workflow
 
+# Global folders: public_folder must be a site path starting with "/" (relative paths are
+# rejected). Collections and the settings file override both with entry-relative paths,
+# because Astro's image() resolves values relative to the YAML file
+# (https://sveltiacms.app/en/docs/media/internal#collection-level-configuration).
 media_folder: src/assets/uploads
-public_folder: ../../assets/uploads
+public_folder: /assets/uploads
 
 # Blank optional fields are left out of the YAML instead of being saved as "" or []
 # (https://sveltiacms.app/en/docs/data-output#controlling-data-output). The schemas also
@@ -35,8 +39,9 @@ singletons:
     file: src/content/settings/site.yaml
     icon: settings
     # Not localised: no field below sets i18n, so the file is shared by all locales.
-    media_folder: src/assets/uploads
-    public_folder: ../../assets/uploads
+    # Relative media_folder = relative to the file; public_folder defaults to it, so the
+    # YAML value is ../../assets/uploads/<name> (src/content/settings -> src/assets/uploads).
+    media_folder: ../../assets/uploads
     fields:
       - { name: brandName, label: Brand name, widget: string }
       - { name: logo, label: Logo, widget: image }
@@ -71,7 +76,12 @@ singletons:
             label: Link
             widget: string
             pattern: ['^https:\/\/', "Start with https://"]
-      - { name: ogImage, label: Default social image, widget: image }
+      - {
+          name: ogImage,
+          label: Default social image,
+          widget: image,
+          accept: "image/png,image/jpeg,image/webp",
+        }
       - name: organization
         label: Organisation
         widget: object
@@ -80,18 +90,22 @@ singletons:
           - name: url
             label: Website URL
             widget: string
-            pattern: ['^https?:\/\/\S+$', "Enter a full URL such as https://example.com"]
+            pattern: ['^https:\/\/\S+$', "Enter a full https URL such as https://example.com"]
           - { name: address, label: Address, widget: string, required: false }
 
+# Folder collections: `format: yaml` alone would write `.yml`, and the default (Markdown with
+# front matter, `.md`) would find none of our files, so both keys are set. Entries live at
+# <folder>/<locale>/<slug>.yaml (i18n structure multiple_folders); the slug is the file name.
+# https://unpkg.com/@sveltia/cms@0.271.2/types/public.d.ts (`extension`, `format`, `folder`)
 collections:
   - name: ui
     label: Interface strings
     folder: src/content/ui
+    format: yaml
+    extension: yaml
     create: false
     delete: false
     summary: Interface strings
-    media_folder: src/assets/uploads
-    public_folder: ../../../assets/uploads
     i18n: true
     fields:
       - name: skipToContent
@@ -294,11 +308,11 @@ collections:
   - name: navigation
     label: Navigation
     folder: src/content/navigation
+    format: yaml
+    extension: yaml
     create: false
     delete: false
     summary: Main navigation
-    media_folder: src/assets/uploads
-    public_folder: ../../../assets/uploads
     i18n: true
     fields:
       - name: header
@@ -336,10 +350,13 @@ collections:
   - name: pages
     label: Pages
     folder: src/content/pages
+    format: yaml
+    extension: yaml
     slug:
       editable: [create]
-    media_folder: src/assets/uploads
-    public_folder: ../../../assets/uploads
+    # Relative to the entry (src/content/<collection>/<locale>/<file>.yaml); public_folder
+    # defaults to the same value.
+    media_folder: ../../../assets/uploads
     i18n: true
     fields:
       - { name: title, label: Title, widget: string, i18n: true, required: [en] }
@@ -350,7 +367,14 @@ collections:
         required: [en]
         minlength: 1
         maxlength: 160
-      - { name: ogImage, label: Social image, widget: image, i18n: true, required: false }
+      - {
+          name: ogImage,
+          label: Social image,
+          widget: image,
+          accept: "image/png,image/jpeg,image/webp",
+          i18n: true,
+          required: false,
+        }
       - &sections
         name: sections
         label: Sections
@@ -460,11 +484,14 @@ collections:
   - name: applications
     label: Applications
     folder: src/content/applications
+    format: yaml
+    extension: yaml
     slug: "{{fields.slug}}"
     identifier_field: name
     sortable_fields: [order, name]
-    media_folder: src/assets/uploads
-    public_folder: ../../../assets/uploads
+    # Relative to the entry (src/content/<collection>/<locale>/<file>.yaml); public_folder
+    # defaults to the same value.
+    media_folder: ../../../assets/uploads
     i18n: true
     fields:
       - { name: name, label: Name, widget: string, i18n: true, required: [en] }
@@ -482,7 +509,14 @@ collections:
         maxlength: 120
       - { name: summary, label: Summary, widget: text, i18n: true, required: [en] }
       - { name: category, label: Category, widget: string, i18n: true, required: [en] }
-      - { name: cover, label: Cover image, widget: image, i18n: true, required: [en] }
+      - {
+          name: cover,
+          label: Cover image,
+          widget: image,
+          accept: "image/png,image/jpeg,image/webp",
+          i18n: true,
+          required: [en],
+        }
       - { name: coverAlt, label: Cover alt text, widget: string, i18n: true, required: [en] }
       - name: status
         label: Status

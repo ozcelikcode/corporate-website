@@ -102,3 +102,23 @@ test('ui: blank strings are dropped (EN fallback), unknown keys still fail', () 
   });
   assert.equal(uiSchema.safeParse({ notAKey: 'x' }).success, false);
 });
+
+test('settings: organization.url must be https', () => {
+  const schema = settingsSchema(context);
+  for (const url of ['javascript:alert(1)', 'http://example.com', 'example.com'])
+    assert.throws(
+      () => schema.parse({ ...settings, organization: { ...settings.organization, url } }),
+      url,
+    );
+});
+
+test('social and cover images refuse SVG, rasters pass', () => {
+  const svgAware = { image: () => z.object({ format: z.string() }) } as never;
+  const png = { format: 'png' };
+  const svg = { format: 'svg' };
+  assert.ok(settingsSchema(svgAware).safeParse({ ...settings, logo: svg, ogImage: png }).success);
+  assert.ok(!settingsSchema(svgAware).safeParse({ ...settings, logo: svg, ogImage: svg }).success);
+  assert.ok(!pageSchema(svgAware).safeParse({ ...page, ogImage: svg }).success);
+  assert.ok(applicationSchema(svgAware).safeParse({ ...application, cover: png }).success);
+  assert.ok(!applicationSchema(svgAware).safeParse({ ...application, cover: svg }).success);
+});

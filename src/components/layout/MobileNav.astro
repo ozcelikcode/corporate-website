@@ -40,7 +40,7 @@ const { links, quote, navLabel, openLabel, closeLabel } = Astro.props;
   class="m-0 h-dvh max-h-none w-full max-w-none border-0 bg-canvas p-0 text-ink opacity-0 transition-[opacity,display,overlay] transition-discrete duration-(--duration-base) open:opacity-100 starting:open:opacity-0 lg:hidden"
 >
   <div class="flex h-full flex-col overflow-y-auto">
-    <div class="flex h-16 shrink-0 items-center justify-end border-b border-line px-4">
+    <div class="flex h-(--header-bar) shrink-0 items-center justify-end border-b border-line px-4">
       <button type="button" class={TOGGLE} popovertarget={MENU_ID} popovertargetaction="hide">
         {closeLabel}
       </button>

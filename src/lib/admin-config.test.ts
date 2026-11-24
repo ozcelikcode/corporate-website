@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { HEX_PATTERN } from './color.ts';
 import { UI_KEYS } from './i18n.ts';
 import { DURATION_PATTERN, SECTION_TYPES } from './sections-schema.ts';
 
 const config = readFileSync(new URL('../../public/admin/config.yml', import.meta.url), 'utf8');
-const html = readFileSync(new URL('../../public/admin/index.html', import.meta.url), 'utf8');
+const html = readFileSync(new URL('../pages/admin/index.astro', import.meta.url), 'utf8');
 
 test('config.yml declares every section block type', () => {
   // Line-anchored: a longer key must not satisfy a shorter one.
@@ -29,7 +29,7 @@ test('config.yml carries the workflow, i18n, media and accent settings', () => {
     assert.ok(config.includes(setting), setting);
 });
 
-test('index.html loads the pinned Sveltia bundle with an SRI hash', () => {
+test('admin page loads the pinned Sveltia bundle with an SRI hash', () => {
   assert.match(html, /@sveltia\/cms@0\.271\.2\/dist\/sveltia-cms\.js/);
   assert.match(html, /integrity="sha384-[A-Za-z0-9+/]{64}"/);
 });
@@ -53,4 +53,81 @@ test('config.yml limits the hero image to rasters the ASCII renderer reads', () 
     config,
     /- name: image\n {16}label: Image\n {16}widget: image\n {16}accept: "image\/png,image\/jpeg,image\/webp"$/m,
   );
+});
+
+test('config.yml limits the social and cover images to rasters (the logo may stay SVG)', () => {
+  const RASTERS = 'accept: "image/png,image/jpeg,image/webp"';
+  // Flow maps, single-line or wrapped by the formatter: each is `{ name: <field>, ... }`.
+  const fieldBody = (name: string): string[] =>
+    [...config.matchAll(new RegExp(`\\{\\s*name: ${name},[^}]*\\}`, 'g'))].map((match) => match[0]);
+  assert.equal(fieldBody('ogImage').length, 2);
+  assert.equal(fieldBody('cover').length, 1);
+  for (const field of [...fieldBody('ogImage'), ...fieldBody('cover')])
+    assert.ok(field.includes(RASTERS), field);
+  assert.match(fieldBody('logo').join(), /widget: image/);
+  assert.doesNotMatch(fieldBody('logo').join(), /accept/);
+});
+
+test('config.yml media folders are valid for Sveltia and resolvable by Astro image()', () => {
+  // Global public_folder must be an absolute site path; relative ones are rejected at load.
+  assert.match(config, /^public_folder: \/\S+$/m);
+  assert.doesNotMatch(config, /^ +public_folder:/m);
+  // Entry-relative collection folders: pages and applications live in <collection>/<locale>/.
+  assert.equal(config.match(/^ {4}media_folder: \.\.\/\.\.\/\.\.\/assets\/uploads$/gm)?.length, 2);
+  // The settings file sits one level higher (src/content/settings/site.yaml).
+  assert.match(config, /^ {4}media_folder: \.\.\/\.\.\/assets\/uploads$/m);
+});
+
+test('config.yml organization.url accepts https only, like the schema', () => {
+  assert.match(config, /pattern: \['\^https:\\\/\\\/\\S\+\$'/);
+  assert.doesNotMatch(config, /\^https\?:/);
+});
+
+const CONTENT = new URL('../content/', import.meta.url);
+const folderCollections = [
+  ...config.matchAll(/^ {2}- name: (\w+)\n(?: {4}.*\n)*? {4}folder: (\S+)\n((?: {4}.*\n)*)/gm),
+].map((match) => ({ name: match[1] as string, folder: match[2] as string, body: match[3] ?? '' }));
+const locales = /^ {2}locales: \[(.*)\]$/m.exec(config)?.[1]?.split(/,\s*/) ?? [];
+
+test('config.yml folder collections find the YAML files under src/content', () => {
+  assert.match(config, /^ {2}structure: multiple_folders$/m);
+  assert.deepEqual(locales, ['en', 'tr']);
+  assert.equal(folderCollections.length, 4);
+  for (const { name, folder, body } of folderCollections) {
+    // Without both keys Sveltia reads `.md` front matter and lists no entries.
+    assert.match(body, /^ {4}format: yaml$/m, `${name} format`);
+    assert.match(body, /^ {4}extension: yaml$/m, `${name} extension`);
+    assert.equal(folder, `src/content/${name}`);
+    assert.match(body, /^ {4}i18n: true$/m, name);
+    // multiple_folders: <folder>/<locale>/<slug>.<extension>
+    const found = readdirSync(new URL(`${name}/`, CONTENT), { withFileTypes: true });
+    assert.ok(found.length > 0, name);
+    for (const entry of found) {
+      assert.ok(entry.isDirectory() && locales.includes(entry.name), `${name}/${entry.name}`);
+      const files = readdirSync(new URL(`${name}/${entry.name}/`, CONTENT));
+      assert.ok(files.length > 0 && files.every((file) => file.endsWith('.yaml')), name);
+    }
+  }
+});
+
+test('config.yml covers every src/content subfolder exactly once', () => {
+  const singletonFile = /^ {4}file: src\/content\/(\w+)\/[\w-]+\.yaml$/gm;
+  const covered = [
+    ...folderCollections.map(({ name }) => name),
+    ...[...config.matchAll(singletonFile)].map((match) => match[1]),
+  ];
+  const actual = readdirSync(CONTENT, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
+  assert.deepEqual([...covered].sort(), [...actual].sort());
+});
+
+test('config.yml ui and navigation keep their one fixed entry (strings, main) in every locale', () => {
+  // ui and navigation keep one fixed entry each (create/delete off): `strings` and `main`.
+  for (const [name, slug] of [
+    ['ui', 'strings'],
+    ['navigation', 'main'],
+  ] as const)
+    for (const locale of locales)
+      assert.ok(readdirSync(new URL(`${name}/${locale}/`, CONTENT)).includes(`${slug}.yaml`), name);
 });

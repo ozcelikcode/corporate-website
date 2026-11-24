@@ -41,14 +41,15 @@ Dev dependencies:
 - `send_email` binding `QUOTE_MAILER` (no `destination_address`): reaches verified Email Routing destinations only; needs a domain on the account. Until then the endpoint redirects to the error state.
 - Turnstile: Managed widget, `data-action="quote"`, siteverify in the Worker.
 - R2 on a custom domain (`assets.<domain>`, `r2.dev` disabled, Cache Everything, CORS GET): large files (brochures) are linked, not embedded.
-- Workers Builds: production branch `main`, `pnpm build` then `npx wrangler deploy`; preview builds on for PR branches.
+- Workers Builds: production branch `main`, `pnpm build` then `npx wrangler deploy`; non-production branch builds OFF (security audit H1: branch code would run with the production deploy token and secrets); admins preview locally with `pnpm build` / `pnpm preview`. Secure previews (separate Worker, no secrets, Cloudflare Access) are an optional later step in the runbook.
 - Build vars (dashboard): `SITE_URL`, `PUBLIC_TURNSTILE_SITE_KEY` (via `astro:env`).
 
 ## CMS
-- Sveltia CMS (pinned exactly, loaded from a pinned bundle with SRI in `public/admin/index.html`; pre-1.0, tested at 0.271.2).
+- Sveltia media folders (0.271.2): global `public_folder` must start with `/` (relative is rejected at load: `public.d.ts`, https://sveltiacms.app/en/docs/media/internal). A collection/file `media_folder` without a leading `/` is relative to the entry/file, so pages and applications use `../../../assets/uploads`, settings `../../assets/uploads` (what Astro `image()` resolves); `public_folder` is omitted there (defaults to it).
+- Sveltia CMS (pinned exactly, loaded from a pinned bundle with SRI in `src/pages/admin/index.astro`; pre-1.0, tested at 0.271.2).
 - Auth: `sveltia-cms-auth` on a free Worker, GitHub App OAuth. Vars: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `ALLOWED_DOMAINS`.
 - `publish_mode: editorial_workflow`; i18n `multiple_folders` en/tr (default en, layout `<folder>/<locale>/<slug>.yaml`); settings as singleton; `media_folder: src/assets/uploads`.
-- Files: `public/admin/index.html` (`noindex`, pinned `@sveltia/cms@0.271.2` with SRI and `crossorigin="anonymous"`) and `public/admin/config.yml` (github backend with placeholder `repo`/`base_url`, replaced in the runbook). Collections: `settings` singleton, `ui`, `navigation` (create/delete off), `pages`, `applications`; one shared `&sections` anchor (7 block types, `typeKey: type`). `src/lib/admin-config.test.ts` checks the config.
+- Files: `src/pages/admin/index.astro` (standalone Astro page with an `is:inline` script, not in `public/`: the dev server maps `/admin/` only to a route, so `public/admin/index.html` gave 404 at `/admin/` in `astro dev`; `noindex`, pinned `@sveltia/cms@0.271.2` with SRI and `crossorigin="anonymous"`) and `public/admin/config.yml` (github backend with placeholder `repo`/`base_url`, replaced in the runbook). Collections: `settings` singleton, `ui`, `navigation` (create/delete off), `pages`, `applications`; one shared `&sections` anchor (7 block types, `typeKey: type`). `src/lib/admin-config.test.ts` checks the config.
 - Verified from docs: top-level `singletons`; `slug.editable` replaces the deprecated `{{fields._slug}}`; field `pattern` is `[regex, message]`; `required: [en]` with i18n; i18n must be opted in per field (collection-level does not cover `ui`/`navigation` fields). Biome formats the YAML (double quotes).
 - Editor/admin split is enforced by GitHub (CODEOWNERS, branch protection, merge rights), not by the config.
 - Hero `actions` and nav `footer` default to `[]` in the schema, so the CMS may omit empty lists.
@@ -92,6 +93,15 @@ Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fie
 - Production only when `WORKERS_CI_BRANCH === 'main'`: then `SITE_URL` (https, trailing slash stripped) and `PUBLIC_TURNSTILE_SITE_KEY` are required (empty counts as missing) or the build throws.
 - Any other branch or a local build ignores both vars: `siteUrl` = `PREVIEW_SITE_URL` (`http://localhost:4321`, interim, open §14 "Previews" item), Turnstile test key `1x00000000000000000000AA`.
 - `astro.config.ts` feeds `site` from it; `src/lib/env.ts` exposes `BUILD` from `astro:env`.
+
+## Security hardening (audit 2026-11-24)
+- `_headers`: `/admin/*` adds `X-Robots-Tag: noindex, nofollow`; `interest-cohort` removed from Permissions-Policy (spec §11 updated).
+- CMS: `ogImage` (settings and pages) and application `cover` have `accept: image/png,image/jpeg,image/webp` (field-level, as on the hero image); the schema also rejects `format === 'svg'` for them (`rasterImage`). Logo may stay SVG. `organization.url` is https-only.
+- GitHub/Cloudflare items (ruleset, ALLOWED_DOMAINS, WAF rate limit, `workers_dev`/`preview_urls` off, security features) are owner steps in `docs/runbook.md` ("Security checklist before the first editor", 3.4, 3.5, 3.11).
+
+## CMS folder collections (fix 2026-11-24)
+- Sveltia 0.271.2 defaults to Markdown front matter (`.md`) for folder collections, so ui/navigation/pages/applications listed 0 entries. They now set `format: yaml` and `extension: yaml` (`format: yaml` alone derives `.yml`). Structure `multiple_folders`: `<folder>/<locale>/<slug>.yaml`. `admin-config.test.ts` derives the layout from config and checks it against `src/content` (every subfolder covered once, all files `.yaml` under a locale folder). Live check needs the native folder picker (owner).
+- Markdown: bare `www.`/`http://` text stays plain text (only https autolinks link); footnote ids are scoped to the section prefix.
 
 ## Tooling notes
 - pnpm 12 blocks install scripts: `pnpm-workspace.yaml` has `allowBuilds` for esbuild and workerd, and `minimumReleaseAgeExclude` for `@cloudflare/workers-types@5.20261123.1`.

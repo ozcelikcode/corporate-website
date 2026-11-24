@@ -60,7 +60,7 @@ VISITOR ──► Cloudflare edge
 EDITOR ──► /admin (Sveltia, static) ──► sveltia-cms-auth Worker (GitHub App OAuth;
               separate Worker from the official repo, deployed by hand, not vendored here)
               └─ editorial_workflow: branch + PR per entry
-                    └─ ADMIN (CODEOWNER) reviews preview build, merges to main
+                    └─ ADMIN (CODEOWNER) reviews the YAML diff (and a local build), merges to main
                           └─ Cloudflare Workers Builds: pnpm build → wrangler deploy
 ```
 
@@ -221,13 +221,13 @@ export type Section = z.infer<ReturnType<typeof sectionsSchema>>[number];
 |---|---|
 | Color (OKLCH) | `canvas`, `surface`, `ink`, `ink-muted`, `line`, `line-strong`, `critical`; `accent` = `var(--accent-seed)` (the only value injected from settings, on `<html>`); `accent-dim` and `accent-wash` derived via `color-mix(in oklab, …)` (oklab: oklch hue path runs through green) |
 | Bars | `bars-white … bars-blue`: the seven SMPTE 75% bars (`rgb(75% 75% 75%)` …). A fixed broadcast standard, not brand colour: the documented exception to the accent-only rule, used only by `BarsStrip` and `NoSignal` (decorative, `aria-hidden` / one `role="img"`) |
-| Type | `--font-sans`, `--font-mono`; `--text-label`, `-body`, `-lede`, `-h2`, `-display` (fluid `clamp`); `--tracking-label` |
+| Type | `--font-sans`, `--font-mono`; fluid `clamp` scale (owner feedback 2026-11-23: refined editorial sizes): `--text-label` 0.75rem, `-body` 1 → 1.125rem, `-lede` 1.125 → 1.375rem, `-h3` 1.25 → 1.5rem, `-h2` 1.5 → 1.875rem, `-quote` 1.375 → 2rem (the mission statement, a regular-weight pull-quote at a 32ch measure), `-display` 2.25 → 4rem, also capped at `2rem + 3.5svh` so the hero fits short laptop screens while text zoom still scales it; `--tracking-label`, `--tracking-display`. One size per heading level: h1 display, h2 h2, h3 h3 |
 | Space | `--spacing: 0.25rem` (4px base) |
 | Line | `--border-hairline: 1px` |
 | Radius / shadow | `--radius-*: initial; --shadow-*: initial` (no such utilities exist) |
 | Z-index | `--z-header`, `--z-popover` |
 | Motion | `--duration-fast` 120ms, `--duration-base` 240ms, `--ease-signal` |
-| Layout | `--container-page`, 12-column grid |
+| Layout | `--container-page`, `--container-measure` 60ch, `--container-quote` 32ch, 12-column grid; masthead heights `--header-bar`, `--tally-bar`, `--masthead`, and `--first-screen` (100svh minus the masthead) for the hero; hero `--hero-pad`/`--hero-pad-end` (5% optical lift) and `--hero-bleed` (≤ 10rem); breakpoint `wide` = 90rem (the page container's width) |
 
 **Typography:**
 - **Schibsted Grotesk** (display/body): a variable grotesk drawn for a newspaper group, so it has press heritage, sharp, and is unused by templates.
@@ -268,8 +268,8 @@ A VU meter was considered and dropped: a second perpetual animation beside the r
 
 | Block | Visual |
 |---|---|
-| `hero` | Spaced split (no cell borders): label, two-tone headline, lede, ≤2 actions left; ASCII render right in `TitleSafe` with scanlines. The image must be a PNG, JPEG or WebP raster (the CMS field accepts only those; any other type fails the build naming the file) |
-| `statement` | Full-width mission sentence in display type, mono label in the gutter |
+| `hero` | The first screen: from `lg` the band is at least `--first-screen` tall and centres its content, so headline, lede, actions and image fit below the header and tally strip (phones stack and scroll, headline and lede above the fold). Spaced split (no cell borders): label, two-tone headline, lede, ≤2 actions left; ASCII render right in `TitleSafe` with scanlines, 6/6 at `lg` (both actions on one row at 1280), 5/7 from `wide` with the media bleeding into the outer margin on larger screens; both columns centred, the pair lifted 5% above the band's centre. The image must be a PNG, JPEG or WebP raster (the CMS field accepts only those; any other type fails the build naming the file) |
+| `statement` | Mission sentence as a large pull-quote (`text-quote`, regular weight, ≤32ch), mono label in the gutter |
 | `app-grid` | Spaced `surface` tiles (no borders): index, status tally, lower-third name, tagline, frameless duotone cover, → (internal link) |
 | `feature-list` | Rundown: numbered rows, title, body, mono `HH:MM:SS` duration column; spacing between rows, no rules |
 | `rich-text` | `Prose` column ≤68ch, mono h3+ |
@@ -410,10 +410,11 @@ Workers Builds build variables, set in the dashboard: `SITE_URL` (feeds `site`) 
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains
 
 /admin/*
+  X-Robots-Tag: noindex, nofollow
   ! Content-Security-Policy
   Content-Security-Policy: default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.githubusercontent.com; media-src blob:; connect-src 'self' https://api.github.com https://*.githubusercontent.com https://<auth-worker>.workers.dev; frame-ancestors 'none'; base-uri 'self'; object-src 'none'
 
@@ -422,6 +423,7 @@ Workers Builds build variables, set in the dashboard: `SITE_URL` (feeds `site`) 
 ```
 
 - `'unsafe-inline'` is allowed for styles only.
+- `/admin/*` also carries `X-Robots-Tag: noindex, nofollow` (robots.txt disallows crawling, so crawlers never see the page's meta tag). `interest-cohort` is not in `Permissions-Policy`: browsers no longer recognise it.
 - `<auth-worker>` in the `/admin/*` policy is edited once by hand to the real auth Worker URL (§13 step 6), together with `base_url` in `config.yml`.
 - Non-production (preview) builds additionally get `X-Robots-Tag: noindex` appended to `dist/_headers` by `src/integrations/build-outputs.ts`.
 - The Worker sets its own `nosniff`, `Referrer-Policy`, HSTS and `Cache-Control: no-store` in `worker/headers.ts`.
@@ -470,7 +472,7 @@ Deploy order: **auth Worker → GitHub App callback → site.**
 8. **Workers Builds (the site):**
    - Production branch `main`; build with `pnpm build`, deploy with `npx wrangler deploy`.
    - Build vars (production values, used on `main` only): `SITE_URL`, `PUBLIC_TURNSTILE_SITE_KEY`.
-   - Preview builds on for PR branches. They are for visual review only: Turnstile test keys, `SITE_URL` = preview host, `noindex`, and CMS auth not expected to work.
+   - Non-production branch builds OFF (Settings, Build, Branch control, clear "Enable Preview Builds"): branch code would run with the production deploy token and secrets. Admins preview locally (`pnpm build`, `pnpm preview`). Secure previews (separate Worker without production secrets, behind Cloudflare Access) are an optional later step.
 9. **Turnstile:** production Managed widget with hostnames set. `TURNSTILE_SECRET_KEY` as a secret. Production keys live on `main` only.
 10. **Email Routing (day one, no custom hostname needed):** the zone is on the account. Enable Email Routing, verify the destination inbox, then set `QUOTE_TO` and `QUOTE_FROM`.
 11. **R2:**
@@ -520,13 +522,13 @@ Deploy order: **auth Worker → GitHub App callback → site.**
 14. Per-locale 404s come from `404-page` handling. `auto-trailing-slash` is paired with `trailingSlash: 'always'`.
 15. `@astrojs/markdown-remark` is added explicitly, because it is an optional peer in Astro 7.
 16. R2 files are linked, not embedded, in v1, so the CSP does not name the assets host.
-17. Workers Builds preview builds run for PR branches, so admins can review before merging (visual review only, see 24).
+17. No hosted preview builds by default (security: they would run branch code with production secrets). Admins review the YAML diff and run the branch locally before merging (see 24).
 18. Component files are PascalCase; all other files are kebab-case.
 19. Structured, PII-free `console.error` in the Worker is the only console use allowed.
 20. TypeScript is pinned to 6.0.3, not 7.0.2, because of the `@astrojs/check` peer range.
 21. The repo is public (decided 2026-11-23), so branch protection on main enforces 1 CODEOWNERS approval for free.
 22. `sveltia-cms-auth` is not vendored. It is deployed once, by hand, from the official repo as its own Worker before the site. Its URL is set by a one-time manual edit of `config.yml` `base_url` and the `/admin/*` CSP in `_headers`, not a build variable: a generator step for two static values that change at most once would be over-engineering. Deploy order: auth Worker → GitHub App callback → site.
 23. Quote `solutions` are validated against a generated allow-list. A small Astro integration (`astro:build:done`) writes `worker/generated/solutions.json` (application slugs + `general`), and the Worker imports it. Build order is `astro build` → Worker bundle. Unknown slugs are rejected.
-24. PR preview builds are for visual review only. They use Turnstile's official always-pass test keys, `SITE_URL` falls back to the preview host, previews are `noindex` (`X-Robots-Tag` + disallow-all `robots.txt`), and CMS auth is not expected to work on them. Production keys are used only on `main`.
+24. Any non-production build (local, or a hosted preview if the owner later sets up secure previews) uses Turnstile's official always-pass test keys, `SITE_URL` falls back to the preview host, previews are `noindex` (`X-Robots-Tag` + disallow-all `robots.txt`), and CMS auth is not expected to work on them. Production keys are used only on `main`.
 25. v1 ships brand-neutral, realistic placeholder seed content: EN for settings, ui, navigation, all pages and 3 sample applications; TR for ui, navigation and home only, to prove the plumbing and fallback. A transmitter-mast hero image (signal waves from its top) is the ASCII source. Real content is entered later by admins via the CMS.
 26. The accent is validated, never adjusted. The CMS field is restricted to a 6-digit hex pattern with a contrast hint, and the build fails loudly, naming the field, when contrast against the canvas is below 3:1. Admins see the failure on the PR preview before merging.

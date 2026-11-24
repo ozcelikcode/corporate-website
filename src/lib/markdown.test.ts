@@ -41,24 +41,6 @@ test('renderMarkdown demotes a setext h1 to h2', async () => {
   assert.match(html, /<h2[^>]*>Title<\/h2>/);
 });
 
-test('renderMarkdown demotes a raw HTML h1 to h2', async () => {
-  const html = await renderMarkdown(
-    '<h1 class="x">Raw</h1>\n\nText with <H1>inline</H1>.',
-    PREFIX,
-    KEEP,
-  );
-  assert.doesNotMatch(html, /<\/?h1/i);
-  assert.match(html, /<h2 class="x">Raw<\/h2>/);
-  assert.match(html, /<h2>inline<\/h2>/i);
-});
-
-test('renderMarkdown leaves other heading levels and h1-like tags alone', async () => {
-  const html = await renderMarkdown('### Three\n\n<header>x</header> <h10>y</h10>', PREFIX, KEEP);
-  assert.match(html, /<h3[^>]*>Three<\/h3>/);
-  assert.match(html, /<header>x<\/header>/);
-  assert.match(html, /<h10>y<\/h10>/);
-});
-
 test('renderMarkdown numbers heading ids under the caller prefix, not by slug', async () => {
   const html = await renderMarkdown('## Main\n\n## Main\n\n# Top', PREFIX, KEEP);
   const ids = [...html.matchAll(/ id="([^"]*)"/g)].map((match) => match[1]);
@@ -90,26 +72,116 @@ test('renderMarkdown passes every link href through the rewrite', async () => {
   ]);
 });
 
-test('renderMarkdown rewrites raw HTML anchors and keeps their other attributes', async () => {
-  const html = await renderMarkdown(
-    '<a title="a > b" href="/about/?x=1&y=2">raw</a> and <A HREF=\'/quote/\'>upper</A>',
-    PREFIX,
-    toTurkish,
-  );
-  assert.match(html, /<a title="a > b" href="\/tr\/about\/\?x=1&#x26;y=2">raw<\/a>/);
-  assert.match(html, /<a href="\/tr\/quote\/">upper<\/a>/);
-});
-
-test('renderMarkdown rewrites only the href attribute itself', async () => {
-  const html = await renderMarkdown(
-    '<a data-href="/about/" href="/privacy/">x</a>',
-    PREFIX,
-    toTurkish,
-  );
-  assert.match(html, /<a data-href="\/about\/" href="\/privacy\/">x<\/a>/);
-});
-
 test('renderMarkdown leaves text that only looks like a link alone', async () => {
   const html = await renderMarkdown('Write `href="/about/"` in code.', PREFIX, toTurkish);
   assert.match(html, /<code>href="\/about\/"<\/code>/);
+});
+
+test('renderMarkdown keeps heading levels other than h1', async () => {
+  const html = await renderMarkdown('### Three', PREFIX, KEEP);
+  assert.match(html, /<h3[^>]*>Three<\/h3>/);
+});
+
+test('renderMarkdown drops raw HTML, block and inline', async () => {
+  const html = await renderMarkdown(
+    [
+      '<script>alert(1)</script>',
+      '',
+      '<meta http-equiv="refresh" content="0;url=https://evil.example">',
+      '',
+      '<style>body{display:none}</style>',
+      '',
+      '<form action="https://evil.example"><input name="x"></form>',
+      '',
+      '<iframe src="https://evil.example"></iframe>',
+      '',
+      '<h1 class="x">Raw</h1>',
+      '',
+      'Safe <b onclick="x()">text</b> <img src=x onerror="alert(1)"> end <!-- note -->',
+    ].join('\n'),
+    PREFIX,
+    KEEP,
+  );
+  assert.doesNotMatch(
+    html,
+    /<(script|meta|style|form|input|iframe|h1|b|img)\b|onerror|onclick|<!--/i,
+  );
+  assert.match(html, /Safe\s+text\s+end/);
+});
+
+test('renderMarkdown rejects non-allowed link and image schemes', async () => {
+  for (const source of [
+    '[x](javascript:alert(1))',
+    '[x](JaVaScRiPt:alert(1))',
+    '[x](  javascript:alert(1))',
+    '[x](java&#x09;script:alert(1))',
+    '[x](&#106;avascript:alert(1))',
+    '[x](<java\tscript:alert(1)>)',
+    '![x](data:image/svg+xml;base64,PHN2Zz4=)',
+    '[x](vbscript:msgbox(1))',
+    '[x](http://example.com/)',
+    '[x](//evil.example/)',
+    '[x](/\\evil.example/)',
+    '[x](</\t/evil.example/>)',
+    '[x](relative/page/)',
+    '[x](< /about/>)',
+    '[x][r]\n\n[r]: javascript:alert(1)',
+    '<javascript:alert(1)>',
+  ])
+    await assert.rejects(renderMarkdown(source, PREFIX, KEEP), /Unsafe URL in Markdown/, source);
+});
+
+test('renderMarkdown names the section and URL in the rejection', async () => {
+  await assert.rejects(
+    renderMarkdown('[x](http://example.com/)', 's7-2', KEEP),
+    /section "s7-2".*"http:\/\/example\.com\/"/,
+  );
+});
+
+test('renderMarkdown keeps links and images with allowed URLs', async () => {
+  const html = await renderMarkdown(
+    '[a](/about/) [b](https://example.com/) [c](mailto:a@example.com) [d](tel:+10000000) [e](#top) ![i](/img.png) ![j](https://example.com/i.png)',
+    PREFIX,
+    KEEP,
+  );
+  assert.equal(html.match(/<a href=/g)?.length, 5);
+  assert.equal(html.match(/<img src=/g)?.length, 2);
+});
+
+test('renderMarkdown keeps bare www and http text as plain text, https autolinks as links', async () => {
+  const html = await renderMarkdown(
+    'See www.example.com or http://example.com/a and https://example.com/b.',
+    PREFIX,
+    KEEP,
+  );
+  assert.match(html, /See www\.example\.com or http:\/\/example\.com\/a and /);
+  assert.deepEqual(
+    [...html.matchAll(/ href="([^"]*)"/g)].map((m) => m[1]),
+    ['https://example.com/b'],
+  );
+  await assert.rejects(renderMarkdown('<http://example.com>', PREFIX, KEEP), /Unsafe URL/);
+  await assert.rejects(renderMarkdown('[http://x.com](http://x.com)', PREFIX, KEEP), /Unsafe URL/);
+});
+
+test('renderMarkdown scopes footnote ids and links to the block prefix', async () => {
+  const source = 'Hi[^1]\n\n[^1]: Note.';
+  const [a, b] = await Promise.all([
+    renderMarkdown(source, 's1', KEEP),
+    renderMarkdown(source, 's2', KEEP),
+  ]);
+  for (const [html, prefix] of [
+    [a, 's1'],
+    [b, 's2'],
+  ] as const) {
+    assert.doesNotMatch(html, /user-content|"footnote-label"/);
+    const ids = [...html.matchAll(/ id="([^"]*)"/g)].map((m) => m[1] as string);
+    assert.equal(new Set(ids).size, ids.length);
+    assert.ok(
+      ids.every((id) => id.startsWith(`${prefix}-`)),
+      ids.join(),
+    );
+    for (const ref of html.matchAll(/(?:href="#|aria-describedby=")([^"]*)"/g))
+      assert.ok(ids.includes(ref[1] as string), `${ref[1]} resolves`);
+  }
+  assert.ok(![...a.matchAll(/ id="([^"]*)"/g)].some((m) => b.includes(` id="${m[1]}"`)));
 });
