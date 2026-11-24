@@ -8,6 +8,7 @@ import { z } from 'astro/zod';
 import { listField, optionalField, withoutBlankValues } from './blank.ts';
 import { accentContrast, HEX_PATTERN, MIN_ACCENT_CONTRAST } from './color.ts';
 import { UI_KEYS } from './i18n.ts';
+import { CONTACT_HREF_PATTERN, SOCIAL_HREF_PATTERN } from './link-patterns.ts';
 import {
   actionSchema,
   applicationSectionsSchema,
@@ -20,7 +21,6 @@ const DESCRIPTION_MAX = 160;
 const TAGLINE_MAX = 120;
 const CONTRAST_DECIMALS = 2;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const CONTACT_HREF_PATTERN = /^(mailto:|tel:|https:\/\/)/;
 
 const accent = z
   .string()
@@ -55,7 +55,7 @@ export const settingsSchema = ({ image }: SchemaContext) =>
         message: 'settings.contacts needs at least one entry with kind "email"',
       }),
     socials: listField(
-      z.array(z.strictObject({ label: z.string(), href: z.string().regex(/^https:\/\//) })),
+      z.array(z.strictObject({ label: z.string(), href: z.string().regex(SOCIAL_HREF_PATTERN) })),
     ),
     ogImage: rasterImage(image, 'settings.ogImage'),
     organization: z.strictObject({

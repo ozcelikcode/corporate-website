@@ -1,6 +1,7 @@
 import type { SchemaContext } from 'astro:content';
 import { z } from 'astro/zod';
 import { listField, optionalField, optionalObjectField } from './blank.ts';
+import { ACTION_HREF_PATTERN, HTTPS_HREF_PATTERN } from './link-patterns.ts';
 import { toFlatSection } from './stored-block.ts';
 
 export const SECTION_TYPES = [
@@ -28,10 +29,6 @@ export const STATS_MAX = 4;
 /** A logo wall holds 4 to 12 logos (the Logos block lays out each count). */
 export const LOGOS_MIN = 4;
 export const LOGOS_MAX = 12;
-/** Site-relative (never protocol-relative) or https. */
-export const ACTION_HREF_PATTERN = /^(\/(?![/\\])|https:\/\/)/;
-/** Outbound links that leave the site (a logo's partner page): https only. */
-export const HTTPS_HREF_PATTERN = /^https:\/\/\S+$/;
 /**
  * Markdoc tag syntax. Keystatic's rich-text editor saves a typed `{% x %}` as a tag and the entry
  * then no longer opens in the editor, so the build refuses it in every Markdown field.

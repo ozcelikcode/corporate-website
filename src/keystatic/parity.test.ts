@@ -10,9 +10,7 @@ import { applicationSchema, pageSchema, settingsSchema } from '../lib/content-sc
 import { UI_KEYS } from '../lib/i18n.ts';
 import { NAV_CHILDREN_MAX, navigationSchema } from '../lib/navigation-schema.ts';
 import {
-  ACTION_HREF_PATTERN,
   DURATION_PATTERN,
-  HTTPS_HREF_PATTERN,
   LABEL_MAX,
   LOGOS_MAX,
   LOGOS_MIN,
@@ -24,20 +22,9 @@ import {
   STATS_MIN,
   sectionSchemas,
 } from '../lib/sections-schema.ts';
-import {
-  collections,
-  DESCRIPTION_LIMIT,
-  OPTIONAL_HTTPS_REGEX,
-  TAGLINE_LIMIT,
-} from './collections.ts';
+import { collections, DESCRIPTION_LIMIT, TAGLINE_LIMIT } from './collections.ts';
 import { LOCAL_CONFIG } from './keystatic-config.ts';
-import {
-  DURATION_REGEX,
-  HREF_REGEX,
-  HTTPS_HREF_REGEX,
-  OPTIONAL_HREF_REGEX,
-  SECTION_LIMITS,
-} from './sections.ts';
+import { DURATION_REGEX, SECTION_LIMITS } from './sections.ts';
 import { NAV_CHILDREN_LIMIT, singletons } from './singletons.ts';
 
 // The real `image()` helper needs the Astro content runtime; a string stands in for it.
@@ -237,8 +224,6 @@ test('the admin limits and patterns match the Zod schemas', () => {
     stats: { min: STATS_MIN, max: STATS_MAX },
     logos: { min: LOGOS_MIN, max: LOGOS_MAX },
   });
-  assert.equal(HREF_REGEX.source, ACTION_HREF_PATTERN.source);
-  assert.equal(HTTPS_HREF_REGEX.source, HTTPS_HREF_PATTERN.source);
   assert.equal(DURATION_REGEX.source, DURATION_PATTERN.source);
   const { description } = pageSchema(context).shape;
   const { tagline } = applicationSchema(context).shape;
@@ -251,17 +236,178 @@ test('the admin limits and patterns match the Zod schemas', () => {
   }
 });
 
-test('the admin optional action link takes what an action takes, or nothing', () => {
-  for (const href of ['/quote/', 'https://example.com/', 'http://example.com/', '//x', 'x']) {
-    assert.equal(OPTIONAL_HREF_REGEX.test(href), ACTION_HREF_PATTERN.test(href), href);
+/** The Zod schema of the key at `path`; lists, defaults, optionals and preprocessing are transparent. */
+function zodAt(schema: z.ZodType, path: readonly string[]): z.ZodType {
+  const [key, ...rest] = path;
+  if (key === undefined) return schema;
+  const def = (schema as unknown as { _zod: { def: ZodDef } })._zod.def;
+  if (def.shape) {
+    const next = def.shape[key];
+    assert.ok(next, `no Zod key ${key}`);
+    return zodAt(next, rest);
   }
-  assert.equal(OPTIONAL_HREF_REGEX.test(''), true);
+  const inner = def.type === 'pipe' ? def.out : (def.innerType ?? def.element);
+  assert.ok(inner, `no Zod key ${key}`);
+  return zodAt(inner, path);
+}
+
+/** The Keystatic field at `path`; lists are transparent. */
+function fieldAt(schema: ComponentSchema, path: readonly string[]): ComponentSchema {
+  const [key, ...rest] = path;
+  if (key === undefined) return schema;
+  if (schema.kind === 'object') {
+    const next = schema.fields[key];
+    assert.ok(next, `no Keystatic field ${key}`);
+    return fieldAt(next, rest);
+  }
+  assert.equal(schema.kind, 'array', `no Keystatic field ${key}`);
+  return fieldAt(schema.kind === 'array' ? schema.element : schema, path);
+}
+
+/** What the admin says when it refuses `value` (Keystatic's own check on save), or undefined. */
+function adminRefusal(field: ComponentSchema, value: string): string | undefined {
+  assert.equal(field.kind, 'form');
+  if (field.kind !== 'form') return undefined;
+  try {
+    field.validate(value, undefined);
+    return undefined;
+  } catch (error) {
+    if (!(error instanceof Error)) throw error;
+    return error.message;
+  }
+}
+
+const LINK_SAMPLES = [
+  '/about/',
+  '/',
+  'about/',
+  '//evil.example',
+  '/\\evil.example',
+  'https://example.com/',
+  'https://',
+  'http://example.com/',
+  'www.example.com',
+  'mailto:team@example.com',
+  'tel:+15550100',
+  'javascript:alert(1)',
+  'https://exa mple.com',
+  '',
+];
+
+/**
+ * A link in the admin and its Zod rule. `group` marks a link inside an optional group (a button
+ * that may be left empty): its own empty value stands for "no group", which Zod reads as absent.
+ */
+type LinkPair = { name: string; field: ComponentSchema; zod: z.ZodType; group?: true };
+
+function linkPairs(): LinkPair[] {
+  const settings = fields.object(singletons.settings.schema);
+  const settingsZod = settingsSchema(context);
+  const pairs: LinkPair[] = [
+    ['contacts', 'href'],
+    ['socials', 'href'],
+    ['organization', 'url'],
+  ].map((path) => ({
+    name: `settings ${path.join('.')}`,
+    field: fieldAt(settings, path),
+    zod: zodAt(settingsZod, path),
+  }));
+  for (const entry of [singletons.navigationEn, singletons.navigationTr]) {
+    const nav = fields.object(entry.schema);
+    for (const path of [
+      ['header', 'href'],
+      ['header', 'children', 'href'],
+      ['footer', 'href'],
+    ]) {
+      pairs.push({
+        name: `${entry.path} ${path.join('.')}`,
+        field: fieldAt(nav, path),
+        zod: zodAt(navigationSchema, path),
+      });
+    }
+    const feature = ['header', 'feature', 'action', 'href'];
+    pairs.push({
+      name: `${entry.path} ${feature.join('.')}`,
+      field: fieldAt(nav, feature),
+      zod: zodAt(navigationSchema, feature),
+      group: true,
+    });
+  }
+  for (const name of ['applicationsEn', 'applicationsTr'] as const) {
+    const application = fields.object(collections[name].schema);
+    for (const path of [['links', 'href'], ['brochure']]) {
+      pairs.push({
+        name: `${name} ${path.join('.')}`,
+        field: fieldAt(application, path),
+        zod: zodAt(applicationSchema(context), path),
+      });
+    }
+  }
+  const schemas = sectionSchemas(context);
+  const blockLinks: [SectionType, string[], true?][] = [
+    ['hero', ['actions', 'href']],
+    ['cta', ['action', 'href']],
+    ['logos', ['items', 'href']],
+    ['media-split', ['action', 'href'], true],
+  ];
+  for (const name of COLLECTION_NAMES) {
+    const blocks = blockSchemas(name);
+    for (const [type, path, group] of blockLinks) {
+      const block = blocks[type];
+      if (block === undefined) continue;
+      pairs.push({
+        name: `${name} ${type} ${path.join('.')}`,
+        field: fieldAt(block, path),
+        zod: zodAt(schemas[type], path),
+        ...(group ? { group } : {}),
+      });
+    }
+  }
+  return pairs;
+}
+
+test('every admin link takes and refuses what the build does, with a message', () => {
+  const pairs = linkPairs();
+  // Settings 3, navigation 2 × 4, applications 2 × 2, blocks: pages 2 × 4, applications 2 × 3.
+  assert.equal(pairs.length, 3 + 8 + 4 + 8 + 6);
+  for (const { name, field, zod, group } of pairs) {
+    for (const value of LINK_SAMPLES) {
+      const refusal = adminRefusal(field, value);
+      const where = `${name} "${value}"`;
+      if (group && value === '') {
+        assert.equal(refusal, undefined, `${where}: an empty optional group must save`);
+        continue;
+      }
+      assert.equal(refusal === undefined, zod.safeParse(value).success, where);
+      if (refusal !== undefined && value !== '') {
+        assert.match(refusal, /^Use /, `${where}: ${refusal}`);
+      }
+    }
+  }
 });
 
-test('the admin brochure rule matches the Zod one (https only, empty for none)', () => {
-  const { brochure } = applicationSchema(context).shape;
-  for (const value of ['https://example.com/a.pdf', 'http://example.com/a.pdf', 'ftp://x', '']) {
-    assert.equal(OPTIONAL_HTTPS_REGEX.test(value), brochure.safeParse(value).success, value);
+test('optional groups tell the editor to fill every field or none', () => {
+  const nav = fields.object(singletons.navigationEn.schema);
+  const groups = [fieldAt(nav, ['header', 'feature'])];
+  for (const name of COLLECTION_NAMES) {
+    const mediaSplit = blockSchemas(name)['media-split'];
+    assert.ok(mediaSplit, name);
+    groups.push(fieldAt(mediaSplit, ['action']));
+  }
+  for (const group of groups) {
+    assert.equal(group.kind, 'object');
+    if (group.kind === 'object') {
+      assert.match(group.description ?? '', /Fill all fields or leave all empty/);
+    }
+  }
+});
+
+test('the nav feature button label has the action label limit', () => {
+  const nav = fields.object(singletons.navigationEn.schema);
+  const label = fieldAt(nav, ['header', 'feature', 'action', 'label']);
+  const zod = zodAt(navigationSchema, ['header', 'feature', 'action', 'label']);
+  for (const value of ['x'.repeat(LABEL_MAX), 'x'.repeat(LABEL_MAX + 1)]) {
+    assert.equal(adminRefusal(label, value) === undefined, zod.safeParse(value).success);
   }
 });
 
