@@ -1,55 +1,38 @@
 /**
- * Maps an imported upload back to its file on disk, so `renderAscii` can read the original.
- * Never relies on Astro's internal `fsPath`.
+ * Maps a hero image, as its YAML stores it, to the upload on disk, so `renderAscii` can read the
+ * original. Deterministic: it uses only the stored path (kept by the section schema as
+ * `imagePath`, before `image()` resolves it), never the build output, Astro's internal `fsPath`
+ * or `import.meta.glob` (importing an image module would ship its original).
  *
- * It lists `src/assets/uploads` on disk instead of using `import.meta.glob`. Importing an image
- * module makes Astro emit its original (EXIF included) into `dist/_astro`, and an original is
- * only removed when the image is optimized, so a glob over the uploads would ship every one.
- * The match is the file name Astro gives `image.src`: `<stem>.<hash>.<ext>` in builds,
- * `<stem>.<ext>` in dev.
+ * Keystatic stores every collection image as `../../../assets/uploads/<collection>/<locale>/
+ * <slug>/<field path>.<ext>` (relative to `src/content/<collection>/<locale>/<slug>.yaml`), so
+ * the path after that prefix is the file under `src/assets/uploads`, the same in dev and build.
+ * EN and TR heroes share a file name but never a folder. Anything else fails, naming the path.
  */
-import { readdirSync } from 'node:fs';
-import { extname, join, parse } from 'node:path';
-import type { ImageMetadata } from 'astro';
+import { existsSync } from 'node:fs';
+import { extname, join, relative, resolve, sep } from 'node:path';
+import { ENTRY_UPLOADS_PUBLIC_PATH, UPLOADS_DIRECTORY } from './upload-paths.ts';
 
-const UPLOADS_DIR = join(process.cwd(), 'src', 'assets', 'uploads');
-/** Rasters the ASCII renderer reads; the CMS hero image field accepts the same types. */
+const PROJECT_UPLOADS = join(process.cwd(), UPLOADS_DIRECTORY);
+const STORED_PREFIX = `${ENTRY_UPLOADS_PUBLIC_PATH}/`;
+/** Rasters the ASCII renderer reads; the CMS hero image field hints the same types. */
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp']);
-/** What may sit between stem and extension: nothing (dev) or one `.<hash>` (build). */
-const HASH_SUFFIX = /^(\.[\w-]+)?$/;
 
-/** Last path segment of a URL without its query string. */
-function urlFileName(src: string): string {
-  return src.split('?')[0]?.split('/').at(-1) ?? '';
-}
-
-function isEmittedFrom(target: string, file: string): boolean {
-  const extension = extname(file);
-  const stem = parse(file).name;
-  return (
-    IMAGE_EXTENSIONS.has(extension.toLowerCase()) &&
-    target.startsWith(stem) &&
-    target.endsWith(extension) &&
-    HASH_SUFFIX.test(target.slice(stem.length, target.length - extension.length))
-  );
-}
-
-export function resolveUploadPath(image: ImageMetadata): string {
-  const target = urlFileName(image.src);
-  if (!IMAGE_EXTENSIONS.has(extname(target).toLowerCase())) {
+export function resolveUploadPath(stored: string, uploads: string = PROJECT_UPLOADS): string {
+  const inside = stored.startsWith(STORED_PREFIX) ? stored.slice(STORED_PREFIX.length) : undefined;
+  const file = inside === undefined ? undefined : resolve(uploads, inside);
+  if (file === undefined || relative(uploads, file).split(sep)[0] === '..') {
     throw new Error(
-      `ASCII source ${target} must be a PNG, JPEG or WebP raster (SVG, GIF and AVIF are not supported); upload one of those as the hero image`,
+      `ASCII source ${stored} is not an upload under ${UPLOADS_DIRECTORY} (stored as ${STORED_PREFIX}…); upload the hero image through the CMS`,
     );
   }
-  const matches = readdirSync(UPLOADS_DIR, { recursive: true, encoding: 'utf8' }).filter((file) =>
-    isEmittedFrom(target, file),
-  );
-  const [match, ...others] = matches;
-  if (match === undefined) {
-    throw new Error(`ASCII source ${image.src} is not an image under src/assets/uploads`);
+  if (!IMAGE_EXTENSIONS.has(extname(file).toLowerCase())) {
+    throw new Error(
+      `ASCII source ${stored} must be a PNG, JPEG or WebP raster (SVG, GIF and AVIF are not supported); upload one of those as the hero image`,
+    );
   }
-  if (others.length > 0) {
-    throw new Error(`ASCII source ${image.src} is ambiguous: ${matches.join(', ')}; rename one`);
+  if (!existsSync(file)) {
+    throw new Error(`ASCII source ${stored} does not exist (looked for ${file})`);
   }
-  return join(UPLOADS_DIR, match);
+  return file;
 }

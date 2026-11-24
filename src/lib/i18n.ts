@@ -22,6 +22,14 @@ export function localizePath(neutralPath: string, locale: Locale): string {
   return locale === DEFAULT_LOCALE ? path : `/${locale}${path}`;
 }
 
+/**
+ * The `lang` of content shown on a `pageLocale` page in `contentLocale` (an untranslated entry
+ * falling back to EN), or undefined when the page language already covers it (WCAG 3.1.2).
+ */
+export function fallbackLang(contentLocale: Locale, pageLocale: Locale): Locale | undefined {
+  return contentLocale === pageLocale ? undefined : contentLocale;
+}
+
 export function pagePath(slug: string): string {
   return slug === HOME_SLUG ? TRAILING_SLASH : `/${slug}/`;
 }
@@ -48,6 +56,8 @@ export const UI_KEYS = [
   'menuClose',
   'navPrimaryLabel',
   'navFooterLabel',
+  'navSubmenu',
+  'navOverview',
   'languageLabel',
   'navQuote',
   'tallyLive',
@@ -62,6 +72,7 @@ export const UI_KEYS = [
   'noSignal',
   'appBrochure',
   'footerContact',
+  'footerApplications',
   'footerSocial',
   'footerRights',
   'quoteName',

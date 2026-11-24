@@ -12,12 +12,14 @@ Dependencies:
 - tailwindcss `4.3.5`, @tailwindcss/vite `4.3.5`
 - class-variance-authority `0.7.1`
 - sharp `0.35.5` (build-time ASCII; direct dep for pnpm strict)
+- @keystatic/core `0.6.10`, react `19.3.1`, react-dom `19.3.1` (admin UI)
 
 Dev dependencies:
 - @astrojs/check `0.9.12`
 - typescript `6.0.3`
 - @biomejs/biome `2.6.8`
 - wrangler `4.166.0`
+- @types/react `19.3.0`, @types/react-dom `19.3.0` (needed by `pnpm check`)
 - @cloudflare/workers-types `5.20261123.1`
 
 ### Why TypeScript 6.0.3, not 7.0.2
@@ -30,6 +32,7 @@ Dev dependencies:
 - Fonts via Astro fonts API (`fonts` top-level config, stable since Astro 6), `fontProviders.local()`; see "Fonts" below.
 
 ## Fonts (Task 2)
+- The single-mono-weight reduction (design §5.1) does not apply: mono is still used by AsciiImage, Timecode, rundown durations, PGM/PVW tallies and prose `code`. No font change.
 - Files: `src/assets/fonts/schibsted-grotesk/{latin,latin-ext}-wght-{normal,italic}.woff2` and `src/assets/fonts/martian-mono/{latin,latin-ext}-wght-normal.woff2`, each folder with `OFL.txt`.
 - Source: Fontsource CDN, variable builds pinned at 5.3.0: `https://cdn.jsdelivr.net/fontsource/fonts/schibsted-grotesk:vf@5.3.0/<subset>-wght-<style>.woff2` and `.../martian-mono:vf@5.3.0/<subset>-wght-normal.woff2` (verified `wOF2` magic). `OFL.txt` from google/fonts `ofl/schibstedgrotesk/OFL.txt` and `ofl/martianmono/OFL.txt` (SIL OFL 1.1). `unicode-range` values copied from `@fontsource-variable/*@5.3.0` CSS into named constants in `astro.config.ts`.
 - Option shape (Astro 7.4.13, read from `node_modules/astro/dist/assets/fonts`): `{ provider: fontProviders.local(), name, cssVariable, fallbacks, options: { variants: [{ src: [path], weight: '400 900', style, unicodeRange }] } }`. Weights: Schibsted `400 900` (normal + italic), Martian `100 800` (the vf instance has `wght` only; `wdth` is fixed). Fallbacks: `system-ui, sans-serif` / `ui-monospace, monospace` (Astro adds metric-matched Arial/Courier fallbacks).
@@ -45,24 +48,16 @@ Dev dependencies:
 - Build vars (dashboard): `SITE_URL`, `PUBLIC_TURNSTILE_SITE_KEY` (via `astro:env`).
 
 ## CMS
-- Sveltia media folders (0.271.2): global `public_folder` must start with `/` (relative is rejected at load: `public.d.ts`, https://sveltiacms.app/en/docs/media/internal). A collection/file `media_folder` without a leading `/` is relative to the entry/file, so pages and applications use `../../../assets/uploads`, settings `../../assets/uploads` (what Astro `image()` resolves); `public_folder` is omitted there (defaults to it).
-- Sveltia CMS (pinned exactly, loaded from a pinned bundle with SRI in `src/pages/admin/index.astro`; pre-1.0, tested at 0.271.2).
-- Auth: `sveltia-cms-auth` on a free Worker, GitHub App OAuth. Vars: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `ALLOWED_DOMAINS`.
-- `publish_mode: editorial_workflow`; i18n `multiple_folders` en/tr (default en, layout `<folder>/<locale>/<slug>.yaml`); settings as singleton; `media_folder: src/assets/uploads`.
-- Files: `src/pages/admin/index.astro` (standalone Astro page with an `is:inline` script, not in `public/`: the dev server maps `/admin/` only to a route, so `public/admin/index.html` gave 404 at `/admin/` in `astro dev`; `noindex`, pinned `@sveltia/cms@0.271.2` with SRI and `crossorigin="anonymous"`) and `public/admin/config.yml` (github backend with placeholder `repo`/`base_url`, replaced in the runbook). Collections: `settings` singleton, `ui`, `navigation` (create/delete off), `pages`, `applications`; one shared `&sections` anchor (7 block types, `typeKey: type`). `src/lib/admin-config.test.ts` checks the config.
-- Verified from docs: top-level `singletons`; `slug.editable` replaces the deprecated `{{fields._slug}}`; field `pattern` is `[regex, message]`; `required: [en]` with i18n; i18n must be opted in per field (collection-level does not cover `ui`/`navigation` fields). Biome formats the YAML (double quotes).
-- Editor/admin split is enforced by GitHub (CODEOWNERS, branch protection, merge rights), not by the config.
+- Keystatic 0.6.10 replaced Sveltia on 2026-11-24 (owner decision; Payload rejected: needs a database and a paid Workers plan). Sveltia's config, admin page and parity test are gone.
+- Admin at `/keystatic/` (static page plus `src/keystatic/mount.ts`); `/admin` and `/admin/*` answer 301 to `/keystatic/` through `public/_redirects` (Workers Static Assets; `pnpm dev` does not read it, so `/admin/` is a 404 there). `/keystatic/` is out of the sitemap (`astro.config.ts`) and `Disallow`ed in `robots.txt`; `keystatic` is a forbidden page slug (`admin` stays forbidden too). `public/_headers` no longer has an admin block: the Worker sets the admin headers (below).
+- Storage: GitHub mode in production (`KEYSTATIC_REPO` in `src/keystatic/repo.ts`; forks edit it), local mode under `pnpm dev`. Auth is a GitHub App (Contents rw, Pull requests rw, Metadata r; webhook inactive; user-token expiry on; installed on this repository only), handled by the site Worker, no separate auth Worker.
+- Editor/admin split is enforced by GitHub (CODEOWNERS, ruleset, merge rights), not by Keystatic. Editor flow: a save to protected `main` is rejected and Keystatic offers a new branch; the PR is opened from the branch link. No editorial status board. The exact UI wording is unconfirmed until the first real OAuth login.
+- The schemas read blank optional values as absent (`lib/blank.ts`), for files saved by hand.
 - Hero `actions` and nav `footer` default to `[]` in the schema, so the CMS may omit empty lists.
-- Final fix wave, verified against the 0.271.2 type definitions (`https://unpkg.com/@sveltia/cms@0.271.2/types/public.d.ts`) and the docs:
-  - `output.omit_empty_optional_fields: true` (root level): fields with `required: false` and an empty value are left out; list items are never removed (an all-empty item stays `{}`). Docs: https://sveltiacms.app/en/docs/data-output#controlling-data-output
-  - `i18n.initial_locales: default`: a new entry draft has only EN enabled; editors enable TR from the editor's three-dot menu. Replaces the deprecated `save_all_locales`. Docs: https://sveltiacms.app/en/docs/i18n/options#disabling-non-default-locale-content
-  - Image field `accept` (comma-separated MIME types or extensions; filters uploads and the selection dialog, and validates existing selections): hero image `image/png,image/jpeg,image/webp`. Docs: https://sveltiacms.app/en/docs/fields/file (the Image field shares the File field options: https://sveltiacms.app/en/docs/fields/image)
-  - The schemas read blank optional values as absent anyway (`lib/blank.ts`), for files saved by hand or before these options; whether a `required: [en]` field counts as optional for TR output is undocumented, so TR ui blanks are dropped by the schema.
-- Admin CSP `script-src` stays `'self' https://unpkg.com` (not narrowed to the package path): the pinned bundle lazy-imports other unpkg packages at runtime (`@sindresorhus/transliterate` for slugs, `dayjs`, `exifr`, `pdfjs-dist`, `@jsquash/*`, `@sveltia/ui@0.96.3` shiki engine, `@shikijs/*`, `leaflet`, and its own `dist/chunks/`), found by reading the 0.271.2 bundle. A path-limited source would break slug generation and image handling.
-- Unverified: `sortable_fields: [order, name]` in 0.271.2. Owner step 6 (manual check in Chromium, File System Access, "Work with Local Repository") is pending; see the runbook.
+- Image fields accept raster only for hero, social and cover images (schema `rasterImage`); the logo may be an SVG.
 
 ## CMS parity checks (runbook 5, owner check (a))
-Record each outcome here after the owner runs them: feature item without duration, application without brochure, CTA without text, new EN page (no TR file), TR ui with cleared fields, SVG/GIF hero upload refused. Status: pending owner. Build-side behaviour for each is covered by tests (`blank.test.ts`, `content-schemas.test.ts`, `sections-schema.test.ts`, `ascii-source.test.ts`, `admin-config.test.ts`) and was probed with real builds (blank `ogImage`, blank TR ui strings, `admin` page slug, SVG hero).
+Record each outcome here after the owner runs them: feature item without duration, application without brochure, CTA without text, new EN page (no TR file), TR ui with cleared fields, SVG/GIF hero upload refused. Status: pending owner. Build-side behaviour for each is covered by tests (`blank.test.ts`, `content-schemas.test.ts`, `sections-schema.test.ts`, `ascii-source.test.ts`, `src/keystatic/parity.test.ts`) and was probed with real builds (blank `ogImage`, blank TR ui strings, `admin` page slug, SVG hero).
 
 ## External-service rules
 - Free tier only. Nothing paid, nothing self-hosted.
@@ -71,7 +66,7 @@ Record each outcome here after the owner runs them: feature item without duratio
 - Worker may use `console.error({ code, step })` only (no PII).
 
 ## Open verifications (builder)
-Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fields`, empty-list serialisation and owner step 6; `astro/zod` bundling in the Worker (else add `zod ^4.6.7`); Workers Builds Node/pnpm support; `send_email` on free plan. No inline `<script>` in `dist/` (CSP): verified in Task 7b (dist script guard).
+Astro i18n fallback on dynamic static routes; `astro/zod` bundling in the Worker (else add `zod ^4.6.7`); Workers Builds Node/pnpm support; `send_email` on free plan. No inline `<script>` in `dist/` (CSP): verified in Task 7b (dist script guard).
 
 ## Spec §14 results (Task 10)
 - `astro/zod` bundles in the Worker (`wrangler deploy --dry-run`): no `zod` pin needed. `cloudflare:email` and the JSON import (`with { type: 'json' }`) bundle too. Bundle `index.js` 792 KiB (limit 3 MiB).
@@ -95,13 +90,29 @@ Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fie
 - `astro.config.ts` feeds `site` from it; `src/lib/env.ts` exposes `BUILD` from `astro:env`.
 
 ## Security hardening (audit 2026-11-24)
-- `_headers`: `/admin/*` adds `X-Robots-Tag: noindex, nofollow`; `interest-cohort` removed from Permissions-Policy (spec §11 updated).
-- CMS: `ogImage` (settings and pages) and application `cover` have `accept: image/png,image/jpeg,image/webp` (field-level, as on the hero image); the schema also rejects `format === 'svg'` for them (`rasterImage`). Logo may stay SVG. `organization.url` is https-only.
-- GitHub/Cloudflare items (ruleset, ALLOWED_DOMAINS, WAF rate limit, `workers_dev`/`preview_urls` off, security features) are owner steps in `docs/runbook.md` ("Security checklist before the first editor", 3.4, 3.5, 3.11).
+- `_headers`: `interest-cohort` removed from Permissions-Policy (spec §11 updated). The admin's `X-Robots-Tag` now comes from the Worker (A3).
+- CMS: `ogImage` (settings and pages) and application `cover` are raster-only; the schema rejects `format === 'svg'` for them (`rasterImage`). Logo may stay SVG. `organization.url` is https-only.
+- GitHub/Cloudflare items (ruleset, WAF rate limit, `workers_dev`/`preview_urls` off, security features) are owner steps in `docs/runbook.md` ("Security checklist before the first editor", 3.4, 3.5, 3.11).
 
-## CMS folder collections (fix 2026-11-24)
-- Sveltia 0.271.2 defaults to Markdown front matter (`.md`) for folder collections, so ui/navigation/pages/applications listed 0 entries. They now set `format: yaml` and `extension: yaml` (`format: yaml` alone derives `.yml`). Structure `multiple_folders`: `<folder>/<locale>/<slug>.yaml`. `admin-config.test.ts` derives the layout from config and checks it against `src/content` (every subfolder covered once, all files `.yaml` under a locale folder). Live check needs the native folder picker (owner).
-- Markdown: bare `www.`/`http://` text stays plain text (only https autolinks link); footnote ids are scoped to the section prefix.
+## Keystatic admin (A1)
+- Admin at `/keystatic/` (static page plus `src/keystatic/mount.ts`, `noindex`). Config: `keystatic.config.ts` calls `keystaticConfig(storage)` in `src/keystatic/keystatic-config.ts` (local storage under `import.meta.env.DEV`, GitHub storage otherwise). Singletons: `src/keystatic/singletons.ts`.
+- `PUBLIC_KEYSTATIC_GITHUB_APP_SLUG` is required for a production build (`build-mode.ts`). Non-main builds bake GitHub storage without it, so `/keystatic/` cannot sign in on preview builds. Local editing is `pnpm dev`.
+- Admin bundle about 913 KB gzip. Never import Zod-bearing modules (`navigation-schema.ts`, `sections-schema.ts`, `content-schemas.ts`) into `src/keystatic/*` (+23 KB gzip): mirror constants and pin them in `parity.test.ts`. Link patterns are shared instead: `lib/link-patterns.ts` is zod-free and imported by both sides (`src/keystatic/link-hints.ts` `linkPattern`, with an `^$|` variant for optional fields, since Keystatic checks a pattern on empty text); `parity.test.ts` runs every admin link field against its Zod rule on a table of values.
+- Keystatic writer behaviour: folds strings longer than ~80 columns into `>-` blocks, single-quotes `#hex`, adds `children: []`, `source: ''` and `feature: { action: {} }` on nav saves, and renames a non-editor image to `<fieldKey>.<ext>` on every save, deleting the old file. Any import of the old name then breaks the build.
+- Upgrade checks:
+  - `src/integrations/keystatic-dev.ts` unshifts its middleware onto `server.middlewares.stack` from a post `configureServer` hook (ahead of Astro's trailing-slash and route guards; `astro:server:setup` is too late). It imports `@keystatic/core/api/generic` statically (a request-time `import()` fails). Re-verify `/api/keystatic/tree` and a deep link in `pnpm dev` after any Astro or Vite upgrade.
+  - The middleware runs ahead of Vite's host validation, so `isLocalDevHost` (`keystatic-dev-route.ts`) guards `/api/keystatic/*`: loopback, `*.localhost` and Vite's `allowedHosts` (array) only, else 403. Keep that guard if the middleware position changes.
+  - Consequence by design: LAN access via `astro dev --host` gets 403. HTTP/2 dev (`server.https`) would send no Host header and be refused.
+  - `parity.test.ts` reads Zod 4 internals (`_zod.def`): re-check it on an `astro/zod` upgrade.
+  - `astro dev` daemonizes (Astro 7): `astro dev stop|status|logs`, and it picks the next free port.
+  - The dev integration is coupled to Astro 7 and Vite 8 internals (middleware stack order, static import of the generic handler). Treat it as an upgrade check: after any Astro, Vite or `@keystatic/core` bump run `pnpm dev`, then `/keystatic/` and `/api/keystatic/tree` (200 on loopback, 403 on another host), and one local save.
+
+## Keystatic collections (A2)
+- Image convention (Keystatic 0.6.10 writes it): `src/assets/uploads/<collection>/<locale>/<slug>/<field path>.<ext>`, e.g. the hero is `…/pages/en/home/sections/0/value/image.png`; the stored string is `../../../assets/uploads/…` (relative to the entry). Singletons have no slug segment; settings stay `src/assets/uploads/<field>.<ext>`. The uploaded file's own name is ignored. Covers are `applications/<locale>/<slug>/cover.png`.
+- Legacy flat paths open as empty in the admin: a required image (hero) then blocks Save, and an optional one (`ogImage`) is silently dropped on save. Removing an optional image deletes its file. An unchanged entry is not saved.
+- Biome does not format `src/content/**` (Keystatic owns the YAML: single quotes, `>-` folding). `src/styles/global.css` has `@source not "../keystatic"` (otherwise Tailwind emits `.table`).
+- Admin bundle 3,015,199 B raw / 914,933 B gzip.
+- Local save checks (all reverted): optional keys omitted when cleared, `actions: []` on hero, `feature: { action: {} }` on nav; each followed by a build.
 
 ## Tooling notes
 - pnpm 12 blocks install scripts: `pnpm-workspace.yaml` has `allowBuilds` for esbuild and workerd, and `minimumReleaseAgeExclude` for `@cloudflare/workers-types@5.20261123.1`.
@@ -111,3 +122,18 @@ Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fie
 ## Routing and i18n fallback (Task 8)
 - Spec section 14 i18n fallback is resolved by manual routing (no Astro i18n config): TR routes exist only for translated entries; EN fallbacks are `noindex` with no canonical.
 - Sitemap uses the `@astrojs/sitemap` i18n option; `robotsTxt` lives in `lib/seo.ts`.
+
+## Mobile menu accordions (B4)
+- Exclusive `<details name>` accordions need Safari 17.2+.
+- `NavChild.lang` marks EN fallback nav entries with `lang="en"` (WCAG 3.1.2). Ui key `navOverview` added.
+
+## Keystatic worker secrets (A3)
+- Secrets (wrangler secret or dashboard): `KEYSTATIC_GITHUB_CLIENT_ID`, `KEYSTATIC_GITHUB_CLIENT_SECRET`, `KEYSTATIC_SECRET` (at least 32 chars). Build var: `PUBLIC_KEYSTATIC_GITHUB_APP_SLUG`. The routing and status codes are in `systemPatterns.md` "Keystatic worker route (A3)".
+- GitHub App OAuth callback: `https://<host>/api/keystatic/github/oauth/callback` (local: `http://127.0.0.1:8787/api/keystatic/github/oauth/callback`).
+- Admin CSP (`ADMIN_CSP` in `worker/headers.ts`): `default-src 'self'`; `script-src 'self'`; `style-src 'self' 'unsafe-inline'`; `img-src 'self' data: blob:`; `font-src 'self'`; `connect-src 'self' https://api.github.com https://raw.githubusercontent.com`; `worker-src 'self'`; `frame-ancestors 'none'`; `base-uri 'self'`; `object-src 'none'`; `form-action 'self'`.
+- `Cache-Control: no-store` applies to the small admin shell only; the roughly 912 KB gzip bundle under `/_astro/` stays immutable-cached. No change needed.
+
+## Spike findings (S1 local, S2 GitHub prep)
+- S1: static admin page plus a plain `.ts` mount (`createRoot`), no `@astrojs/react`; the dev API needs a Vite plugin with an unshifted middleware and static imports; unknown keys make an entry unopenable; an empty optional nested object is written as `{}`; typed `{% ... %}` in a Markdoc field breaks the entry.
+- S2 (pre-login half, dummy vars under `wrangler dev`): the Worker mount, the SPA fallback and the admin CSP work; no `nodejs_compat` needed (Wrangler's bundle define sets `process.env.NODE_ENV`, cookies are `Secure` in a deploy bundle); `login` redirects to GitHub with the right callback; a bogus callback code gives 401 without an exception.
+- Still unverified until the owner's first real login: the OAuth round trip, `User-Agent` on the token exchange and logout revoke (workerd sends none; the revoke result is ignored by the handler), the branch offer and PR link wording, and that a ruleset rejects an editor's direct save to `main`. `main` has no ruleset today.

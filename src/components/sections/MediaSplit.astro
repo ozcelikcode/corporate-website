@@ -1,0 +1,59 @@
+---
+/**
+ * Image and text side by side, an even 6/6 split from `lg` (stacked below it). The text side
+ * carries the indexed label, the h2, Markdown through the shared `renderMarkdown` path (sanitized
+ * there, links localized) and an optional primary action; the image side is a frameless
+ * `DuotoneCover`. Text comes first, as in the hero; `reverse` puts the image first in DOM order
+ * (no CSS `order`), so the reading order always matches what is seen and consecutive splits
+ * alternate on every screen width.
+ */
+import { renderMarkdown } from '../../lib/markdown.ts';
+import Button from '../ui/Button.astro';
+import DuotoneCover from '../ui/DuotoneCover.astro';
+import GridFrame from '../ui/GridFrame.astro';
+import Heading from '../ui/Heading.astro';
+import Label from '../ui/Label.astro';
+import Prose from '../ui/Prose.astro';
+import { type BlockProps, sectionIdPrefix } from './block-props.ts';
+
+type Props = BlockProps<'media-split'>;
+
+/** Half the page container (41.5rem at 90rem) and its double; full width when stacked. */
+const IMAGE_WIDTHS = [640, 1280];
+/**
+ * From `lg` a side is half the container less its 2rem padding and half the 3rem gap; the
+ * container caps at 90rem, so past it the image never needs more than 41.5rem.
+ */
+const IMAGE_SIZES = '(min-width: 90rem) 41.5rem, (min-width: 64rem) calc(50vw - 3.5rem), 100vw';
+const SIDE = 'min-w-0 lg:col-span-6 lg:self-center';
+const ORDER = { text: ['text', 'media'], media: ['media', 'text'] } as const;
+
+const { section, index, headingLevel, localize } = Astro.props;
+const html = await renderMarkdown(section.text, sectionIdPrefix(index), localize);
+const sides = section.reverse ? ORDER.media : ORDER.text;
+---
+<GridFrame columns={12}>
+  {
+    sides.map((side) =>
+      side === 'text' ? (
+        <div class:list={[SIDE, 'flex flex-col items-start gap-6']}>
+          <Label text={section.label} index={index} />
+          <Heading level={headingLevel} text={section.heading} />
+          <Prose html={html} />
+          {section.action !== undefined && (
+            <Button href={localize(section.action.href)}>{section.action.label}</Button>
+          )}
+        </div>
+      ) : (
+        <div class={SIDE}>
+          <DuotoneCover
+            src={section.image}
+            alt={section.imageAlt}
+            widths={IMAGE_WIDTHS}
+            sizes={IMAGE_SIZES}
+          />
+        </div>
+      ),
+    )
+  }
+</GridFrame>

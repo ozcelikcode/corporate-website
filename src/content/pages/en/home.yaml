@@ -1,44 +1,147 @@
 title: Software for live news and broadcast
-description: Newsroom, playout and archive software that keeps live production calm, accurate and on air.
+description: >-
+  Newsroom, playout and archive software that keeps live production calm,
+  accurate and on air.
 sections:
-  - type: hero
-    label: Broadcast software
-    headline: Software for the control room,
-    headlineAccent: built to stay on air.
-    lede: Brand makes newsroom, playout and archive tools for broadcasters and media teams who cannot afford a missed cue.
-    actions:
-      - label: Request a quote
+  - discriminant: hero
+    value:
+      label: Broadcast software
+      headline: Software for the control room,
+      headlineAccent: built to stay on air.
+      lede: >-
+        Brand makes newsroom, playout and archive tools for broadcasters and
+        media teams who cannot afford a missed cue.
+      actions:
+        - label: Request a quote
+          href: /quote/
+        - label: See applications
+          href: /applications/
+      image: ../../../assets/uploads/pages/en/home/sections/0/value/image.png
+      imageAlt: A transmitter mast sending signal waves out from its top
+  - discriminant: statement
+    value:
+      label: Mission
+      text: >-
+        Live production runs on trust. We build software that does exactly what
+        the operator expects, every time the red light comes on.
+  - discriminant: stats
+    value:
+      label: On air
+      items:
+        - value: 24/7
+          label: Continuous playout
+          note: Every channel, every day of the year.
+        - value: 99.98%
+          label: Signal uptime
+          note: Measured over the last twelve months.
+        - value: 140+
+          label: Channels on air
+          note: From regional news to national networks.
+  - discriminant: app-grid
+    value:
+      label: Applications
+      heading: Three tools, one workflow
+      apps: []
+  - discriminant: media-split
+    value:
+      label: Desk to gallery
+      heading: One rundown from the first draft to the on-air graphic
+      text: >
+        Stories, scripts and lower thirds live in one running order, so the desk
+        and the gallery always work from the same page.
+
+
+        A change made at the desk reaches the playout chain before the next
+        break, and every operator sees it at once.
+      image: ../../../assets/uploads/pages/en/home/sections/4/value/image.webp
+      imageAlt: A wall of monitors, one tile framed as the programme feed
+      action:
+        label: Meet the team
+        href: /about/
+      reverse: false
+  - discriminant: media-split
+    value:
+      label: Archive
+      heading: Every frame you aired, found in seconds
+      text: >
+        Clips are logged as they air. Search by face, place or spoken word, and
+        send the result straight back to playout.
+
+
+        No tapes to fetch and no files to rename: the archive is part of the
+        running order.
+      image: ../../../assets/uploads/pages/en/home/sections/5/value/image.webp
+      imageAlt: Rows of archived clips over a waveform, one clip picked out
+      action: {}
+      reverse: true
+  - discriminant: feature-list
+    value:
+      label: Why Brand
+      heading: Built around the broadcast day
+      items:
+        - title: Predictable under load
+          body: >-
+            Every screen answers in a fixed time budget, so an operator never
+            waits during a breaking story.
+          duration: '00:01:30'
+        - title: Open formats
+          body: >-
+            Rundowns, graphics and media move in and out through documented
+            standards, with no lock-in.
+          duration: '00:00:45'
+        - title: Audit-ready
+          body: >-
+            Each change to a rundown or playlist is logged with who, what and
+            when, ready for compliance review.
+          duration: '00:02:15'
+        - title: Supported by engineers
+          body: >-
+            You speak to the people who wrote the code, with a named contact
+            during your on-air hours.
+          duration: '00:01:10'
+  - discriminant: logos
+    value:
+      label: Trusted on air
+      heading: Broadcasters and media teams we work with
+      items:
+        - image: >-
+            ../../../assets/uploads/pages/en/home/sections/7/value/items/0/image.webp
+          alt: Regional news network
+          href: https://example.com/partner-1/
+        - image: >-
+            ../../../assets/uploads/pages/en/home/sections/7/value/items/1/image.webp
+          alt: Public radio service
+          href: https://example.com/partner-2/
+        - image: >-
+            ../../../assets/uploads/pages/en/home/sections/7/value/items/2/image.webp
+          alt: Sports production house
+        - image: >-
+            ../../../assets/uploads/pages/en/home/sections/7/value/items/3/image.webp
+          alt: City television channel
+          href: https://example.com/partner-4/
+        - image: >-
+            ../../../assets/uploads/pages/en/home/sections/7/value/items/4/image.webp
+          alt: Streaming news desk
+          href: https://example.com/partner-5/
+        - image: >-
+            ../../../assets/uploads/pages/en/home/sections/7/value/items/5/image.webp
+          alt: Media training college
+  - discriminant: testimonial
+    value:
+      quote: >-
+        We moved three control rooms onto one rundown in a single weekend. On
+        Monday the news went out on time, and nobody in the gallery noticed the
+        switch.
+      name: Maren Holt
+      role: Head of presentation
+      organization: Regional news network
+      portrait: ../../../assets/uploads/pages/en/home/sections/8/value/portrait.webp
+  - discriminant: cta
+    value:
+      heading: Planning a new control room or a refresh?
+      text: >-
+        Tell us about your facility and we will recommend a setup within two
+        working days.
+      action:
+        label: Request a quote
         href: /quote/
-      - label: See applications
-        href: /applications/
-    image: ../../../assets/uploads/transmitter.png
-    imageAlt: A transmitter mast sending signal waves out from its top
-  - type: statement
-    label: Mission
-    text: Live production runs on trust. We build software that does exactly what the operator expects, every time the red light comes on.
-  - type: app-grid
-    label: Applications
-    heading: Three tools, one workflow
-    apps: []
-  - type: feature-list
-    label: Why Brand
-    heading: Built around the broadcast day
-    items:
-      - title: Predictable under load
-        body: Every screen answers in a fixed time budget, so an operator never waits during a breaking story.
-        duration: "00:01:30"
-      - title: Open formats
-        body: Rundowns, graphics and media move in and out through documented standards, with no lock-in.
-        duration: "00:00:45"
-      - title: Audit-ready
-        body: Each change to a rundown or playlist is logged with who, what and when, ready for compliance review.
-        duration: "00:02:15"
-      - title: Supported by engineers
-        body: You speak to the people who wrote the code, with a named contact during your on-air hours.
-        duration: "00:01:10"
-  - type: cta
-    heading: Planning a new control room or a refresh?
-    text: Tell us about your facility and we will recommend a setup within two working days.
-    action:
-      label: Request a quote
-      href: /quote/

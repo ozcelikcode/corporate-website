@@ -1,28 +1,61 @@
 name: Archive Search
 slug: archive-search
 tagline: Find any clip in seconds, not hours.
-summary: Searchable media archive that indexes footage, transcripts and metadata, so producers can find and reuse material without calling the library.
+summary: >-
+  Searchable media archive that indexes footage, transcripts and metadata, so
+  producers can find and reuse material without calling the library.
 category: Archive
-cover: ../../../assets/uploads/cover-archive-search.png
+cover: ../../../assets/uploads/applications/en/archive-search/cover.png
 coverAlt: A grid of thumbnails with one result circled by an amber magnifier
 status: Beta
 order: 3
+links: []
 sections:
-  - type: feature-list
-    label: Capabilities
-    heading: What it does
-    items:
-      - title: Full-text and transcript search
-        body: Search what was said, not just what was tagged, across years of footage.
-        duration: "00:01:00"
-      - title: Rights and expiry
-        body: Usage rights travel with each asset, with warnings before restricted material goes to air.
-        duration: "00:00:40"
-      - title: Direct to edit
-        body: Send a selected range to the editing system or the rundown in one step.
-        duration: "00:01:25"
-  - type: cta
-    heading: Curious how it would index your archive?
-    action:
-      label: Request a quote
-      href: /quote/
+  - discriminant: stats
+    value:
+      label: At a glance
+      items:
+        - value: 3,200
+          label: Hours logged each month
+        - value: < 2 s
+          label: Typical search
+        - value: 1 click
+          label: Back to playout
+  - discriminant: feature-list
+    value:
+      label: Capabilities
+      heading: What it does
+      items:
+        - title: Full-text and transcript search
+          body: >-
+            Search what was said, not just what was tagged, across years of
+            footage.
+          duration: '00:01:00'
+        - title: Rights and expiry
+          body: >-
+            Usage rights travel with each asset, with warnings before restricted
+            material goes to air.
+          duration: '00:00:40'
+        - title: Direct to edit
+          body: >-
+            Send a selected range to the editing system or the rundown in one
+            step.
+          duration: '00:01:25'
+  - discriminant: media-split
+    value:
+      label: Search
+      heading: Find the shot, not the file
+      text: >
+        Search by face, place or spoken word. Results open at the exact
+        timecode, so a clip goes back to air without scrubbing.
+      image: >-
+        ../../../assets/uploads/applications/en/archive-search/sections/2/value/image.webp
+      imageAlt: A waveform above transcript lines, one spoken phrase found
+      action: {}
+      reverse: true
+  - discriminant: cta
+    value:
+      heading: Curious how it would index your archive?
+      action:
+        label: Request a quote
+        href: /quote/

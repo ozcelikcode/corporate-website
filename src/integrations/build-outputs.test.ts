@@ -100,7 +100,7 @@ test('appendNoindex handles CRLF, trailing spaces and leading comments', () => {
 });
 
 test('appendNoindex throws when there is no /* rule', () => {
-  assert.throws(() => appendNoindex('/admin/*\n  X-A: b\n'), /\/\*/);
+  assert.throws(() => appendNoindex('/keystatic/*\n  X-A: b\n'), /\/\*/);
 });
 
 test('APPLICATION_PATH is built from LOCALES', () => {

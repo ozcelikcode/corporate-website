@@ -32,7 +32,7 @@ const { section, index, headingLevel } = Astro.props;
     {
       section.items.map((item, i) => (
         <li class="grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-y-3 max-md:gap-x-6 md:col-span-3 md:grid-cols-subgrid lg:col-span-4">
-          <span class="col-start-1 row-start-1 label-mono text-ink" aria-hidden="true">
+          <span class="col-start-1 row-start-1 label text-ink" aria-hidden="true">
             {padIndex(i + FIRST_ROW)}
           </span>
           <h3 class="col-span-2 row-start-2 text-h3 font-semibold md:col-span-1 md:col-start-2 md:row-start-1">
@@ -44,7 +44,7 @@ const { section, index, headingLevel } = Astro.props;
           {item.duration !== undefined && (
             <time
               datetime={durationToIso(item.duration)}
-              class="col-start-2 row-start-1 justify-self-end label-mono text-ink-muted md:col-start-3 lg:col-start-4"
+              class="col-start-2 row-start-1 justify-self-end label-signal text-ink-muted md:col-start-3 lg:col-start-4"
             >
               {item.duration}
             </time>

@@ -14,11 +14,11 @@ What runs where:
 | Quote endpoint `POST /api/quote` | The same Worker (`worker/index.ts`) | Only `/api/*` runs Worker code; pages never do. |
 | Quote mail | Cloudflare Email Routing (`send_email` binding `QUOTE_MAILER`) | Reaches verified destination addresses only. |
 | Bot check | Cloudflare Turnstile | Widget on `/quote/` and `/tr/quote/`, verified in the Worker. |
-| Content editor | Sveltia CMS at `/admin/` | Writes to GitHub through a pull request per edit. |
-| CMS login | `sveltia-cms-auth` (its own small Worker) | Not part of this repo. |
+| Content editor | Keystatic at `/keystatic/` (`/admin/` redirects there) | Static admin page; saves go to GitHub as commits or branches. |
+| CMS login and API | The same Worker, under `/api/keystatic/*` | GitHub App OAuth; no separate auth service. |
 | Large files | R2 bucket on `assets.<domain>` | Linked from content, never stored in the repo. |
 
-Deploy order (do not reorder): **auth Worker, then the GitHub App callback, then the site.**
+Deploy order (do not reorder): **GitHub App, then the Worker secrets and the slug build variable, then the site.**
 
 Variables and secrets in one place:
 
@@ -29,8 +29,10 @@ Variables and secrets in one place:
 | `TURNSTILE_SECRET_KEY` | secret | `wrangler secret put` or dashboard | Worker siteverify |
 | `QUOTE_TO` | secret | same | verified Email Routing destination (your inbox) |
 | `QUOTE_FROM` | secret | same | sender address on your Email Routing zone |
-| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | secrets | on the auth Worker | GitHub App login |
-| `ALLOWED_DOMAINS` | variable | on the auth Worker | hosts allowed to start a CMS login |
+| `PUBLIC_KEYSTATIC_GITHUB_APP_SLUG` | build variable | Workers Builds (production) | the admin page; the last segment of `github.com/apps/<slug>` (not the full URL). A production build fails without it |
+| `KEYSTATIC_GITHUB_CLIENT_ID` | secret | `wrangler secret put` or dashboard | GitHub App sign-in (the Client ID, starts with `Iv`) |
+| `KEYSTATIC_GITHUB_CLIENT_SECRET` | secret | same | GitHub App sign-in (generated separately, shown once) |
+| `KEYSTATIC_SECRET` | secret | same | signs the session cookies; at least 32 characters (`openssl rand -hex 32`) |
 
 Never commit a secret. Never put one in `wrangler.jsonc`.
 
@@ -47,16 +49,18 @@ QUOTE_TO=<an address verified in Email Routing, or any address for local tests>
 QUOTE_FROM=<sender on your Email Routing zone>
 ```
 
-The secret above is Turnstile's published always-pass test secret.
+The secret above is Turnstile's published always-pass test secret. To test the Keystatic sign-in under `pnpm preview` (GitHub mode), add the three `KEYSTATIC_*` values from 3.1 and 3.2 here too; the App's local callback URL (3.1) must exist. This is optional: normal local editing needs none of it (below).
 
 | Command | What it does |
 |---|---|
-| `pnpm dev` | Astro dev server (pages only; no Worker). |
+| `pnpm dev` | Astro dev server (pages only; no Worker). Also serves Keystatic in **local mode** at `/keystatic/` (below). Does not read `public/_redirects`, so `/admin/` is a 404 here. |
 | `pnpm build` | Static build into `dist/` and the Worker allow-list `worker/generated/solutions.json`. |
 | `pnpm check` | `astro check` plus `tsc -p worker`. **Run after a build**: the Worker needs the generated JSON. |
 | `pnpm lint` | Biome. |
 | `pnpm test` | `node --test` over `src` and `worker`. |
 | `pnpm preview` | Build, then `wrangler dev` (static assets, headers and the Worker together, on port 8787). |
+
+**Local editing (no GitHub, no secrets).** Run `pnpm dev` and open `/keystatic/`. Keystatic then writes straight to the working tree, so edits appear as uncommitted file changes to review and commit yourself. It works in any browser, Safari included. Only loopback hosts are accepted (`localhost`, `127.0.0.1`, `*.localhost`); a request through a LAN address (`astro dev --host`) gets a 403 by design.
 
 Gate before every merge, in this order: `pnpm build && pnpm check && pnpm lint && pnpm test`.
 
@@ -69,41 +73,48 @@ Gate before every merge, in this order: `pnpm build && pnpm check && pnpm lint &
 Do these in order. None of them can be skipped: until they are done, anyone with Write access could publish to production or read the Worker's secrets without a review. Details are in the sections named.
 
 1. [ ] **Workers Builds: non-production branch builds OFF** (3.5). Branch code would otherwise run with the production deploy token and secrets.
-2. [ ] **The `main` ruleset exists** (3.4), with every option listed there. Create it **before** adding any collaborator.
-3. [ ] **`ALLOWED_DOMAINS` on the auth Worker** lists exact hosts only: no wildcard, never empty (3.1).
+2. [ ] **The `main` ruleset exists** (3.4), with every option listed there. Create it **before** adding any collaborator. Today `main` is unprotected: until the ruleset exists, anyone with Write access (every editor you invite) can push straight to production.
+3. [ ] **Keystatic secrets and the slug build variable are set** (3.2), and the three secrets were never committed or pasted into a PR.
 4. [ ] **GitHub repository security features on** (3.4): secret scanning, push protection, Dependabot alerts and updates, private vulnerability reporting; Actions disabled.
-5. [ ] **GitHub App** keeps "Expire user authorization tokens" on and is installed on this repository only (3.2).
+5. [ ] **GitHub App** keeps "Expire user authorization tokens" on, has no active webhook and is installed on this repository only (3.1).
 6. [ ] Only then add the first editor (Write role).
 
 After the custom domain exists, also do the hardening in 3.11 (rate-limit rule, `workers_dev` and `preview_urls` off).
 
 **Role model:** Editor = submit (Write role; opens PRs that need 1 Code Owner approval). Admin = review + publish (repo owner and Maintain role; on the bypass list, so admins can merge their own changes).
 
-### 3.1 Auth Worker (`sveltia-cms-auth`)
+### 3.1 GitHub App (Keystatic sign-in)
 
-- [ ] Clone the official repository `sveltia/sveltia-cms-auth` into a separate folder (it is not vendored here). Read its README first: confirm the deploy steps and variable names are still the ones below.
-- [ ] Deploy it as its own Worker: `npx wrangler deploy` from that folder. Note the URL it prints, `https://<auth-worker>.<account-subdomain>.workers.dev`. This is `<auth-worker-url>` below.
-- [ ] **Mandatory:** set `ALLOWED_DOMAINS` to the exact production site host(s). The auth Worker uses it both to accept a login and as the only target it sends the GitHub token to. Unset, empty or a wildcard (such as `*.workers.dev`) lets any site that opens the login window receive a user's GitHub token. List full hostnames only, no wildcard, never blank. For example `<site-name>.<account-subdomain>.workers.dev` (known before the first site deploy: the site Worker name is `corporate-site` in `wrangler.jsonc`, so `corporate-site.<account-subdomain>.workers.dev`). Add the custom domain later (3.11).
+Keystatic signs editors in through a GitHub App you own. There is no separate auth service: the site Worker answers `/api/keystatic/*`.
 
-### 3.2 GitHub App
+- [ ] GitHub, Settings, Developer settings, GitHub Apps, New GitHub App. Homepage URL: your site.
+- [ ] **Callback URLs** (add both): `https://<domain>/api/keystatic/github/oauth/callback` and, for local Worker testing, `http://127.0.0.1:8787/api/keystatic/github/oauth/callback`. Use `<site-name>.<account-subdomain>.workers.dev` as `<domain>` until a custom domain exists (the site Worker name is `corporate-site` in `wrangler.jsonc`), and add the custom domain's callback later (3.11).
+- [ ] **Webhook:** untick "Active".
+- [ ] **Repository permissions:** Contents read and write, Pull requests read and write, Metadata read (read-only, selected automatically). Nothing else.
+- [ ] Keep **Expire user authorization tokens** on.
+- [ ] Where can this app be installed: your account only. After creating it, **Install App** on **this repository only** (not "All repositories").
+- [ ] Write down three values from the app's settings page: the **slug** (the last segment of `github.com/apps/<slug>`, not the full URL), the **Client ID** and a **client secret** (Generate a new client secret; GitHub shows it once).
 
-- [ ] GitHub, Settings, Developer settings, GitHub Apps, New GitHub App.
-- [ ] Callback URL: `<auth-worker-url>/callback`. Untick "Webhook active".
-- [ ] Repository permissions: Contents read and write, Pull requests read and write.
-- [ ] Install the app on this repository only.
-- [ ] Generate a client secret. On the auth Worker set the two secrets (paste when prompted):
+Common mistakes: the numeric **App ID** is not the Client ID (the Client ID starts with `Iv`); the client secret is a separate step and is shown only once, so copy it straight into the next step.
+
+### 3.2 Keystatic secrets and the app slug
+
+- [ ] Generate the cookie secret: `openssl rand -hex 32` (64 characters; the Worker refuses anything under 32).
+- [ ] Set the three Worker secrets from the repo root (paste when prompted), or in the dashboard under the Worker, Settings, Variables and Secrets:
 
 ```
-npx wrangler secret put GITHUB_CLIENT_ID
-npx wrangler secret put GITHUB_CLIENT_SECRET
+npx wrangler secret put KEYSTATIC_GITHUB_CLIENT_ID
+npx wrangler secret put KEYSTATIC_GITHUB_CLIENT_SECRET
+npx wrangler secret put KEYSTATIC_SECRET
 ```
-- [ ] Keep **Expire user authorization tokens** on, and install the app on this repository only (not "All repositories").
+- [ ] Add the **build variable** `PUBLIC_KEYSTATIC_GITHUB_APP_SLUG` (the slug only) in Workers Builds, production. A production build fails without it, naming it. It is baked into the admin page, so changing it needs a new deploy.
+- [ ] Local GitHub-mode testing only: put the same values in `.dev.vars` (gitignored) and run `pnpm build` once so the slug is baked in. Never commit them.
+- [ ] Until all three secrets are set the Worker answers `/api/keystatic/*` with a 503 and logs `{ code: 'config' }`; that is the expected state before this step.
 
-### 3.3 One-time repo edits (commit before the first site deploy)
+### 3.3 Forks, and retiring the old CMS
 
-- [ ] `public/admin/config.yml`: set `backend.repo` to `<owner>/<repo>` and `backend.base_url` to `<auth-worker-url>`.
-- [ ] `public/_headers`: in the `/admin/*` block replace `https://<auth-worker>.workers.dev` in `connect-src` with the auth Worker origin. Check it matches exactly, including the account subdomain.
-- [ ] Commit both directly to `main` as an admin (the bypass list in 3.4 allows it). This is the one clear path: admin commits or merges directly; only editors go through review.
+- [ ] Forks: edit the owner and repository name in `src/keystatic/repo.ts` (`KEYSTATIC_REPO`). This is where the admin and the Worker learn which repository to edit; it names a code host, not the brand. Commit it directly to `main` as an admin (the bypass list in 3.4 allows it) before the first site deploy: admin commits or merges directly; only editors go through review.
+- [ ] If you ran the previous setup: delete the old `sveltia-cms-auth` Worker (Cloudflare dashboard, Workers, that Worker, Settings, Delete) and its GitHub OAuth app or App registration, and remove its stored secrets. The admin no longer uses either.
 
 ### 3.4 GitHub: CODEOWNERS, branch protection, editors
 
@@ -119,7 +130,7 @@ The repo is public, so these are free.
 - [ ] Settings, Security and quality, Advanced Security: turn on **secret scanning**, **push protection**, **Dependabot alerts**, **Dependabot security updates** and **private vulnerability reporting** (all free on a public repo).
 - [ ] Settings, Actions, General: choose **Disable actions**. The repository has no workflows; a Write user could otherwise push one on a branch and run it. The weaker alternative, "Allow <owner>, and select non-<owner>, actions and reusable workflows", does not stop a workflow's own `run:` steps, so it protects much less.
 - [ ] Settings, Collaborators: add each editor with the **Write** role. Writers are not on the bypass list, so every editor PR needs 1 Code Owner approval.
-- [ ] Resulting model: Editor = submit, Admin = review + publish. GitHub, not the CMS, enforces it.
+- [ ] Resulting model: Editor = submit, Admin = review + publish. GitHub, not the CMS, enforces it. Keystatic has no role system of its own: an editor is a GitHub user with Write access.
 
 ### 3.5 Cloudflare: Workers Builds (the site)
 
@@ -172,22 +183,36 @@ Cloudflare requires a payment method on file to create any R2 bucket, even insid
 
 ### 3.10 First deploy
 
-- [ ] Merge the 3.3 edits to `main`. Workers Builds deploys. Open `https://corporate-site.<account-subdomain>.workers.dev/`.
+- [ ] Merge any 3.3 edit to `main`. Workers Builds deploys. Open `https://corporate-site.<account-subdomain>.workers.dev/`.
 
 ### 3.11 Custom domain (optional, later)
 
 - [ ] Worker, Settings, Domains and Routes, add the custom domain (or add `"routes": [{ "pattern": "<domain>", "custom_domain": true }]` to `wrangler.jsonc`).
-- [ ] Then update, in this order: `SITE_URL` build variable (redeploy), the Turnstile widget hostnames, the auth Worker `ALLOWED_DOMAINS` (exact hosts, no wildcard), the R2 CORS origin.
+- [ ] Then update, in this order: `SITE_URL` build variable (redeploy), the Turnstile widget hostnames, the GitHub App callback URL (add `https://<custom-domain>/api/keystatic/github/oauth/callback`, then remove the `workers.dev` one), the R2 CORS origin.
 - [ ] **Rate limit the quote endpoint.** Cloudflare dashboard, the zone, Security, WAF, Rate limiting rules (Free plan: 1 rule, and it can only match the URI Path, not the method): match `URI Path` equals `/api/quote`, count per IP, for example 5 requests per 10 seconds, action Block for 10 seconds. `GET` already returns 405, so matching the path only is fine. Turnstile alone does not stop a human-solved flood. WAF rules only apply on the custom domain, so do the next step too.
-- [ ] **Close the other hosts.** In `wrangler.jsonc` set `"workers_dev": false` and `"preview_urls": false` (today both are `true`), commit to `main` and let Workers Builds deploy. Production is then reachable only on the custom domain, where the rate-limit rule applies. Before this, make sure every URL you use (Turnstile hostnames, `ALLOWED_DOMAINS`, `SITE_URL`) is the custom domain.
+- [ ] **Close the other hosts.** In `wrangler.jsonc` set `"workers_dev": false` and `"preview_urls": false` (today both are `true`), commit to `main` and let Workers Builds deploy. Production is then reachable only on the custom domain, where the rate-limit rule applies. Before this, make sure every URL you use (Turnstile hostnames, the GitHub App callback, `SITE_URL`) is the custom domain.
 - [ ] **Logs.** `observability` is on, which stores invocation logs (request URL and Cloudflare request metadata) next to the PII-free error lines. Decide: keep it and mention it on the privacy page, or set `"observability": { "enabled": true, "logs": { "invocation_logs": false } }` in `wrangler.jsonc`.
 
 ## 4. Editing flow
 
-1. An editor opens `/admin/`, signs in with GitHub and edits an entry. Saving creates a branch and a pull request (editorial workflow).
-2. No hosted preview is built (non-production builds are off, 3.5). A code owner reads the YAML diff on GitHub and, for a visual check, runs `pnpm build` and `pnpm preview` on the PR branch locally. The build fails on an unsafe link, a bad value or a non-raster social image.
-3. A code owner reviews and merges the PR on GitHub, or publishes it from the CMS "Ready" column. Editors write Markdown only: raw HTML in rich text is dropped, and links must be site paths, `https:`, `mailto:`, `tel:` or `#fragments`.
-4. The merge to `main` triggers the production build and deploy.
+**Where the admin lives.** `https://<host>/keystatic/`. The old `/admin/` and anything under it answer a 301 to `/keystatic/` (`public/_redirects`, served by Workers Static Assets; `pnpm dev` does not read it).
+
+**Editor flow (GitHub mode).** An editor needs the Write role on the repository (3.4). The behaviour below is what Keystatic is expected to do; the exact UI wording is **to confirm on first real login** (the OAuth login has not been exercised yet).
+
+1. The editor opens `/keystatic/`, signs in with GitHub and edits an entry. Keystatic tries to save to `main`.
+2. Because the `main` ruleset requires a pull request, GitHub rejects that save for an editor, and Keystatic offers to save to a **new branch** instead. Admins are on the bypass list, so their saves to `main` go through directly.
+3. The editor opens the pull request from the branch link Keystatic shows (GitHub's "new pull request" page for that branch). There is no editorial status board in the admin: no Draft, In review or Ready columns. Status lives in GitHub.
+4. No hosted preview is built (non-production builds are off, 3.5). A code owner reads the YAML diff on GitHub and, for a visual check, runs `pnpm build` and `pnpm preview` on the PR branch locally. The build fails on an unsafe link, a bad value or a non-raster social image.
+5. A code owner approves and merges the PR on GitHub. The merge to `main` triggers the production build and deploy.
+
+Editors write Markdown only: raw HTML in rich text is dropped, and links must be site paths, `https:`, `mailto:`, `tel:` or `#fragments`.
+
+**Content rules every editor must know:**
+
+- **TR slugs equal the EN twin.** A Turkish page or application must use exactly the slug of its English twin (`tr/about` for `en/about`); a TR entry with no EN twin fails the build.
+- **Never type `{% ... %}` in a rich-text or FAQ answer.** Markdoc reads it as a tag: the build fails and the entry becomes unopenable in the admin until the text is removed from the file.
+- **Images are stored per entry and field**, at `src/assets/uploads/<collection>/<locale>/<slug>/<field path>.<ext>`. The uploaded file's own name is ignored. Renaming a slug or reordering sections moves the files, so commit the YAML and the moved images together.
+- The first save of an older entry reflows long text and requotes colour values; expect a larger diff once.
 
 The accent colour must keep at least 3:1 contrast on the dark canvas; the build fails and names the field otherwise.
 
@@ -198,8 +223,8 @@ Links in content (navigation, buttons, rich text and FAQ answers) are written as
 Run these on the production URL once everything above is done.
 
 - [ ] Lighthouse, mobile, production URL: Performance 95 or more (target 100), Accessibility 100, Best Practices 100, SEO 100. Command: `npx lighthouse https://<your-final-host>/ --view`.
-- [ ] Scripts: no `<script>` in `dist/` outside the quote pages and `/admin/`, except the ASCII motion module on pages with `AsciiImage`, plus `application/ld+json` data. After `pnpm build`, this prints nothing when clean: `grep -rhoE '<script[^>]*>' dist --include='*.html' --exclude-dir=admin | grep -v 'application/ld+json' | grep -v 'challenges.cloudflare.com/turnstile' | grep -vE '^<script type="module" src="/_astro/[^"]+\.js">$'`. The hero ASCII figure is under 30 KB.
-- [ ] Headers: `curl -sI https://<host>/` shows the Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy and Strict-Transport-Security headers. `curl -sI https://<host>/admin/` shows the admin CSP (the page is the Astro route `src/pages/admin/index.astro`, so `/admin/` also works in `astro dev`; only `config.yml` lives in `public/admin/`). `curl -sI https://<host>/_astro/<any file>` shows `Cache-Control: public, max-age=31536000, immutable`. securityheaders.com grade A or better.
+- [ ] Scripts: no `<script>` in `dist/` outside the quote pages and `/keystatic/`, except the ASCII motion module on pages with `AsciiImage`, plus `application/ld+json` data. After `pnpm build`, this prints nothing when clean: `grep -rhoE '<script[^>]*>' dist --include='*.html' --exclude-dir=keystatic | grep -v 'application/ld+json' | grep -v 'challenges.cloudflare.com/turnstile' | grep -vE '^<script type="module" src="/_astro/[^"]+\.js">$'`. The hero ASCII figure is under 30 KB.
+- [ ] Headers: `curl -sI https://<host>/` shows the Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy and Strict-Transport-Security headers. `curl -sI https://<host>/keystatic/` shows the admin CSP (`worker/headers.ts`), `X-Robots-Tag: noindex, nofollow` and `Cache-Control: no-store`. `curl -sI https://<host>/admin/` answers `301` with `Location: /keystatic/`. `curl -sI https://<host>/_astro/<any file>` shows `Cache-Control: public, max-age=31536000, immutable`. securityheaders.com grade A or better.
 - [ ] Quote form, with JavaScript: submit; the page shows `#sent` and a mail arrives in `QUOTE_TO` with a Reply-To of the visitor.
 - [ ] Quote form, without JavaScript: the page shows `#error-verify` with the email fallback.
 - [ ] Bad token: `curl -si -X POST https://<host>/api/quote -H 'Origin: https://<host>' --data '<valid fields>&cf-turnstile-response=bad'` redirects to `/quote/#error-verify`.
@@ -211,16 +236,16 @@ Run these on the production URL once everything above is done.
 
 These could not be automated in the build environment.
 
-- [ ] **(a) CMS end to end (Chromium).** Open `https://<host>/admin/` in Chromium (the "Work with Local Repository" option needs Chromium; the GitHub login itself works in any browser). Log in with GitHub. Edit one page in EN and the same page in TR. As an editor, "Save" then "Ready for review": a PR appears. As an admin, publish it (or merge on GitHub) and confirm the production site updates. Also check: an empty hero actions list saves cleanly, and sorting in the Applications list works (both were unverified in Sveltia 0.271.2).
+- [ ] **(a) CMS end to end.** First apply 3.1 and 3.2, and the `main` ruleset (3.4). Open `https://<host>/keystatic/`, sign in with GitHub, edit one page in EN and the same page in TR. As an editor (Write role, not on the bypass list): save, confirm GitHub rejects the save to `main` and Keystatic offers a new branch, open the pull request from the branch link. As an admin, merge it and confirm the production site updates. Also confirm and record: the exact wording of the branch offer, that logout works, and that an editor cannot merge. Local mode (`pnpm dev`, `/keystatic/`) needs no login and can be tried first.
 
-  CMS parity checks (blank and partial values must never break the site). For each, save as an editor and open the PR, then check out its branch locally and confirm `pnpm build` passes (or run these after merge, on production), and look at the saved YAML in the PR diff:
+  Parity checks (blank and partial values must never break the site). For each, save as an editor and open the PR, then check out its branch locally and confirm `pnpm build` passes, and look at the saved YAML in the PR diff:
   1. Save a feature-list item with no duration: the key is absent (or empty) and the row shows no duration.
   2. Save an application with no brochure: the key is absent (or empty) and the page shows no brochure button.
   3. Save a CTA section with no text: the CTA renders heading and button only.
-  4. Create a new EN page: the PR adds `src/content/pages/en/<slug>.yaml` only, no half-empty `pages/tr/<slug>.yaml` (new entries start in EN only; TR is turned on from the editor's menu when translated).
+  4. Create a new EN page: the PR adds the EN entry only, no half-empty TR entry.
   5. Save the TR interface strings with a few fields cleared: the build passes and those strings show in English on `/tr/`.
-  6. Try to upload an SVG or GIF as the hero image, a page's social image or an application cover: the field refuses it (PNG, JPEG and WebP only; only the logo may be an SVG).
-  7. Translate an existing page that has no TR version yet (turn TR on for it from the editor's menu): the PR adds `src/content/pages/tr/<slug>.yaml` only, `pnpm build` passes on the branch, and on the local preview every TR page's header, menu and footer link `/tr/<slug>/` with no navigation edit.
+  6. Try to upload an SVG or GIF as the hero image, a page's social image or an application cover: the build refuses it (PNG, JPEG and WebP only; only the logo may be an SVG).
+  7. Translate an existing page that has no TR version yet: the PR adds the TR entry (same slug as the EN twin) only, `pnpm build` passes on the branch, and on the local preview every TR page's header, menu and footer link `/tr/<slug>/` with no navigation edit.
 
   Record the outcome of each (pass, or what the YAML looked like) in `memory-bank/techContext.md` under "CMS parity checks".
 - [ ] **(b) Turnstile in the real Workers runtime.**
@@ -235,6 +260,10 @@ These could not be automated in the build environment.
   2. Production: submit the real form once. Expected: `#sent` and a mail in your inbox.
 - [ ] **(c) HOLD key.** On `/`, with motion on, the ASCII hero animates. Press the `HOLD` key in the strip at the top (also reachable with the Tab key and Space): all motion stops and the static ASCII picture shows; press again to resume.
 
+### Known limitations
+
+- **Desktop menu on hover (WCAG 1.4.13, needs owner sign-off).** With a mouse or trackpad, hovering a menu item opens its panel. That hover-opened panel cannot be dismissed with Escape while the pointer rests on the item or the panel: Escape closes it only once the pointer moves away, because the menu is CSS only (no JavaScript). The keyboard and touch path is the chevron button, which opens the same panel as a popover that Escape and a click outside close. Related minors: hover does not reopen a panel the keyboard left open (one extra click), and a click outside with the pointer away closes the panel after a short delay (300 ms).
+
 ## 6. Builder verifications (spec section 14)
 
 Dates are the build dates, 2026-11-23.
@@ -244,7 +273,7 @@ Dates are the build dates, 2026-11-23.
 | TypeScript version | `@astrojs/check@0.9.12` peers `typescript ^5 or ^6`; pinned 6.0.3 (newest 6.x) | 2026-11-23 |
 | Fonts option shape | `fontProviders.local()` with `variants`, verified in Astro 7.4.13; latin and latin-ext files, Turkish glyphs present | 2026-11-23 |
 | i18n fallback | Resolved by manual routing: TR routes only for translated entries; EN fallbacks are `noindex`, no canonical | 2026-11-23 |
-| Sveltia 0.271.2 | Config verified from docs: `editorial_workflow`, `type`-keyed lists, singletons, per-collection media folders, `output.omit_empty_optional_fields`, `i18n.initial_locales: default`, image `accept`. R2 stored as plain URL fields. Owner check (a), including the CMS parity checks, still open | 2026-11-23 |
+| CMS | Sveltia was replaced by Keystatic 0.6.10 on 2026-11-24. Local mode, collections and the Worker route are verified (spikes S1 and S2, plus the Worker tests and `wrangler dev`); the real GitHub OAuth login, branch flow and parity checks (owner check (a)) are still open | 2026-11-24 |
 | Worker zod | `astro/zod` bundles in the Worker; no `zod` pin needed | 2026-11-23 |
 | Build image | Not testable locally: confirm on the first Workers Builds run (Node 26.13.1 and pnpm 12; fallback in 3.5) | open |
 | Email | `send_email` without `destination_address` bundles; live delivery not testable locally. Owner check in section 5 | open |
@@ -253,7 +282,7 @@ Dates are the build dates, 2026-11-23.
 | Turkish glyphs | Both font families include them | 2026-11-23 |
 | Previews | Hosted previews are off (security: they would run branch code with production secrets). Admins preview locally; optional secure previews are described in 3.5 | decided |
 | Generated JSON | `check` after `build` | 2026-11-23 |
-| Auth Worker | Confirm the official repo's current steps and variable names at deploy time (3.1) | open |
+| Keystatic sign-in | Needs the owner's GitHub App (3.1, 3.2); `User-Agent` on the token exchange and logout revoke is unverified until the first real login | open |
 
 Final local acceptance numbers (build, tests, bundle and page weight) are recorded in `memory-bank/progress.md`.
 
@@ -262,11 +291,16 @@ Final local acceptance numbers (build, tests, bundle and page weight) are record
 - **Build fails with an accent contrast error:** the `accent` in site settings is below 3:1 on the canvas. Pick a lighter colour; the message names the field.
 - **`pnpm check` fails on a missing `solutions.json`:** run `pnpm build` first.
 - **Build fails with "Links to the wrong language":** a TR page links the English URL of a page that has a TR version (for example `/quote/` instead of `/tr/quote/`). Content links are localized at build time, so a hit means a renderer skipped the href localizer: a code bug to report, not a content fix. Each line names the page, the link and the files where that link text lives (the page's entry, its EN entry where the page falls back to English, and the navigation), so you can find which link it is. Translating a page never needs a navigation edit.
-- **Build fails with "the slug ... is reserved":** pages cannot be called `admin`, `api`, `en` or `tr` (they would hide the CMS, the quote endpoint or a language). Rename the page.
+- **Build fails with "the slug ... is reserved":** pages cannot be called `admin`, `keystatic`, `api`, `en` or `tr` (they would hide the CMS, its redirect, the quote endpoint or a language). Rename the page.
 - **Build fails with "ASCII source ... must be a PNG, JPEG or WebP raster":** the hero image is an SVG, GIF or AVIF. Upload a PNG, JPEG or WebP instead.
 - **Quote shows `#error-send`:** Email Routing is not enabled, the destination is not verified, or `QUOTE_TO` / `QUOTE_FROM` / `TURNSTILE_SECRET_KEY` are not set. Check the Worker logs (observability is on).
 - **Quote shows `#error-verify` for real visitors:** the Turnstile hostnames do not include the host they use, or the site key and secret are from different widgets.
 - **Production build fails naming `SITE_URL` or `PUBLIC_TURNSTILE_SITE_KEY`:** the variable is missing, empty, or `SITE_URL` is not https. Set it in Workers Builds for the production branch.
-- **CMS login window opens then fails:** the auth Worker `ALLOWED_DOMAINS` lacks the host, the GitHub App callback URL is not `<auth-worker-url>/callback`, or `base_url` in `config.yml` / `connect-src` in `_headers` is wrong.
+- **`/keystatic/` loads but sign-in answers 503 or "Keystatic is unavailable":** one of the three `KEYSTATIC_*` secrets is missing, or `KEYSTATIC_SECRET` is under 32 characters (3.2). The Worker log shows `{ code: 'config' }`.
+- **GitHub shows "redirect_uri is not associated" or the login bounces:** the GitHub App callback URL does not match `https://<host>/api/keystatic/github/oauth/callback` exactly (3.1); add the host you are really using.
+- **GitHub says the client is unknown:** `KEYSTATIC_GITHUB_CLIENT_ID` holds the numeric App ID instead of the Client ID (starts with `Iv`), or the client secret was not generated or was copied wrong.
+- **Production build fails naming `PUBLIC_KEYSTATIC_GITHUB_APP_SLUG`:** set the build variable (3.2), the slug only, not the full URL.
+- **An entry will not open in the admin, or the build fails on a Markdoc tag:** the rich text contains `{% ... %}`; remove it from the YAML file.
+- **`/admin/` is a 404 in `pnpm dev`:** by design; the redirect is `public/_redirects`, which only the deployed Worker (or `pnpm preview`) reads. Use `/keystatic/`.
 - **No hosted preview for a PR:** by design (3.5). Run `pnpm build` and `pnpm preview` on the PR branch locally.
 - **Build fails with "Unsafe URL in Markdown":** a rich-text or FAQ link or image uses a scheme or form that is not allowed (`javascript:`, `data:`, `http:`, a relative path, `//host`). Use a site path starting with `/`, `https:`, `mailto:`, `tel:` or `#fragment`. The message names the section and the URL.

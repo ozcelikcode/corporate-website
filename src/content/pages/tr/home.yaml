@@ -1,45 +1,145 @@
-# Links use English site paths; Turkish pages link the /tr/ URL of every page that has one.
 title: Canlı haber ve yayın için yazılım
-description: Canlı yapımı sakin, doğru ve yayında tutan haber merkezi, playout ve arşiv yazılımları.
+description: >-
+  Canlı yapımı sakin, doğru ve yayında tutan haber merkezi, playout ve arşiv
+  yazılımları.
 sections:
-  - type: hero
-    label: Yayın yazılımı
-    headline: Kontrol odası için yazılım,
-    headlineAccent: yayında kalmak üzere tasarlandı.
-    lede: Brand, tek bir kaçırılmış cue'yu bile göze alamayan yayıncılar ve medya ekipleri için haber merkezi, playout ve arşiv araçları geliştirir.
-    actions:
-      - label: Teklif iste
+  - discriminant: hero
+    value:
+      label: Yayın yazılımı
+      headline: Kontrol odası için yazılım,
+      headlineAccent: yayında kalmak üzere tasarlandı.
+      lede: >-
+        Brand, tek bir kaçırılmış cue'yu bile göze alamayan yayıncılar ve medya
+        ekipleri için haber merkezi, playout ve arşiv araçları geliştirir.
+      actions:
+        - label: Teklif iste
+          href: /quote/
+        - label: Uygulamaları gör
+          href: /applications/
+      image: ../../../assets/uploads/pages/tr/home/sections/0/value/image.png
+      imageAlt: Tepesinden sinyal dalgaları yayan bir verici direği
+  - discriminant: statement
+    value:
+      label: Misyon
+      text: >-
+        Canlı yayın güvene dayanır. Kırmızı ışık yandığında operatörün
+        beklediğini her seferinde yapan yazılımlar geliştiriyoruz.
+  - discriminant: stats
+    value:
+      label: Yayında
+      items:
+        - value: 24/7
+          label: Kesintisiz playout
+          note: Her kanalda, yılın her günü.
+        - value: '%99,98'
+          label: Sinyal sürekliliği
+          note: Son on iki ayda ölçüldü.
+        - value: 140+
+          label: Yayındaki kanal
+          note: Bölgesel haberden ulusal ağlara.
+  - discriminant: app-grid
+    value:
+      label: Uygulamalar
+      heading: Üç araç, tek iş akışı
+      apps: []
+  - discriminant: media-split
+    value:
+      label: Masadan galeriye
+      heading: İlk taslaktan yayındaki grafiğe tek akış
+      text: >
+        Haberler, metinler ve alt yazılar tek bir yayın akışında durur; masa ve
+        galeri her zaman aynı sayfadan çalışır.
+
+
+        Masada yapılan bir değişiklik bir sonraki aradan önce playout zincirine
+        ulaşır ve her operatör onu hemen görür.
+      image: ../../../assets/uploads/pages/tr/home/sections/4/value/image.webp
+      imageAlt: Bir karesi program beslemesi olarak çerçevelenmiş monitör duvarı
+      action:
+        label: Ekibi tanıyın
+        href: /about/
+      reverse: false
+  - discriminant: media-split
+    value:
+      label: Arşiv
+      heading: Yayınladığınız her kare, saniyeler içinde
+      text: >
+        Klipler yayına çıktıkça kaydedilir. Yüze, yere ya da konuşulan söze göre
+        arayın, sonucu doğrudan playout'a geri gönderin.
+
+
+        Getirilecek bant ya da yeniden adlandırılacak dosya yok: arşiv yayın
+        akışının bir parçası.
+      image: ../../../assets/uploads/pages/tr/home/sections/5/value/image.webp
+      imageAlt: Bir dalga biçiminin üstünde arşiv klipleri, biri seçili
+      action: {}
+      reverse: true
+  - discriminant: feature-list
+    value:
+      label: Neden Brand
+      heading: Yayın gününün etrafında tasarlandı
+      items:
+        - title: Yük altında öngörülebilir
+          body: >-
+            Her ekran sabit bir süre bütçesi içinde yanıt verir; son dakika
+            haberinde operatör beklemez.
+          duration: '00:01:30'
+        - title: Açık biçimler
+          body: >-
+            Akışlar, grafikler ve medya belgelenmiş standartlarla girip çıkar;
+            bağımlılık yaratmaz.
+          duration: '00:00:45'
+        - title: Denetime hazır
+          body: >-
+            Akış veya oynatma listesindeki her değişiklik kim, ne ve ne zaman
+            bilgisiyle kaydedilir.
+          duration: '00:02:15'
+        - title: Mühendisler destekler
+          body: >-
+            Kodu yazan kişilerle konuşursunuz; yayın saatlerinizde adı belli bir
+            irtibat kişiniz olur.
+          duration: '00:01:10'
+  - discriminant: logos
+    value:
+      label: Yayında güvenilen
+      heading: Birlikte çalıştığımız yayıncılar ve medya ekipleri
+      items:
+        - image: >-
+            ../../../assets/uploads/pages/tr/home/sections/7/value/items/0/image.webp
+          alt: Bölgesel haber ağı
+          href: https://example.com/partner-1/
+        - image: >-
+            ../../../assets/uploads/pages/tr/home/sections/7/value/items/1/image.webp
+          alt: Kamu radyo hizmeti
+          href: https://example.com/partner-2/
+        - image: >-
+            ../../../assets/uploads/pages/tr/home/sections/7/value/items/2/image.webp
+          alt: Spor yapım şirketi
+        - image: >-
+            ../../../assets/uploads/pages/tr/home/sections/7/value/items/3/image.webp
+          alt: Şehir televizyon kanalı
+          href: https://example.com/partner-4/
+        - image: >-
+            ../../../assets/uploads/pages/tr/home/sections/7/value/items/4/image.webp
+          alt: Çevrim içi haber masası
+          href: https://example.com/partner-5/
+        - image: >-
+            ../../../assets/uploads/pages/tr/home/sections/7/value/items/5/image.webp
+          alt: Medya eğitim okulu
+  - discriminant: testimonial
+    value:
+      quote: >-
+        Üç kontrol odasını tek bir hafta sonunda tek yayın akışına taşıdık.
+        Pazartesi haberler zamanında çıktı ve galeride kimse değişikliği fark
+        etmedi.
+      name: Maren Holt
+      role: Sunum yöneticisi
+      organization: Bölgesel haber ağı
+      portrait: ../../../assets/uploads/pages/tr/home/sections/8/value/portrait.webp
+  - discriminant: cta
+    value:
+      heading: Yeni bir kontrol odası mı kuruyorsunuz, yenilemeyi mi düşünüyorsunuz?
+      text: Tesisinizi anlatın, iki iş günü içinde bir kurulum öneralım.
+      action:
+        label: Teklif iste
         href: /quote/
-      - label: Uygulamaları gör
-        href: /applications/
-    image: ../../../assets/uploads/transmitter.png
-    imageAlt: Tepesinden sinyal dalgaları yayan bir verici direği
-  - type: statement
-    label: Misyon
-    text: Canlı yayın güvene dayanır. Kırmızı ışık yandığında operatörün beklediğini her seferinde yapan yazılımlar geliştiriyoruz.
-  - type: app-grid
-    label: Uygulamalar
-    heading: Üç araç, tek iş akışı
-    apps: []
-  - type: feature-list
-    label: Neden Brand
-    heading: Yayın gününün etrafında tasarlandı
-    items:
-      - title: Yük altında öngörülebilir
-        body: Her ekran sabit bir süre bütçesi içinde yanıt verir; son dakika haberinde operatör beklemez.
-        duration: "00:01:30"
-      - title: Açık biçimler
-        body: Akışlar, grafikler ve medya belgelenmiş standartlarla girip çıkar; bağımlılık yaratmaz.
-        duration: "00:00:45"
-      - title: Denetime hazır
-        body: Akış veya oynatma listesindeki her değişiklik kim, ne ve ne zaman bilgisiyle kaydedilir.
-        duration: "00:02:15"
-      - title: Mühendisler destekler
-        body: Kodu yazan kişilerle konuşursunuz; yayın saatlerinizde adı belli bir irtibat kişiniz olur.
-        duration: "00:01:10"
-  - type: cta
-    heading: Yeni bir kontrol odası mı kuruyorsunuz, yenilemeyi mi düşünüyorsunuz?
-    text: Tesisinizi anlatın, iki iş günü içinde bir kurulum öneralım.
-    action:
-      label: Teklif iste
-      href: /quote/

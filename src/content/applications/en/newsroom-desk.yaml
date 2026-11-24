@@ -1,9 +1,11 @@
 name: Newsroom Desk
 slug: newsroom-desk
 tagline: Plan, write and run the rundown from one screen.
-summary: A collaborative newsroom system for planning stories, editing scripts and building live rundowns, with changes visible to the whole team in real time.
+summary: >-
+  A collaborative newsroom system for planning stories, editing scripts and
+  building live rundowns, with changes visible to the whole team in real time.
 category: Newsroom
-cover: ../../../assets/uploads/cover-newsroom-desk.png
+cover: ../../../assets/uploads/applications/en/newsroom-desk/cover.png
 coverAlt: Stacked hairline rectangles representing a rundown, one highlighted
 status: Stable
 order: 1
@@ -12,21 +14,54 @@ links:
     href: /quote/
 brochure: https://example.com/brochures/newsroom-desk.pdf
 sections:
-  - type: feature-list
-    label: Capabilities
-    heading: What it does
-    items:
-      - title: Live rundowns
-        body: Reorder, time and lock stories while the show is running. Every operator sees the same state.
-        duration: "00:01:00"
-      - title: Script editing
-        body: Write against a running clock with read-time estimates and tracked changes.
-        duration: "00:00:40"
-      - title: Wire and feed intake
-        body: Pull agency copy and social feeds into one inbox, filtered by desk and topic.
-        duration: "00:01:25"
-  - type: cta
-    heading: See Newsroom Desk with your own workflow
-    action:
-      label: Request a quote
-      href: /quote/
+  - discriminant: stats
+    value:
+      label: At a glance
+      items:
+        - value: '12'
+          label: Desks on one rundown
+        - value: < 1 s
+          label: From edit to every screen
+        - value: 100%
+          label: Changes logged
+  - discriminant: feature-list
+    value:
+      label: Capabilities
+      heading: What it does
+      items:
+        - title: Live rundowns
+          body: >-
+            Reorder, time and lock stories while the show is running. Every
+            operator sees the same state.
+          duration: '00:01:00'
+        - title: Script editing
+          body: >-
+            Write against a running clock with read-time estimates and tracked
+            changes.
+          duration: '00:00:40'
+        - title: Wire and feed intake
+          body: >-
+            Pull agency copy and social feeds into one inbox, filtered by desk
+            and topic.
+          duration: '00:01:25'
+  - discriminant: media-split
+    value:
+      label: Workflow
+      heading: Write against the clock
+      text: >
+        Read times update as you type, so the producer sees the running order
+        fill up before the show, not during it.
+
+
+        Lock a story for air and it stays put, whoever else is editing.
+      image: >-
+        ../../../assets/uploads/applications/en/newsroom-desk/sections/2/value/image.webp
+      imageAlt: Rows of a running order, one story locked for air on the clock line
+      action: {}
+      reverse: true
+  - discriminant: cta
+    value:
+      heading: See Newsroom Desk with your own workflow
+      action:
+        label: Request a quote
+        href: /quote/

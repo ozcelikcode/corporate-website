@@ -43,7 +43,7 @@ export function localizedPathSet(
  * The href a page in `locale` renders for a content href. A site path whose target is in
  * `localized` (from `localizedPathSet`) gets the locale prefix and the trailing slash, keeping its
  * query and fragment; everything else (the default locale, untranslated targets, external,
- * `mailto:`, `tel:` and fragment-only hrefs, `/api/`, `/admin/`, `/_astro/`, already prefixed
+ * `mailto:`, `tel:` and fragment-only hrefs, `/api/`, `/keystatic/`, `/_astro/`, already prefixed
  * paths) is returned unchanged.
  */
 export function localizeHref(href: string, locale: Locale, localized: ReadonlySet<string>): string {

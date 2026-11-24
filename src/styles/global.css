@@ -1,5 +1,7 @@
 @import "tailwindcss" source("../");
 @import "./tokens.css";
+/* Admin config words (such as `table: false`) are not public classes. */
+@source not "../keystatic";
 
 @layer base {
   html {
@@ -61,11 +63,23 @@
   }
 }
 
-@utility label-mono {
+/* Interface labels (nav, buttons, form labels, section labels): sans, medium, sentence case. */
+@utility label {
+  font-family: --theme(--font-sans);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  font-weight: --theme(--font-weight-medium);
+  letter-spacing: var(--tracking-label-sans);
+}
+
+/* Broadcast hardware cues only (timecode, rundown durations, PGM/PVW tallies): mono uppercase. */
+@utility label-signal {
   font-family: --theme(--font-mono);
   font-size: var(--text-label);
   line-height: var(--text-label--line-height);
+  font-weight: --theme(--font-weight-normal);
   letter-spacing: var(--tracking-label);
+  font-variant-numeric: tabular-nums;
   text-transform: uppercase;
 }
 
@@ -112,7 +126,7 @@
   }
 }
 
-/* Long-form copy column: at most 68ch, mono uppercase headings from h3 down. */
+/* Long-form copy column: at most 68ch, label-style headings from h3 down; code stays mono. */
 @utility prose {
   max-inline-size: 68ch;
 
@@ -133,7 +147,7 @@
   }
 
   & :where(h3, h4, h5, h6) {
-    @apply label-mono;
+    @apply label;
     margin-block-start: 2.5em;
     color: var(--color-ink-muted);
   }
@@ -167,7 +181,6 @@
   }
 
   & :where(li)::marker {
-    font-family: --theme(--font-mono);
     color: var(--color-ink-muted);
   }
 

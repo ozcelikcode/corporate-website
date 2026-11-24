@@ -5,7 +5,7 @@ A static, brand-agnostic corporate showcase site. It presents the brand's identi
 
 ## Principles
 1. Small beats feature-rich. "Efficient and beautiful" beats "feature-rich". Every file, dependency and block must earn its place.
-2. Hand-crafted, not templated. Control-room monitor-wall look: calm spacing with hairlines in moderation, sharp corners, a few broadcast details, mono tally labels, one two-tone headline, one ASCII hero image.
+2. Hand-crafted, not templated. Control-room monitor-wall look: calm spacing with hairlines in moderation, sharp corners, a few broadcast details, sans labels, mono only on signal cues, one two-tone headline, one ASCII hero image.
 3. Platform first. Use forms, `<dialog>`, Popover API and `<details>` before any JS.
 4. Content is data. Every user-facing string lives in typed content.
 
@@ -14,14 +14,14 @@ A static, brand-agnostic corporate showcase site. It presents the brand's identi
 ### Pages
 - Home (`/`), About, Contact, Privacy, Applications index, Application detail (`/applications/<slug>`), Quote (`/quote`), 404.
 - English at `/`; optional Turkish at `/tr/` (translated entries only, EN fallback).
-- `/admin` serves the CMS (static page).
+- `/keystatic/` serves the CMS (static page); `/admin/` redirects to it.
 
-### The 7 section blocks
-`hero`, `statement`, `app-grid`, `feature-list`, `rich-text`, `cta`, `faq`. Pages and applications compose them through a typed `sections[]` union.
+### The 11 section blocks
+`hero`, `statement`, `app-grid`, `feature-list`, `rich-text`, `cta`, `faq`, `stats`, `logos`, `testimonial`, `media-split`. Pages and applications compose them through a typed `sections[]` union.
 
 ### Roles
 - Visitor: reads the site, submits the quote form. No account.
-- Editor (GitHub Write): edits content in the CMS; each entry becomes a branch + PR.
+- Editor (GitHub Write): edits content in the CMS; a save to protected `main` goes to a branch and a PR.
 - Admin (Maintain/Admin + CODEOWNER): reviews the YAML diff and a local build (no hosted previews by default) and merges to `main`.
 
 ## Out of scope (forbidden)

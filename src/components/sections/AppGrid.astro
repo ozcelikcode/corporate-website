@@ -5,11 +5,11 @@
  * name as a lower third (strap = category), the tagline and → at the foot. Inside the link the
  * cover is decorative (`alt=""`), so the link's name stays the tile text; `coverAlt` describes
  * it on the application page. Links go through `localize`: the page locale's URL when the
- * application is translated, else the EN one.
+ * application is translated, else the EN one, and such a fallback tile carries `lang="en"`.
  */
 import { listApplications } from '../../lib/content.ts';
 import { selectApps } from '../../lib/entries.ts';
-import { applicationPath } from '../../lib/i18n.ts';
+import { applicationPath, fallbackLang } from '../../lib/i18n.ts';
 import DuotoneCover from '../ui/DuotoneCover.astro';
 import Glyph from '../ui/Glyph.astro';
 import GridFrame from '../ui/GridFrame.astro';
@@ -39,6 +39,7 @@ const apps = selectApps(await listApplications(locale), section.apps);
         <li class="bg-surface">
           <a
             href={localize(applicationPath(app.slug))}
+            lang={fallbackLang(app.locale, locale)}
             class="group flex h-full flex-col gap-6 p-6"
           >
             <div class="flex items-center justify-between gap-4">

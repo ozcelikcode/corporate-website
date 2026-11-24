@@ -1,34 +1,81 @@
 title: About
 description: Who we are, what we build and how we work with broadcasters and media teams.
 sections:
-  - type: statement
-    label: About us
-    text: We are a small team of broadcast engineers and software developers. We build the tools we wished we had on the studio floor.
-  - type: feature-list
-    label: How we work
-    heading: Principles behind the product
-    items:
-      - title: Operators first
-        body: Features are designed with the people who run the show, and tested in real control rooms before release.
-        duration: "00:02:00"
-      - title: Calm interfaces
-        body: Dense information, clear hierarchy and no surprises, so attention stays on the programme.
-        duration: "00:01:20"
-      - title: Long-term support
-        body: Versions are supported for years, with upgrade paths that do not interrupt a broadcast day.
-        duration: "00:00:50"
-  - type: faq
-    label: Questions
-    items:
-      - q: Who uses your software?
-        a: Regional and national broadcasters, production houses and corporate media teams running live and scheduled output.
-      - q: Do you offer on-premises installs?
-        a: Yes. Every application runs on your own infrastructure, in a private cloud, or as a hybrid of both.
-      - q: Can you integrate with our existing systems?
-        a: Most integrations use open standards such as MOS, GPI and REST. Our engineers will review your setup before quoting.
-  - type: cta
-    heading: Want to know more?
-    text: We are happy to walk you through the products and answer technical questions.
-    action:
-      label: Contact us
-      href: /contact/
+  - discriminant: statement
+    value:
+      label: About us
+      text: >-
+        We are a small team of broadcast engineers and software developers. We
+        build the tools we wished we had on the studio floor.
+  - discriminant: stats
+    value:
+      label: In numbers
+      items:
+        - value: '16'
+          label: Years in broadcast
+        - value: '40'
+          label: Engineers and developers
+        - value: '12'
+          label: Countries on air
+        - value: 3,200
+          label: Hours archived each month
+  - discriminant: media-split
+    value:
+      label: The team
+      heading: Engineers who have run a gallery
+      text: >
+        Most of us have sat in a control room during a breaking story. That is
+        why our tools stay quiet when everything else is loud.
+
+
+        Every release is tested with operators before it ships, and a named
+        engineer is on call during your on-air hours.
+      image: ../../../assets/uploads/pages/en/about/sections/2/value/image.webp
+      imageAlt: A row of preview monitors above a bank of faders, one fader raised
+      action: {}
+      reverse: false
+  - discriminant: feature-list
+    value:
+      label: How we work
+      heading: Principles behind the product
+      items:
+        - title: Operators first
+          body: >-
+            Features are designed with the people who run the show, and tested
+            in real control rooms before release.
+          duration: '00:02:00'
+        - title: Calm interfaces
+          body: >-
+            Dense information, clear hierarchy and no surprises, so attention
+            stays on the programme.
+          duration: '00:01:20'
+        - title: Long-term support
+          body: >-
+            Versions are supported for years, with upgrade paths that do not
+            interrupt a broadcast day.
+          duration: '00:00:50'
+  - discriminant: faq
+    value:
+      label: Questions
+      items:
+        - q: Who uses your software?
+          a: >
+            Regional and national broadcasters, production houses and corporate
+            media teams running live and scheduled output.
+        - q: Do you offer on-premises installs?
+          a: >
+            Yes. Every application runs on your own infrastructure, in a private
+            cloud, or as a hybrid of both.
+        - q: Can you integrate with our existing systems?
+          a: >
+            Most integrations use open standards such as MOS, GPI and REST. Our
+            engineers will review your setup before quoting.
+  - discriminant: cta
+    value:
+      heading: Want to know more?
+      text: >-
+        We are happy to walk you through the products and answer technical
+        questions.
+      action:
+        label: Contact us
+        href: /contact/

@@ -1,9 +1,10 @@
 title: Sayfa bulunamadı
 description: Aradığınız sayfa mevcut değil veya taşınmış olabilir.
 sections:
-  - type: cta
-    heading: Bu sayfa yayında değil.
-    text: Adres yanlış yazılmış olabilir veya sayfa taşınmış olabilir.
-    action:
-      label: Ana sayfaya dön
-      href: /
+  - discriminant: cta
+    value:
+      heading: Bu sayfa yayında değil.
+      text: Adres yanlış yazılmış olabilir veya sayfa taşınmış olabilir.
+      action:
+        label: Ana sayfaya dön
+        href: /

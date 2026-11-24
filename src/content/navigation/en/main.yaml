@@ -1,13 +1,32 @@
 header:
   - label: Applications
     href: /applications/
-  - label: About
-    href: /about/
+    source: applications
+    children: []
+    feature:
+      heading: Not sure where to start?
+      text: Tell us what you need and we will recommend the right application.
+      action:
+        label: Request a quote
+        href: /quote/
+  - label: Company
+    source: ''
+    children:
+      - label: About
+        href: /about/
+        description: Our mission and how we work.
+      - label: Privacy
+        href: /privacy/
+        description: How we handle your data.
+    feature:
+      action: {}
   - label: Contact
     href: /contact/
+    source: ''
+    children: []
+    feature:
+      action: {}
 footer:
-  - label: Applications
-    href: /applications/
   - label: About
     href: /about/
   - label: Contact

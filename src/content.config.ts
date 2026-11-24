@@ -1,12 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
-import {
-  applicationSchema,
-  navigationSchema,
-  pageSchema,
-  settingsSchema,
-  uiSchema,
-} from './lib/content-schemas.ts';
+import { applicationSchema, pageSchema, settingsSchema, uiSchema } from './lib/content-schemas.ts';
+import { navigationSchema } from './lib/navigation-schema.ts';
 
 // Ids come from the file path (`<locale>/<slug>`), never from a `slug` field: slugs repeat across locales.
 const fromYaml = (base: string) =>

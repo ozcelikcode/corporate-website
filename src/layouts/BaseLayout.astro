@@ -15,8 +15,15 @@ import SeoHead from '../components/layout/SeoHead.astro';
 import SiteFooter from '../components/layout/SiteFooter.astro';
 import SiteHeader from '../components/layout/SiteHeader.astro';
 import TallyStrip from '../components/layout/TallyStrip.astro';
-import { getNavigation, getSettings, getUiDictionary, hrefLocalizer } from '../lib/content.ts';
+import {
+  getNavigation,
+  getSettings,
+  getUiDictionary,
+  hrefLocalizer,
+  listApplications,
+} from '../lib/content.ts';
 import { type Locale, localizePath, pagePath, t, type UiKey } from '../lib/i18n.ts';
+import { applicationLinks, resolveNavItems } from '../lib/nav-items.ts';
 import { QUOTE_SLUG } from '../lib/page-slugs.ts';
 import { absoluteUrl, formatTitle, hreflangLinks } from '../lib/seo.ts';
 import '../styles/global.css';
@@ -60,11 +67,12 @@ const {
 const site = Astro.site;
 if (site === undefined) throw new Error('BaseLayout needs `site` in astro.config.ts');
 
-const [settings, dict, navigation, localize] = await Promise.all([
+const [settings, dict, navigation, localize, applications] = await Promise.all([
   getSettings(),
   getUiDictionary(),
   getNavigation(locale),
   hrefLocalizer(locale),
+  listApplications(locale),
 ]);
 const ui = (key: UiKey) => t(dict, locale, key);
 
@@ -84,7 +92,30 @@ const homeHref = localize(HOME_PATH);
 const quote = { label: ui('navQuote'), href: localize(pagePath(QUOTE_SLUG)) };
 const localizeLinks = (links: readonly { label: string; href: string }[]) =>
   links.map((link) => ({ ...link, href: localize(link.href) }));
-const currentPath = Astro.url.pathname;
+/**
+ * `listApplications` gives each application in `locale`, else its EN entry (name and tagline then
+ * stay EN, flagged by `lang`), and the localizer keeps the EN URL of an untranslated one, so
+ * neither the menu nor the footer ever links a missing `/tr/` page.
+ */
+const navApplications = applications.map(({ data, locale: entryLocale }) => ({
+  slug: data.slug,
+  name: data.name,
+  tagline: data.tagline,
+  order: data.order,
+  locale: entryLocale,
+}));
+/** Header items, built once for both navs. */
+const navItems = resolveNavItems({
+  entries: navigation.data.header,
+  applications: navApplications,
+  locale,
+  localize,
+  currentPath: Astro.url.pathname,
+});
+/** The footer lists the same applications in the same order and cap as the menu. */
+const footerApplications = applicationLinks(navApplications, locale).map(
+  ({ label, href, lang }) => ({ label, href: localize(href), lang }),
+);
 ---
 <!doctype html>
 <html lang={locale} style={{ '--accent-seed': settings.accent }}>
@@ -110,7 +141,7 @@ const currentPath = Astro.url.pathname;
   <body>
     <a
       href="#main"
-      class="sr-only label-mono focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-(--z-popover) focus:flex focus:min-h-11 focus:items-center focus:bg-ink focus:px-4 focus:text-canvas"
+      class="sr-only label focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-(--z-popover) focus:flex focus:min-h-11 focus:items-center focus:bg-ink focus:px-4 focus:text-canvas"
     >
       {ui('skipToContent')}
     </a>
@@ -118,14 +149,15 @@ const currentPath = Astro.url.pathname;
       locale={locale}
       neutralPath={neutralPath}
       availableLocales={availableLocales}
-      currentPath={currentPath}
       homeHref={homeHref}
       logo={settings.logo}
       logoAlt={settings.logoAlt}
-      links={localizeLinks(navigation.data.header)}
+      items={navItems}
       quote={quote}
       labels={{
         nav: ui('navPrimaryLabel'),
+        submenu: ui('navSubmenu'),
+        overview: ui('navOverview'),
         language: ui('languageLabel'),
         menuOpen: ui('menuOpen'),
         menuClose: ui('menuClose'),
@@ -152,10 +184,12 @@ const currentPath = Astro.url.pathname;
       address={settings.organization.address}
       links={localizeLinks(navigation.data.footer)}
       contacts={settings.contacts}
+      applications={footerApplications}
       socials={settings.socials}
       labels={{
         nav: ui('navFooterLabel'),
         contact: ui('footerContact'),
+        applications: ui('footerApplications'),
         social: ui('footerSocial'),
         rights: ui('footerRights'),
       }}

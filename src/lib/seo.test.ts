@@ -74,7 +74,7 @@ test('organizationJsonLd omits absent optional fields', () => {
 test('robotsTxt allows crawling in production and points to the sitemap index', () => {
   assert.equal(
     robotsTxt({ isProduction: true, siteUrl: 'https://example.com' }),
-    'User-agent: *\nDisallow: /admin/\n\nSitemap: https://example.com/sitemap-index.xml\n',
+    'User-agent: *\nDisallow: /keystatic/\n\nSitemap: https://example.com/sitemap-index.xml\n',
   );
 });
 

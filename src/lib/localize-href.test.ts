@@ -51,6 +51,7 @@ test('localizeHref never touches the Worker, the CMS, build assets or a locale p
   const careless = new Set([
     '/api/quote/',
     '/admin/',
+    '/keystatic/',
     '/_astro/x.js/',
     '/tr/',
     '/tr/about/',
@@ -59,6 +60,7 @@ test('localizeHref never touches the Worker, the CMS, build assets or a locale p
   for (const href of [
     '/api/quote',
     '/admin/',
+    '/keystatic/',
     '/_astro/x.js',
     '/tr/',
     '/tr',

@@ -5,7 +5,8 @@
  * rule above is the one line). PGM is the on-air tally (accent lamp), PVW the standby one (muted
  * lamp). The status segments are decoration, hidden from assistive tech; channel, then PGM/PVW and
  * the format drop out on narrow screens, and the status clips before it could push the key. The
- * format keeps its case (`1080i50`: the `i` means interlaced).
+ * band is set in the sans `label`; only the timecode and the PGM/PVW tallies (`signal`) are
+ * hardware cues in mono. The format keeps its case (`1080i50`: the `i` means interlaced).
  *
  * The HOLD key is the site's motion pause (WCAG 2.2.2), on every page and breakpoint: a native
  * checkbox, so it needs no JS. Its hint sits outside the label (description only, read once). `[data-motion-hold]:checked` pauses every animation in
@@ -29,16 +30,16 @@ interface Props {
 const { live, timecode, channel, program, preview, format, hold, holdHint } = Astro.props;
 ---
 <div class="bg-surface">
-  <div class="mx-auto flex max-w-page items-center gap-6 px-4 label-mono md:gap-8 md:px-8">
+  <div class="mx-auto flex max-w-page items-center gap-6 px-4 label md:gap-8 md:px-8">
     <div class="flex h-(--tally-bar) min-w-0 flex-1 items-center gap-6 overflow-x-clip md:gap-8" aria-hidden="true">
       <Tally text={live} />
       <Timecode prefix={timecode} />
       <span class="hidden text-ink-muted sm:inline">{channel}</span>
       <span class="hidden items-center gap-4 md:flex">
-        <Tally text={program} />
-        <Tally text={preview} tone="muted" />
+        <Tally text={program} signal />
+        <Tally text={preview} tone="muted" signal />
       </span>
-      <span class="ms-auto hidden text-ink-muted normal-case md:inline">{format}</span>
+      <span class="ms-auto hidden text-ink-muted md:inline">{format}</span>
     </div>
     <label
       class="hold-key flex min-h-11 shrink-0 cursor-pointer items-center gap-2 border border-line-strong px-3 text-ink"

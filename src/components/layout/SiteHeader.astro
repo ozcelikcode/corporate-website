@@ -1,17 +1,17 @@
 ---
 /**
- * Sticky top bar: logo (home link, named by `logoAlt`; the logo is a wordmark), inline nav
- * from `lg`, language toggle, the quote key from `md` and the MobileNav button below `lg`.
- * The quote key is never hidden: below `md` it lives in the menu sheet. An exact match carries
- * `aria-current="page"`; a section match (`isSectionActive`: the page lies below a non-root href,
- * on whole segments) gets only the visual state. Both draw an accent bar on the header rule
- * (a graphic, so 3:1 is enough).
+ * Sticky top bar: logo (home link, named by `logoAlt`; the logo is a wordmark), the inline nav
+ * with its mega panels from `lg` (DesktopNav), language toggle, the quote key from `md` and the
+ * MobileNav button below `lg`. The quote key is never hidden: below `md` it lives in the menu
+ * sheet. Both navs take the same resolved items (`resolveNavItems` in BaseLayout), so they share
+ * one highlight rule.
  */
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import type { Locale } from '../../lib/i18n.ts';
-import { isCurrentPage, isSectionActive } from '../../lib/nav-state.ts';
+import type { NavItem } from '../../lib/nav-items.ts';
 import Button from '../ui/Button.astro';
+import DesktopNav from './DesktopNav.astro';
 import LanguageToggle from './LanguageToggle.astro';
 import MobileNav from './MobileNav.astro';
 
@@ -21,64 +21,32 @@ interface Props {
   locale: Locale;
   neutralPath: string;
   availableLocales: readonly Locale[];
-  currentPath: string;
   homeHref: string;
   logo: ImageMetadata;
   logoAlt: string;
-  /** Header nav, hrefs already localized by BaseLayout. */
-  links: readonly Link[];
+  /** Header nav: hrefs localized and states resolved by BaseLayout. */
+  items: readonly NavItem[];
   quote: Link;
   labels: {
     nav: string;
+    submenu: string;
+    overview: string;
     language: string;
     menuOpen: string;
     menuClose: string;
   };
 }
 
-const {
-  locale,
-  neutralPath,
-  availableLocales,
-  currentPath,
-  homeHref,
-  logo,
-  logoAlt,
-  links,
-  quote,
-  labels,
-} = Astro.props;
-
-/** Computed once here and handed to MobileNav, so both navs share one highlight rule. */
-const navItems = links.map((link) => {
-  const current = isCurrentPage(currentPath, link.href);
-  return { ...link, current, active: current || isSectionActive(currentPath, link.href) };
-});
+const { locale, neutralPath, availableLocales, homeHref, logo, logoAlt, items, quote, labels } =
+  Astro.props;
 ---
 <header class="sticky top-0 z-(--z-header) border-b border-line bg-canvas">
   <div class="mx-auto flex h-(--header-bar) max-w-page items-center gap-4 px-4 md:gap-6 md:px-8">
     <a href={homeHref} class="me-auto flex min-h-11 shrink-0 items-center">
-      <Image src={logo} alt={logoAlt} class="h-6 w-auto" loading="eager" />
+      <Image src={logo} alt={logoAlt} class="h-7 w-auto" loading="eager" />
     </a>
 
-    <nav aria-label={labels.nav} class="hidden lg:block">
-      <ul class="flex items-center gap-4">
-        {
-          navItems.map(({ label, href, current, active }) => (
-            <li>
-              <a
-                class="relative flex min-h-11 items-center px-2 label-mono text-ink-muted hover:text-ink data-active:text-ink data-active:after:absolute data-active:after:inset-x-2 data-active:after:-bottom-2.5 data-active:after:h-0.5 data-active:after:bg-accent"
-                href={href}
-                aria-current={current ? 'page' : undefined}
-                data-active={active ? '' : undefined}
-              >
-                {label}
-              </a>
-            </li>
-          ))
-        }
-      </ul>
-    </nav>
+    <DesktopNav items={items} navLabel={labels.nav} submenuLabel={labels.submenu} />
 
     <LanguageToggle
       locale={locale}
@@ -92,11 +60,12 @@ const navItems = links.map((link) => {
     </div>
 
     <MobileNav
-      links={navItems}
+      items={items}
       quote={quote}
       navLabel={labels.nav}
       openLabel={labels.menuOpen}
       closeLabel={labels.menuClose}
+      overviewLabel={labels.overview}
     />
   </div>
 </header>

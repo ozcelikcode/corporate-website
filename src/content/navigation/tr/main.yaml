@@ -1,14 +1,32 @@
-# Links use English site paths; Turkish pages link the /tr/ URL of every page that has one.
 header:
   - label: Uygulamalar
     href: /applications/
-  - label: Hakkımızda
-    href: /about/
+    source: applications
+    children: []
+    feature:
+      heading: Nereden başlayacağınızdan emin değil misiniz?
+      text: İhtiyacınızı anlatın, size uygun uygulamayı önerelim.
+      action:
+        label: Teklif iste
+        href: /quote/
+  - label: Kurumsal
+    source: ''
+    children:
+      - label: Hakkımızda
+        href: /about/
+        description: Misyonumuz ve çalışma biçimimiz.
+      - label: Gizlilik
+        href: /privacy/
+        description: Verilerinizi nasıl ele aldığımız.
+    feature:
+      action: {}
   - label: İletişim
     href: /contact/
+    source: ''
+    children: []
+    feature:
+      action: {}
 footer:
-  - label: Uygulamalar
-    href: /applications/
   - label: Hakkımızda
     href: /about/
   - label: İletişim
