@@ -18,7 +18,7 @@ const SEPARATOR = '/';
 const { locale, neutralPath, availableLocales, label } = Astro.props;
 ---
 <nav aria-label={label}>
-  <ul class="flex items-center label-mono">
+  <ul class="flex items-center label">
     {
       LOCALES.map((code, index) => (
         <li class="flex items-center">

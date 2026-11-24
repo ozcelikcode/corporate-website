@@ -67,7 +67,7 @@ const navItems = links.map((link) => {
           navItems.map(({ label, href, current, active }) => (
             <li>
               <a
-                class="relative flex min-h-11 items-center px-2 label-mono text-ink-muted hover:text-ink data-active:text-ink data-active:after:absolute data-active:after:inset-x-2 data-active:after:-bottom-2.5 data-active:after:h-0.5 data-active:after:bg-accent"
+                class="relative flex min-h-11 items-center px-2 label text-ink-muted hover:text-ink data-active:text-ink data-active:after:absolute data-active:after:inset-x-2 data-active:after:-bottom-2.5 data-active:after:h-0.5 data-active:after:bg-accent"
                 href={href}
                 aria-current={current ? 'page' : undefined}
                 data-active={active ? '' : undefined}
