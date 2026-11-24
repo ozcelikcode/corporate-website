@@ -30,6 +30,7 @@ interface Props {
   labels: {
     nav: string;
     submenu: string;
+    overview: string;
     language: string;
     menuOpen: string;
     menuClose: string;
@@ -64,6 +65,7 @@ const { locale, neutralPath, availableLocales, homeHref, logo, logoAlt, items, q
       navLabel={labels.nav}
       openLabel={labels.menuOpen}
       closeLabel={labels.menuClose}
+      overviewLabel={labels.overview}
     />
   </div>
 </header>

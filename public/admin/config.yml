@@ -132,6 +132,10 @@ collections:
         widget: string
         i18n: true
         required: [en]
+      - name: navOverview
+        widget: string
+        i18n: true
+        required: [en]
       - name: languageLabel
         widget: string
         i18n: true
