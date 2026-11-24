@@ -31,3 +31,19 @@ export function withoutBlankValues(value: unknown): unknown {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return value;
   return Object.fromEntries(Object.entries(value).filter(([, entry]) => !isBlank(entry)));
 }
+
+/** Blank at every depth: a blank leaf, or an object whose values all are (`{}` included). */
+function isBlankDeep(value: unknown): boolean {
+  if (isBlank(value)) return true;
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  return Object.values(value).every(isBlankDeep);
+}
+
+/**
+ * An optional nested object. Keystatic saves an emptied one as `{}` (or with blank leaves), so
+ * `undefined`, `null`, `{}` and an object whose leaves are all blank parse as absent; anything
+ * else must pass `schema`.
+ */
+export function optionalObjectField<T extends z.ZodType>(schema: T) {
+  return z.preprocess((value) => (isBlankDeep(value) ? undefined : value), schema.optional());
+}

@@ -20,7 +20,6 @@ const TAGLINE_MAX = 120;
 const CONTRAST_DECIMALS = 2;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const CONTACT_HREF_PATTERN = /^(mailto:|tel:|https:\/\/)/;
-const LINK_HREF_PATTERN = /^(\/(?![/\\])|https:\/\/|mailto:)/;
 
 /** Social and cover images are rasters only (the CMS field refuses SVG; the build does too). */
 const rasterImage = (image: SchemaContext['image'], field: string) =>
@@ -47,8 +46,6 @@ const contact = z.strictObject({
   value: z.string(),
   href: z.string().regex(CONTACT_HREF_PATTERN),
 });
-
-const link = z.strictObject({ label: z.string(), href: z.string().regex(LINK_HREF_PATTERN) });
 
 export const settingsSchema = ({ image }: SchemaContext) =>
   z.strictObject({
@@ -78,11 +75,6 @@ export const uiSchema = z.preprocess(
   withoutBlankValues,
   z.partialRecord(z.enum(UI_KEYS), z.string().min(1)),
 );
-
-export const navigationSchema = z.strictObject({
-  header: z.array(link).min(1),
-  footer: listField(z.array(link)),
-});
 
 export const pageSchema = (context: SchemaContext) =>
   z.strictObject({
