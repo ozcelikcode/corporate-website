@@ -30,23 +30,23 @@ interface Props {
 const { id, links, feature } = Astro.props;
 ---
 <div id={id} popover data-mega-panel class="mega-panel bg-surface text-ink">
-  <div class:list={[CONTAINER, 'py-10']}>
+  <div class:list={[CONTAINER, 'py-12']}>
     <GridFrame columns={12}>
-      <ul class="-mx-4 grid grid-cols-2 content-start gap-x-8 gap-y-2 lg:col-span-8">
+      <ul class="-mx-4 grid grid-cols-2 content-start gap-x-8 gap-y-4 lg:col-span-8">
         {
           links.map(({ label, href, description, current, lang }) => (
             <li>
               <a
-                class="group relative flex min-h-11 flex-col justify-center gap-1 px-4 py-3 hover:bg-(--ink-band) focus-visible:outline-offset-[calc(var(--border-focus)*-1)] aria-[current=page]:bg-(--ink-band) aria-[current=page]:before:absolute aria-[current=page]:before:inset-y-0 aria-[current=page]:before:start-0 aria-[current=page]:before:w-1 aria-[current=page]:before:bg-accent"
+                class="group relative flex min-h-11 flex-col justify-center gap-2 px-4 py-4 hover:bg-(--ink-band) focus-visible:outline-offset-[calc(var(--border-focus)*-1)] aria-[current=page]:bg-(--ink-band) aria-[current=page]:before:absolute aria-[current=page]:before:inset-y-0 aria-[current=page]:before:start-0 aria-[current=page]:before:w-1 aria-[current=page]:before:bg-accent"
                 href={href}
                 aria-current={current ? 'page' : undefined}
               >
-                <span lang={lang} class="flex items-center gap-2 font-medium">
+                <span lang={lang} class="flex items-center gap-2 text-lede font-semibold">
                   {label}
-                  <Glyph name="→" class="text-ink-muted transition-transform group-hover:translate-x-1 group-hover:text-ink" />
+                  <Glyph name="→" size="body" class="text-ink-muted transition-transform group-hover:translate-x-1 group-hover:text-ink" />
                 </span>
                 {description !== undefined && (
-                  <span lang={lang} class="text-label text-ink-muted">
+                  <span lang={lang} class="text-ink-muted">
                     {description}
                   </span>
                 )}
@@ -57,8 +57,8 @@ const { id, links, feature } = Astro.props;
       </ul>
       {
         feature !== undefined && (
-          <div class="flex flex-col items-start gap-4 self-start bg-canvas p-6 lg:col-span-4">
-            <p class="text-h3 font-semibold">{feature.heading}</p>
+          <div class="flex flex-col items-start gap-4 self-start bg-canvas p-6 lg:col-span-4 xl:p-8">
+            <p class="text-h3 font-semibold wrap-break-word">{feature.heading}</p>
             <p class="text-ink-muted">{feature.text}</p>
             <Button href={feature.action.href} size="sm">
               {feature.action.label}

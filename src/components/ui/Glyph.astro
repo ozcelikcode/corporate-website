@@ -3,15 +3,21 @@
  * Arrow glyphs drawn as inline SVG: the font subsets lack → and ↗, so the marks never fall back
  * to a system font. `⌄` is the submenu chevron (it points down; the menu turns it when open).
  * Square caps and mitred joins match the 0-radius language; the stroke takes the surrounding
- * text colour. Sized to the label type token.
+ * text colour. Sized to the label type token, or the body one beside body-size and larger text.
  */
 
 type GlyphName = '→' | '↗' | '⌄';
 
 interface Props {
   name: GlyphName;
+  size?: 'label' | 'body';
   class?: string;
 }
+
+const SIZE = {
+  label: 'size-(--text-label)',
+  body: 'size-(--text-body)',
+} as const satisfies Record<NonNullable<Props['size']>, string>;
 
 /** Drawing box and stroke, in SVG user units (scale with the rendered size). */
 const VIEWBOX_SIZE = 16;
@@ -24,10 +30,10 @@ const PATHS = {
   '⌄': 'M3 6L8 11L13 6',
 } as const satisfies Record<GlyphName, string>;
 
-const { name, class: className } = Astro.props;
+const { name, size = 'label', class: className } = Astro.props;
 ---
 <svg
-  class:list={['inline-block size-(--text-label) shrink-0', className]}
+  class:list={['inline-block shrink-0', SIZE[size], className]}
   viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`}
   fill="none"
   stroke="currentColor"
