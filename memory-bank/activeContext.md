@@ -61,3 +61,5 @@ i18n fallback in static dynamic routes, `astro/zod` bundling in the Worker, Work
 - Open items (A2 follow-ups):
   - (a) `ascii-source` finds the hero source by matching bytes in `dist/_astro` (relies on Astro's build order). I1 replaces it with deterministic resolution.
   - (b) Old Sveltia `/admin/` writes a shape the build now rejects. Do not use it until A4 removes Sveltia.
+- A3 merged (`68893ca`): the Worker serves `/api/keystatic/*` and the `/keystatic/*` shell through `routeFor`; the secrets, callback URL and admin CSP are in `techContext.md` ("Keystatic worker secrets (A3)").
+

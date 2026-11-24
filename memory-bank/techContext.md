@@ -138,3 +138,9 @@ Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fie
 ## Mobile menu accordions (B4)
 - Exclusive `<details name>` accordions need Safari 17.2+.
 - `NavChild.lang` marks EN fallback nav entries with `lang="en"` (WCAG 3.1.2). Ui key `navOverview` added.
+
+## Keystatic worker secrets (A3)
+- Secrets (wrangler secret or dashboard): `KEYSTATIC_GITHUB_CLIENT_ID`, `KEYSTATIC_GITHUB_CLIENT_SECRET`, `KEYSTATIC_SECRET` (at least 32 chars). Build var: `PUBLIC_KEYSTATIC_GITHUB_APP_SLUG`. The routing and status codes are in `systemPatterns.md` "Keystatic worker route (A3)".
+- GitHub App OAuth callback: `https://<host>/api/keystatic/github/oauth/callback` (local: `http://127.0.0.1:8787/api/keystatic/github/oauth/callback`).
+- Admin CSP (`ADMIN_CSP` in `worker/headers.ts`): `default-src 'self'`; `script-src 'self'`; `style-src 'self' 'unsafe-inline'`; `img-src 'self' data: blob:`; `font-src 'self'`; `connect-src 'self' https://api.github.com https://raw.githubusercontent.com`; `worker-src 'self'`; `frame-ancestors 'none'`; `base-uri 'self'`; `object-src 'none'`; `form-action 'self'`.
+- Open: `Cache-Control: no-store` on the admin shell also stops caching of the roughly 912 KB gzip admin bundle under `/_astro/`. Only the shell is `no-store`; keep this in view for A4.

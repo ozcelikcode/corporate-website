@@ -204,8 +204,17 @@ Don't:
 - UI_KEYS was 52 here (`quote*` keys, `footerRights` in TR; `motionHold`, `motionHoldHint` from Task 7b fix round 1, EN "Hold" / TR "Beklet").
 
 ## Quote Worker (Task 10, `worker/`)
-- `index.ts`: `/api/quote` (exact path) -> `handleQuote`; everything else -> `env.ASSETS.fetch`. `wrangler.jsonc` `run_worker_first: ["/api/*"]`. Allow-list = `worker/generated/solutions.json` (written by `build-outputs` on `astro:build:done`, gitignored).
+- `index.ts` switches on the pure `routeFor` (`worker/route.ts`): `quote` (`/api/quote`, exact) -> `handleQuote`; `keystatic` (`/api/keystatic/*` and `/keystatic/*`) -> the Keystatic handler; `assets` -> `env.ASSETS.fetch`. `wrangler.jsonc` `run_worker_first: ["/api/*", "/keystatic/*"]`. Allow-list = `worker/generated/solutions.json` (written by `build-outputs` on `astro:build:done`, gitignored).
 - `quote.ts` flow: non-POST 405 (`Allow: POST`) -> Origin must equal request origin -> content type urlencoded/multipart -> bad `MAX_BODY_BYTES` = `error-send` -> `Content-Length` over cap -> body read as a stream, capped at `MAX_BODY_BYTES` even when chunked -> `formData()` -> `quoteSchema` + allow-list (`error-invalid`) -> empty/over-limit/missing token `error-verify` (no siteverify, covers no-JS) -> missing secret/`QUOTE_TO`/`QUOTE_FROM` `error-send` -> `verifyTurnstile` (hostname, action `quote`, 5 s timeout) `error-verify` -> `send` rejects `error-send` -> `sent`. Every POST answer is a 303 to `<origin>[/tr]/quote/#<state>` with `WORKER_HEADERS`.
 - Logging: only `console.error({ code, step })`, `code` in guard|invalid|verify|send|config. Guard failures before the form is parsed take the locale from the Referer's first path segment via `isLocale` only (else EN); a body stream error is `error-invalid` (`guard`/`body`).
 - `mail.ts`: CRLF, base64 body (76 cols), RFC 2047 subject split into short encoded words, throws on CR/LF in any header value. `Reply-To` is the visitor.
 - `public/_headers` is spec §11 verbatim (`<auth-worker>` placeholder stays until the owner fills it). Worker responses set their own headers (`headers.ts`).
+
+## Keystatic worker route (A3, `worker/route.ts`, `worker/keystatic.ts`, `worker/headers.ts`)
+- Shared prefixes live in `src/keystatic/paths.ts` (`KEYSTATIC_API_PREFIX`, `KEYSTATIC_SHELL_PATH`), imported by the worker and `keystatic-dev-route.ts`.
+- `/api/keystatic/*` runs the generic GitHub-mode handler (storage from `KEYSTATIC_REPO`). `/keystatic/*` always serves the shell (the `/keystatic/` asset), so deep links such as `/keystatic/branch/main/` load the SPA.
+- Config gate: missing or short (<32 chars) `KEYSTATIC_SECRET` returns 503 `{code:'config', step:'keystatic'}`. A handler throw returns 500 `{code:'keystatic', step:'api'}`; a shell fetch throw returns 500 `{step:'shell'}`. Logging stays `console.error({ code, step })`.
+- `toApiResult` (pure, `keystatic.ts`) maps the handler result to a Response: status defaults to 200, headers expand via `new Headers()` so multiple Set-Cookie pairs stay separate.
+- Admin responses (the small shell only) get `ADMIN_CSP`, `X-Frame-Options: DENY`, `X-Robots-Tag: noindex` and `Cache-Control: no-store`. The bundle under `/_astro/` stays immutable-cached.
+- `worker/tsconfig.json` sets `skipLibCheck` (Keystatic types pull DOM libs through `@keystatic/core`). First-party code stays strict. The handler config type comes from `Parameters<typeof makeGenericAPIRouteHandler>[0]['config']`.
+- No `nodejs_compat`. Worker dry-run about 134 KiB gzip.
