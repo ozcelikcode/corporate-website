@@ -4,7 +4,8 @@
  * with its mega panels from `lg` (DesktopNav), language toggle, the quote key from `md` and the
  * MobileNav button below `lg`. The quote key is never hidden: below `md` it lives in the menu
  * sheet. Both navs take the same resolved items (`resolveNavItems` in BaseLayout), so they share
- * one highlight rule.
+ * one highlight rule. The logo box is capped at `max-w-28` (a wider wordmark scales down inside
+ * it): the header label budget (`NAV_HEADER_LABELS_BUDGET`) was measured with that width.
  */
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
@@ -43,7 +44,12 @@ const { locale, neutralPath, availableLocales, homeHref, logo, logoAlt, items, q
 <header class="sticky top-0 z-(--z-header) border-b border-line bg-canvas">
   <div class="mx-auto flex h-(--header-bar) max-w-page items-center gap-4 px-4 md:gap-6 md:px-8">
     <a href={homeHref} class="me-auto flex min-h-11 shrink-0 items-center">
-      <Image src={logo} alt={logoAlt} class="h-7 w-auto" loading="eager" />
+      <Image
+        src={logo}
+        alt={logoAlt}
+        class="h-7 w-auto max-w-28 object-contain object-left"
+        loading="eager"
+      />
     </a>
 
     <DesktopNav items={items} navLabel={labels.nav} submenuLabel={labels.submenu} />
@@ -56,7 +62,7 @@ const { locale, neutralPath, availableLocales, homeHref, logo, logoAlt, items, q
     />
 
     <div class="hidden whitespace-nowrap md:block">
-      <Button href={quote.href} size="sm">{quote.label}</Button>
+      <Button href={quote.href} size="sm" caption="body">{quote.label}</Button>
     </div>
 
     <MobileNav

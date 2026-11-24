@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { z } from 'astro/zod';
 import { applicationSchema, pageSchema, settingsSchema, uiSchema } from './content-schemas.ts';
+import { NAV_QUOTE_MAX } from './navigation-schema.ts';
 
 // The real `image()` helper needs the Astro content runtime; a string stands in for it.
 const context = { image: () => z.string() } as never;
@@ -105,4 +106,12 @@ test('social and cover images refuse SVG, rasters pass', () => {
   assert.ok(!pageSchema(svgAware).safeParse({ ...page, ogImage: svg }).success);
   assert.ok(applicationSchema(svgAware).safeParse({ ...application, cover: png }).success);
   assert.ok(!applicationSchema(svgAware).safeParse({ ...application, cover: svg }).success);
+});
+
+test('the header quote caption may not outgrow the measured header budget', () => {
+  assert.equal(uiSchema.safeParse({ navQuote: 'Request a quote' }).success, true);
+  assert.equal(uiSchema.safeParse({ navQuote: 'x'.repeat(NAV_QUOTE_MAX + 1) }).success, false);
+  const wide = uiSchema.safeParse({ navQuote: 'WWWWWWWWWW' });
+  assert.equal(wide.success, false);
+  assert.match(wide.error?.issues[0]?.message ?? '', /navQuote .* too long for the header bar/);
 });

@@ -1,8 +1,9 @@
 ---
 /**
- * `EN / TR` switch. Codes come from `LOCALES`, uppercased in JS (`toUpperCase`; the sans `label`
- * does not transform case). The current locale is plain text with `aria-current`; every other one
- * links to its twin of this page (or that locale's home).
+ * `EN / TR` switch, set like the header nav (body size, medium). Codes come from `LOCALES`,
+ * uppercased in JS (`toUpperCase`; the type does not transform case). The current locale is plain
+ * text with `aria-current`; every other one links to its twin of this page (or that locale's
+ * home).
  */
 import { LOCALES, type Locale, toggleTarget } from '../../lib/i18n.ts';
 
@@ -19,7 +20,7 @@ const SEPARATOR = '/';
 const { locale, neutralPath, availableLocales, label } = Astro.props;
 ---
 <nav aria-label={label}>
-  <ul class="flex items-center label">
+  <ul class="flex items-center text-body font-medium">
     {
       LOCALES.map((code, index) => (
         <li class="flex items-center">
