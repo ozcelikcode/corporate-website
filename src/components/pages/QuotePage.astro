@@ -19,7 +19,7 @@ import { QUOTE_SLUG } from '../../lib/page-slugs.ts';
 import { MAX_SOLUTIONS } from '../../lib/quote-schema.ts';
 import QuoteForm from '../quote/QuoteForm.astro';
 import QuoteStatus from '../quote/QuoteStatus.astro';
-import { BAND, CONTAINER, DIVIDER } from '../sections/band-class.ts';
+import { bandBefore, CONTAINER, DEFAULT_LAYOUT, sectionBand } from '../sections/band-class.ts';
 import SectionRenderer from '../sections/SectionRenderer.astro';
 
 interface Props {
@@ -54,6 +54,9 @@ if (solutions.length + GENERAL_COUNT > MAX_SOLUTIONS) {
     `The quote form offers ${solutions.length} applications plus "general", more than MAX_SOLUTIONS (${MAX_SOLUTIONS}) in src/lib/quote-schema.ts; raise the limit or remove applications`,
   );
 }
+// The page always has a title band (or a hero) above its sections, so the form band has a neighbour.
+const { sections } = page.data;
+const formBand = sectionBand(DEFAULT_LAYOUT, bandBefore(sections, sections.length, true));
 ---
 <BaseLayout
   locale={locale}
@@ -69,7 +72,7 @@ if (solutions.length + GENERAL_COUNT > MAX_SOLUTIONS) {
   </Fragment>
   <SectionRenderer sections={page.data.sections} locale={locale} pageTitle={page.data.title} />
   <QuoteStatus locale={locale} ui={ui} email={email} />
-  <div class:list={[BAND, DIVIDER]}>
+  <div class={formBand}>
     <div class={CONTAINER}>
       <QuoteForm
         locale={locale}

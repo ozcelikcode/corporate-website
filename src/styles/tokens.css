@@ -121,6 +121,12 @@
      *   4.3:1 on the ground and 3.7:1 on tiles (focus rings, keys, button borders); the button
      *   glyph, in the ground colour, sits on it at the same ratio. The default amber: 6.3:1.
      */
+    /*
+     * Cover ground (duotone covers): the page canvas, resolved here on :root, so it stays dark
+     * inside a contrast band, where `--color-canvas` flips to light and would flash before a lazy
+     * image loads.
+     */
+    --cover-ground: var(--color-canvas);
     --band-subtle: var(--color-surface);
     --contrast-canvas: var(--color-ink);
     --contrast-surface: oklch(0.9 0.006 255);

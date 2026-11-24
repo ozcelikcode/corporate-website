@@ -22,7 +22,7 @@ const FORMATS = ['avif', 'webp'];
 
 const { src, alt, widths, sizes, loading = 'lazy' } = Astro.props;
 ---
-<div class="relative isolate bg-canvas">
+<div class="relative isolate bg-(--cover-ground)">
   <Picture
     src={src}
     alt={alt}

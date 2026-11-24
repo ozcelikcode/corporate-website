@@ -1,12 +1,23 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import type { SectionLayout } from '../../lib/sections-schema.ts';
-import { BAND, bandTinted, DIVIDER, FIRST_BAND, sectionBand } from './band-class.ts';
+import type { Section, SectionLayout } from '../../lib/sections-schema.ts';
+import {
+  BAND,
+  bandBefore,
+  DEFAULT_LAYOUT,
+  DIVIDER,
+  FIRST_BAND,
+  PLAIN_BAND,
+  sectionBand,
+} from './band-class.ts';
 
-const DEFAULT_LAYOUT: SectionLayout = { background: 'default', spacing: 'regular' };
-const MIDDLE = { first: false, afterTint: false };
-const FIRST = { first: true, afterTint: false };
-const AFTER_TINT = { first: false, afterTint: true };
+const MIDDLE = PLAIN_BAND;
+const FIRST = undefined;
+const tinted = (background: 'subtle' | 'contrast'): SectionLayout => ({
+  ...DEFAULT_LAYOUT,
+  background,
+});
+const AFTER_TINT = tinted('subtle');
 const classes = (value: string) => value.split(' ').filter((part) => part !== '');
 
 test('the default layout renders the usual band, first or after a divider', () => {
@@ -41,8 +52,42 @@ test('the band after a tinted one skips the divider', () => {
   assert.equal(sectionBand(DEFAULT_LAYOUT, AFTER_TINT), BAND);
 });
 
-test('only subtle and contrast backgrounds are tinted', () => {
-  assert.equal(bandTinted(DEFAULT_LAYOUT), false);
-  assert.equal(bandTinted({ ...DEFAULT_LAYOUT, background: 'subtle' }), true);
-  assert.equal(bandTinted({ ...DEFAULT_LAYOUT, background: 'contrast' }), true);
+test('every previous-band case keeps the output of the old place flags', () => {
+  const TINT_CLASS = { subtle: 'band-subtle', contrast: 'band-contrast' } as const;
+  for (const background of ['subtle', 'contrast'] as const) {
+    const layout = tinted(background);
+    const tint = TINT_CLASS[background];
+    const body = `py-16 md:py-24 ${tint}`;
+    assert.equal(sectionBand(layout, PLAIN_BAND), body);
+    assert.equal(sectionBand(layout, FIRST), `${body} ${FIRST_BAND}`);
+    // A tinted band after the other tint is its own edge, as before.
+    const other = tinted(background === 'subtle' ? 'contrast' : 'subtle');
+    assert.equal(sectionBand(layout, other), body);
+    // A plain band after a tint skips the rule, as before.
+    assert.equal(sectionBand(DEFAULT_LAYOUT, layout), BAND);
+  }
+  assert.equal(sectionBand(DEFAULT_LAYOUT, DEFAULT_LAYOUT), `${BAND} ${DIVIDER}`);
+});
+
+test('two adjacent bands of the same tint keep one hairline rule between them', () => {
+  for (const background of ['subtle', 'contrast'] as const) {
+    const layout = tinted(background);
+    const band = classes(sectionBand(layout, layout));
+    for (const part of classes(DIVIDER)) assert.ok(band.includes(part), background);
+    assert.ok(band.includes(`band-${background}`), background);
+    // The rule needs a ground that differs from it, and only the border colour token is used.
+    assert.ok(DIVIDER.includes('border-line'));
+  }
+});
+
+test('bandBefore reads the band above: a layout, a plain band, the title band or nothing', () => {
+  const layout = tinted('contrast');
+  const hero = { type: 'hero' } as Section;
+  const statement = { type: 'statement', layout } as Section;
+  assert.equal(bandBefore([], 0, false), undefined);
+  assert.equal(bandBefore([hero, statement], 0, false), undefined);
+  assert.equal(bandBefore([hero, statement], 0, true), PLAIN_BAND);
+  assert.equal(bandBefore([hero, statement], 1, false), PLAIN_BAND);
+  assert.equal(bandBefore([hero, statement], 2, true), layout);
+  assert.equal(bandBefore([], 0, true), PLAIN_BAND);
 });

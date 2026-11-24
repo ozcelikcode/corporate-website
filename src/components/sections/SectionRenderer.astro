@@ -3,7 +3,7 @@
  * Renders a page's `sections[]` as full-bleed bands, each with the page container inside.
  * - Dividers (border budget): every band after the first opens with one full-width hairline
  *   rule; blocks never draw their own outer borders. A tinted band (`layout.background`) is its
- *   own edge, so neither it nor the band after it draws the rule (`sectionBand`).
+ *   own edge, except next to a band of the same tint (`sectionBand` decides).
  * - Layout: every section but the hero carries `layout` (background, spacing), resolved to its
  *   band classes by `sectionBand`; the default layout is the usual band.
  * - The page's one h1: a hero (always at position 0) takes it, in its own first-screen band
@@ -21,7 +21,7 @@ import type { Locale } from '../../lib/i18n.ts';
 import type { Section } from '../../lib/sections-schema.ts';
 import Heading from '../ui/Heading.astro';
 import AppGrid from './AppGrid.astro';
-import { BAND, bandTinted, CONTAINER, FIRST_BAND, HERO_BAND, sectionBand } from './band-class.ts';
+import { BAND, bandBefore, CONTAINER, FIRST_BAND, HERO_BAND, sectionBand } from './band-class.ts';
 import Cta from './Cta.astro';
 import Faq from './Faq.astro';
 import FeatureList from './FeatureList.astro';
@@ -63,14 +63,12 @@ const localize = await hrefLocalizer(locale);
   sections.map((section, i) => {
     const isFirstBand = i + bandOffset === 0;
     const common = { index: i + FIRST_INDEX, locale, localize };
-    const previous = sections[i - 1];
-    const afterTint = previous !== undefined && previous.type !== 'hero' && bandTinted(previous.layout);
     return (
       <section
         class={
           section.type === 'hero'
             ? HERO_BAND
-            : sectionBand(section.layout, { first: isFirstBand, afterTint })
+            : sectionBand(section.layout, bandBefore(sections, i, titleBand !== undefined))
         }
       >
         <div class={CONTAINER}>
