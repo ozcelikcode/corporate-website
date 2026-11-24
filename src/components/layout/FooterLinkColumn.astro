@@ -1,0 +1,51 @@
+---
+/**
+ * One footer link list: a label in the shared first-row box (indexed for a column label, unindexed
+ * for the brand column's Contact list), then underlined links named by that label
+ * (`aria-labelledby`). An item sets `lang` when its text is in another language than the page
+ * (WCAG 3.1.2) and `external` to carry ↗.
+ */
+import type { Locale } from '../../lib/i18n.ts';
+import Glyph from '../ui/Glyph.astro';
+import Label from '../ui/Label.astro';
+
+export type FooterLink = {
+  label: string;
+  href: string;
+  lang?: Locale | undefined;
+  external?: boolean;
+};
+
+interface Props {
+  /** Unique on the page; the label's id, which names the list. */
+  id: string;
+  label: string;
+  index?: number | undefined;
+  items: readonly FooterLink[];
+}
+
+/** Inline-block keeps ↗ after a wrapped value's last word; padding meets the 24 CSS pixel target. */
+const LINK =
+  'inline-block py-1 underline decoration-line-strong underline-offset-4 hover:decoration-ink';
+const GLYPH_GAP = 'ms-2';
+const ROW = 'py-1.5';
+
+const { id, label, index, items } = Astro.props;
+---
+<div class="flex flex-col gap-2">
+  <div id={id} class="flex min-h-11 items-center">
+    <Label text={label} index={index} />
+  </div>
+  <ul class="flex flex-col" aria-labelledby={id}>
+    {
+      items.map(({ label: text, href, lang, external = false }) => (
+        <li class={ROW}>
+          <a class={LINK} href={href} lang={lang}>
+            {text}
+            {external && <Glyph name="↗" class={GLYPH_GAP} />}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</div>

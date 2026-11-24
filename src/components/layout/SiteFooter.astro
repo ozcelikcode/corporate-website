@@ -7,18 +7,21 @@
  * Applications and Follow render only when they have entries, so the grid has two to four tracks.
  * Every column's first row is the same `min-h-11` box, so the first rows share one line; one
  * running `[NN]` sequence runs over the column labels (the nav rows, then Applications and Follow).
+ * The Contact label belongs to column 1, not to the column labels, so it carries no index.
  * Contacts keep their own `mailto:` / `tel:` / `https:` hrefs; outbound links get ↗.
  */
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
+import type { ComponentProps } from 'astro/types';
 import type { Locale } from '../../lib/i18n.ts';
 import { EXTERNAL_PREFIX } from '../../lib/link-schemes.ts';
 import BarsStrip from '../ui/BarsStrip.astro';
-import Glyph from '../ui/Glyph.astro';
 import GridFrame from '../ui/GridFrame.astro';
 import Label from '../ui/Label.astro';
+import FooterLinkColumn from './FooterLinkColumn.astro';
 
 type Link = { label: string; href: string };
+type Columns = NonNullable<ComponentProps<typeof GridFrame>['columns']>;
 
 interface Props {
   homeHref: string;
@@ -39,21 +42,15 @@ interface Props {
 }
 
 /** Brand and nav always; Applications and Follow each add a track when they have entries. */
-const COLUMNS_ALL = 4;
-const COLUMNS_ONE_OPTIONAL = 3;
 const COLUMNS_FIXED = 2;
 /** `[NN]` indexes count from 1. */
 const FIRST_INDEX = 1;
 /** Stamped at build time; the site rebuilds on every content change. */
 const BUILD_YEAR = new Date().getFullYear();
-
-/** Inline-block keeps ↗ after a wrapped value's last word; padding meets the 24 CSS pixel target. */
-const LINK =
-  'inline-block py-1 underline decoration-line-strong underline-offset-4 hover:decoration-ink';
-const GLYPH_GAP = 'ms-2';
-const ROW = 'py-1.5';
-/** Same box as a nav row and the logo link, so every column's first row shares one line. */
-const FIRST_ROW = 'flex min-h-11 items-center';
+/** Label ids that name the link lists; the footer renders once per page. */
+const CONTACT_ID = 'footer-contact';
+const APPLICATIONS_ID = 'footer-applications';
+const SOCIAL_ID = 'footer-social';
 
 const {
   homeHref,
@@ -70,17 +67,19 @@ const {
 
 const hasApplications = applications.length > 0;
 const hasSocials = socials.length > 0;
-const columns =
-  hasApplications && hasSocials
-    ? COLUMNS_ALL
-    : hasApplications || hasSocials
-      ? COLUMNS_ONE_OPTIONAL
-      : COLUMNS_FIXED;
+/** Two to four by construction, the range GridFrame takes. */
+const columns = (COLUMNS_FIXED + Number(hasApplications) + Number(hasSocials)) as Columns;
 /** The nav rows take the first indexes; the Applications and Follow labels continue the run. */
 const applicationsIndex = links.length + FIRST_INDEX;
 const socialIndex = applicationsIndex + Number(hasApplications);
 /** Settings often repeat the street address as a linked contact; print it once, as the link. */
 const showAddress = address !== undefined && !contacts.some(({ value }) => value === address);
+const contactLinks = contacts.map(({ value, href }) => ({
+  label: value,
+  href,
+  external: href.startsWith(EXTERNAL_PREFIX),
+}));
+const socialLinks = socials.map((link) => ({ ...link, external: true }));
 ---
 <footer class="mt-24 border-t border-line">
   <div class="mx-auto max-w-page px-4 pt-12 pb-8 md:px-8">
@@ -89,26 +88,12 @@ const showAddress = address !== undefined && !contacts.some(({ value }) => value
         <a href={homeHref} class="flex min-h-11 items-center self-start">
           <Image src={logo} alt={logoAlt} class="h-6 w-auto" />
         </a>
-        <address class="flex flex-col gap-6 not-italic">
+        <address class="flex flex-col gap-4 not-italic">
           <p class="text-ink-muted">
             <span class="block text-ink">{legalName}</span>
             {showAddress && <span class="block">{address}</span>}
           </p>
-          <div class="flex flex-col gap-2">
-            <Label text={labels.contact} />
-            <ul class="flex flex-col">
-              {
-                contacts.map(({ value, href }) => (
-                  <li class={ROW}>
-                    <a class={LINK} href={href}>
-                      {value}
-                      {href.startsWith(EXTERNAL_PREFIX) && <Glyph name="↗" class={GLYPH_GAP} />}
-                    </a>
-                  </li>
-                ))
-              }
-            </ul>
-          </div>
+          <FooterLinkColumn id={CONTACT_ID} label={labels.contact} items={contactLinks} />
         </address>
       </div>
 
@@ -128,40 +113,23 @@ const showAddress = address !== undefined && !contacts.some(({ value }) => value
 
       {
         hasApplications && (
-          <div class="flex flex-col gap-2">
-            <div class={FIRST_ROW}>
-              <Label text={labels.applications} index={applicationsIndex} />
-            </div>
-            <ul class="flex flex-col">
-              {applications.map(({ label, href, lang }) => (
-                <li class={ROW}>
-                  <a class={LINK} href={href} lang={lang}>
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <FooterLinkColumn
+            id={APPLICATIONS_ID}
+            label={labels.applications}
+            index={applicationsIndex}
+            items={applications}
+          />
         )
       }
 
       {
         hasSocials && (
-          <div class="flex flex-col gap-2">
-            <div class={FIRST_ROW}>
-              <Label text={labels.social} index={socialIndex} />
-            </div>
-            <ul class="flex flex-col">
-              {socials.map(({ label, href }) => (
-                <li class={ROW}>
-                  <a class={LINK} href={href}>
-                    {label}
-                    <Glyph name="↗" class={GLYPH_GAP} />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <FooterLinkColumn
+            id={SOCIAL_ID}
+            label={labels.social}
+            index={socialIndex}
+            items={socialLinks}
+          />
         )
       }
     </GridFrame>
