@@ -8,7 +8,12 @@ import { createReader } from '@keystatic/core/reader';
 import { z } from 'astro/zod';
 import { applicationSchema, pageSchema, settingsSchema } from '../lib/content-schemas.ts';
 import { UI_KEYS } from '../lib/i18n.ts';
-import { NAV_CHILDREN_MAX, NAV_HEADER_MAX, navigationSchema } from '../lib/navigation-schema.ts';
+import {
+  NAV_CHILDREN_MAX,
+  NAV_HEADER_LABEL_MAX,
+  NAV_HEADER_MAX,
+  navigationSchema,
+} from '../lib/navigation-schema.ts';
 import {
   DURATION_PATTERN,
   LABEL_MAX,
@@ -25,7 +30,12 @@ import {
 import { collections, DESCRIPTION_LIMIT, TAGLINE_LIMIT } from './collections.ts';
 import { LOCAL_CONFIG } from './keystatic-config.ts';
 import { DURATION_REGEX, SECTION_LIMITS } from './sections.ts';
-import { NAV_CHILDREN_LIMIT, NAV_HEADER_LIMIT, singletons } from './singletons.ts';
+import {
+  NAV_CHILDREN_LIMIT,
+  NAV_HEADER_LABEL_LIMIT,
+  NAV_HEADER_LIMIT,
+  singletons,
+} from './singletons.ts';
 
 // The real `image()` helper needs the Astro content runtime; a string stands in for it.
 const context: SchemaContext = {
@@ -218,8 +228,12 @@ test('every block field key equals its SECTION_SCHEMAS key', () => {
 test('the admin limits and patterns match the Zod schemas', () => {
   assert.equal(NAV_CHILDREN_LIMIT, NAV_CHILDREN_MAX);
   assert.equal(NAV_HEADER_LIMIT, NAV_HEADER_MAX);
+  assert.equal(NAV_HEADER_LABEL_LIMIT, NAV_HEADER_LABEL_MAX);
   for (const nav of [singletons.navigationEn, singletons.navigationTr]) {
     assert.deepEqual(nav.schema.header.validation?.length, { min: 1, max: NAV_HEADER_MAX });
+    const label = nav.schema.header.element.fields.label;
+    assert.equal(adminRefusal(label, 'x'.repeat(NAV_HEADER_LABEL_MAX)), undefined);
+    assert.ok(adminRefusal(label, 'x'.repeat(NAV_HEADER_LABEL_MAX + 1)));
   }
   assert.deepEqual(SECTION_LIMITS, {
     label: LABEL_MAX,

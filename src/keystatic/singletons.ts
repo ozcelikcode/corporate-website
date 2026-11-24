@@ -12,12 +12,13 @@ import { LOCALE_NAMES } from './locale-names.ts';
 import { SECTION_LIMITS } from './sections.ts';
 
 /**
- * Mirror `NAV_CHILDREN_MAX` and `NAV_HEADER_MAX` (`lib/navigation-schema.ts`), which are not
- * imported because that module would pull Zod into the admin bundle; `parity.test.ts` checks
- * they agree.
+ * Mirror `NAV_CHILDREN_MAX`, `NAV_HEADER_MAX` and `NAV_HEADER_LABEL_MAX`
+ * (`lib/navigation-schema.ts`), which are not imported because that module would pull Zod into
+ * the admin bundle; `parity.test.ts` checks they agree.
  */
 export const NAV_CHILDREN_LIMIT = 6;
 export const NAV_HEADER_LIMIT = 4;
+export const NAV_HEADER_LABEL_LIMIT = 18;
 /** Upload folder as seen from `src/content/settings/site.yaml` (what Astro `image()` resolves). */
 const SETTINGS_UPLOADS_PUBLIC_PATH = '../../assets/uploads/';
 
@@ -107,7 +108,11 @@ const navigationSingleton = (locale: Locale) =>
     schema: {
       header: fields.array(
         fields.object({
-          label: fields.text({ label: 'Label', validation: required }),
+          label: fields.text({
+            label: 'Label',
+            description: `At most ${NAV_HEADER_LABEL_LIMIT} characters. All header labels share one width budget (the desktop bar at its narrowest): if the build reports the header bar is full, shorten the labels.`,
+            validation: { isRequired: true, length: { max: NAV_HEADER_LABEL_LIMIT } },
+          }),
           href: fields.text({
             label: 'Link',
             description: `${LINK_HINT} Leave empty for a menu-only parent (needs children or a source).`,

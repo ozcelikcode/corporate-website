@@ -35,7 +35,7 @@ const FIRST_POSITION = 1;
 const TRIGGER =
   'nav-trigger relative flex items-center text-body font-medium text-ink after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 hover:after:bg-line-strong data-active:after:bg-accent';
 /** Positioned, so each control paints (and hit-tests) above its column's bridge. */
-const CONTROL = 'pointer-events-auto relative flex min-h-11 items-center';
+const CONTROL = 'pointer-events-auto relative flex min-h-11 items-center whitespace-nowrap';
 
 const { items, navLabel, submenuLabel } = Astro.props;
 
