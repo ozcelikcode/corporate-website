@@ -68,7 +68,6 @@
   line-height: var(--text-label--line-height);
   font-weight: --theme(--font-weight-medium);
   letter-spacing: var(--tracking-label-sans);
-  font-variant-numeric: tabular-nums;
 }
 
 /* Broadcast hardware cues only (timecode, rundown durations, PGM/PVW tallies): mono uppercase. */
@@ -78,6 +77,7 @@
   line-height: var(--text-label--line-height);
   font-weight: --theme(--font-weight-normal);
   letter-spacing: var(--tracking-label);
+  font-variant-numeric: tabular-nums;
   text-transform: uppercase;
 }
 
