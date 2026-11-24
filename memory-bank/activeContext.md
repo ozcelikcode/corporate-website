@@ -2,7 +2,7 @@
 
 ## Current state (2026-11-23)
 - Design spec: `docs/superpowers/specs/2026-11-23-corporate-site-design.md`. Owner APPROVED it on 2026-11-23.
-- Finished on `feat/site-v1`: all 12 plan tasks plus 7a and 7b (toolchain, tokens/fonts, content + i18n, UI atoms, layout shell + SEO head, ASCII pipeline + live signal, Sveltia admin, design refinement, section blocks, routes/SEO, quote page, quote Worker, runbook). Whole-branch review done ("Ready after fixes"); its single fix wave is applied (TR quote links + cross-locale link guard, blank CMS values, reserved slugs, hero raster check, dead code and duplicates, docs sync). 13 pages, 196 tests, gate and guards green. I1 fix on top (render-time href localization, M1–M3): 214 tests.
+- Finished on `feat/site-v1`: all 12 plan tasks plus 7a and 7b (toolchain, tokens/fonts, content + i18n, UI atoms, layout shell + SEO head, ASCII pipeline + live signal, Sveltia admin (since replaced by Keystatic), design refinement, section blocks, routes/SEO, quote page, quote Worker, runbook). Whole-branch review done ("Ready after fixes"); its single fix wave is applied (TR quote links + cross-locale link guard, blank CMS values, reserved slugs, hero raster check, dead code and duplicates, docs sync). 13 pages, 196 tests, gate and guards green. I1 fix on top (render-time href localization, M1–M3): 214 tests.
 - Repo decision (2026-11-23): GitHub repo is public, so CODEOWNERS-enforced branch protection on `main` is free.
 
 ## Hero and type refinement (2026-11-23, branch `fix/hero-type-admin`)
@@ -27,7 +27,7 @@
 
 ## Key decisions so far
 - Own UI kit of about 12 Astro primitives with `class-variance-authority`; no shadcn/React islands.
-- CMS: Sveltia (git-based, editorial workflow), auth through `sveltia-cms-auth` on a free Worker.
+- CMS: Keystatic (git-based, GitHub App sign-in through the site Worker; replaced Sveltia on 2026-11-24).
 - Edge: Astro `output: 'static'` + one hand-written Worker for `/api/*`; no Astro Cloudflare adapter.
 - Fonts: Schibsted Grotesk + Martian Mono, local via the Astro fonts API.
 - TypeScript pinned at 6.0.3 (`@astrojs/check` peer range excludes 7.x).
@@ -44,14 +44,14 @@
 - Arrows: internal links →, outbound ↗, both via `Glyph` (settled; the quote key is →).
 
 ## Open items and owner decisions
-- Sveltia step 6 (manual check in Chromium with File System Access, "Work with Local Repository"): pending owner, see runbook. Also unverified: `sortable_fields`. Empty optional fields are now omitted (`output.omit_empty_optional_fields`) and blank values are absent in the schemas; the CMS parity checks in runbook check (a) confirm it on the real CMS.
+- Keystatic first real login (owner): create the GitHub App, set the secrets and the slug build var, set the `main` ruleset, then run the runbook check (a) incl. the parity checks; record results in `techContext.md`. `main` is unprotected today.
 - Font preload: 4 upright files, accepted.
 - Unoptimized imported images (any image imported without `<Image>`/`getImage`) ship the original, EXIF included, to `dist/_astro`. Task 8 resolved the dist side (`pruneUnreferencedImages` removes unoptimized originals from `dist/_astro`). EXIF on uploads is still open: strip on upload, or route all images through the optimizer.
 - Resolved in Task 8: `applicationSectionsSchema` rejects any hero in an application.
 - `.superpowers/` is git-ignored (SDD reports and review diffs stay local).
 
 ## Left to the builder (verify during implementation)
-i18n fallback in static dynamic routes, `astro/zod` bundling in the Worker, Workers Builds Node/pnpm support, `send_email` on free plan, CSP vs inline scripts. Sveltia open checks are listed in `techContext.md`.
+i18n fallback in static dynamic routes, `astro/zod` bundling in the Worker, Workers Builds Node/pnpm support, `send_email` on free plan, CSP vs inline scripts.
 
 ## Keystatic and menu branch (2026-11-24)
 - Branch `feat/keystatic-menu` implements `docs/superpowers/plans/2026-11-24-keystatic-menu-richness.md`. Sveltia to Keystatic decided by the owner 2026-11-24 (Payload rejected: needs a database and a paid Workers plan).
@@ -60,6 +60,7 @@ i18n fallback in static dynamic routes, `astro/zod` bundling in the Worker, Work
 - A2 done (merge `bd53387`, branch `worktree-agent-a6f60832bb0c6a6de`, commits `c40b948` and fix round `96f6f17`): blocks stored as Keystatic blocks, `pagesEn/Tr` and `applicationsEn/Tr` collections, seeds and images moved to Keystatic's paths and normalised. Gate: build 16 pages, check 0/0/0, lint clean, test 266/266. Public HTML unchanged apart from asset names.
 - Open items (A2 follow-ups):
   - (a) `ascii-source` finds the hero source by matching bytes in `dist/_astro` (relies on Astro's build order). I1 replaces it with deterministic resolution.
-  - (b) Old Sveltia `/admin/` writes a shape the build now rejects. Do not use it until A4 removes Sveltia.
+  - (b) Resolved by A4: Sveltia is removed.
 - A3 merged (`68893ca`): the Worker serves `/api/keystatic/*` and the `/keystatic/*` shell through `routeFor`; the secrets, callback URL and admin CSP are in `techContext.md` ("Keystatic worker secrets (A3)").
 
+- A4 done: Sveltia removed (`public/admin/config.yml`, `src/pages/admin`, `admin-config.test.ts`); `/admin` and `/admin/*` 301 to `/keystatic/` (`public/_redirects`); `/keystatic/` out of the sitemap and `Disallow`ed in robots, `keystatic` a forbidden slug; `_headers` admin block dropped. Runbook sections 1 to 4 rewritten for Keystatic, README updated. Owner tasks: GitHub App (runbook 3.1), secrets and slug (3.2), ruleset (3.4), retire the old `sveltia-cms-auth` Worker and its OAuth app (3.3), first real login check (5a).
