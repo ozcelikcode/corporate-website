@@ -8,9 +8,20 @@ import type { NavChildEntry, NavEntry, NavFeature } from './navigation-schema.ts
 
 export const NAV_APPLICATIONS_MAX = 8;
 
-/** The slice of an application the menu needs; the caller resolves the locale fallback. */
-export type NavApplication = { slug: string; name: string; tagline: string; order: number };
-export type NavChild = NavChildEntry & { current: boolean };
+/**
+ * The slice of an application the menu needs; the caller resolves the locale fallback and passes
+ * the locale of the entry it got (`locale`), which differs from the page's on a fallback.
+ */
+export type NavApplication = {
+  slug: string;
+  name: string;
+  tagline: string;
+  order: number;
+  locale: Locale;
+};
+/** `lang` is set only when the text is in another language than the page (WCAG 3.1.2). */
+export type NavChild = NavChildEntry & { current: boolean; lang?: Locale };
+type ListedChild = NavChildEntry & { lang?: Locale };
 export type NavItem = {
   label: string;
   href?: string | undefined;
@@ -20,7 +31,7 @@ export type NavItem = {
   feature?: NavFeature | undefined;
 };
 
-export function applicationLinks(apps: readonly NavApplication[], locale: Locale): NavChildEntry[] {
+export function applicationLinks(apps: readonly NavApplication[], locale: Locale): ListedChild[] {
   return [...apps]
     .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name, locale))
     .slice(0, NAV_APPLICATIONS_MAX)
@@ -28,6 +39,7 @@ export function applicationLinks(apps: readonly NavApplication[], locale: Locale
       label: app.name,
       description: app.tagline,
       href: applicationPath(app.slug),
+      ...(app.locale === locale ? {} : { lang: app.locale }),
     }));
 }
 
