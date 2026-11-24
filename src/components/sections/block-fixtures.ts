@@ -1,7 +1,9 @@
 /**
  * Temporary fixture content for the block preview page (deleted in Task I1). It covers each
  * block's edge counts: 3 and 4 stats (with and without notes), 4 and 12 logos (with and without
- * links). Existing uploads stand in for logos until I1 adds the placeholder marks.
+ * links), a testimonial with and without a portrait, and a media split each way round (with an
+ * action and a Markdown link, then reversed without either). Existing uploads stand in for logos
+ * and the portrait until I1 adds the placeholder marks.
  */
 import archive from '../../assets/uploads/cover-archive-search.png';
 import newsroom from '../../assets/uploads/cover-newsroom-desk.png';
@@ -56,5 +58,40 @@ export const BLOCK_FIXTURES: PreviewBlock[] = [
     label: 'Network',
     heading: 'On the same signal chain',
     items: Array.from({ length: DENSE_COUNT }, (_, n) => partner(n)),
+  },
+  {
+    type: 'media-split',
+    label: 'Newsroom',
+    heading: 'From the first draft to the on-air graphic',
+    text: 'Stories, scripts and lower thirds share one rundown, so the desk and the gallery work from the same page.\n\nEvery change reaches the playout chain before the next break. Read more [about the team](/about/).',
+    image: newsroom,
+    imageAlt: 'A newsroom desk with monitors showing the running order.',
+    action: { label: 'Request a quote', href: '/quote/' },
+    reverse: false,
+  },
+  {
+    type: 'media-split',
+    label: 'Archive',
+    heading: 'Every frame you aired, found in seconds',
+    text: 'Clips are logged as they air. Search by face, place or spoken word, and send the result straight back to playout.',
+    image: archive,
+    imageAlt: 'An archive search screen listing clips by timecode.',
+    reverse: true,
+  },
+  {
+    type: 'testimonial',
+    quote:
+      'We moved three channels onto the new chain in a weekend, and the gallery never lost the signal once.',
+    name: 'Alex Morgan',
+    role: 'Head of playout',
+    organization: 'Example Broadcasting',
+    portrait: playout,
+  },
+  {
+    type: 'testimonial',
+    quote: 'The rundown finally matches what goes to air.',
+    name: 'Sam Rivera',
+    role: 'News editor',
+    organization: 'Example Network',
   },
 ];

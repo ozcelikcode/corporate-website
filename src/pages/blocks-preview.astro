@@ -9,15 +9,17 @@
 import { BAND, CONTAINER, DIVIDER } from '../components/sections/band-class.ts';
 import { BLOCK_FIXTURES } from '../components/sections/block-fixtures.ts';
 import Logos from '../components/sections/Logos.astro';
+import MediaSplit from '../components/sections/MediaSplit.astro';
 import SectionRenderer from '../components/sections/SectionRenderer.astro';
 import Stats from '../components/sections/Stats.astro';
+import Testimonial from '../components/sections/Testimonial.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { assertNever } from '../lib/assert-never.ts';
 import { hrefLocalizer } from '../lib/content.ts';
 import { DEFAULT_LOCALE } from '../lib/i18n.ts';
 
 const TITLE = 'Block preview';
-const DESCRIPTION = 'Fixture render of the stats and logos blocks.';
+const DESCRIPTION = 'Fixture render of the stats, logos, media-split and testimonial blocks.';
 const PREVIEW_PATH = '/blocks-preview/';
 /** `[NN]` indexes count from 1. */
 const FIRST_INDEX = 1;
@@ -47,6 +49,10 @@ const localize = await hrefLocalizer(locale);
                     return <Stats section={section} {...common} />;
                   case 'logos':
                     return <Logos section={section} {...common} />;
+                  case 'media-split':
+                    return <MediaSplit section={section} {...common} />;
+                  case 'testimonial':
+                    return <Testimonial section={section} {...common} />;
                   default:
                     return assertNever(section);
                 }
