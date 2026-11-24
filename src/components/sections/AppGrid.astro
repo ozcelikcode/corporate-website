@@ -31,9 +31,9 @@ const FIRST_INDEX = 1;
 const { section, index, locale, headingLevel, localize } = Astro.props;
 const apps = selectApps(await listApplications(locale), section.apps);
 ---
-<div class="flex flex-col gap-12 md:gap-16">
+<div class="reveal-group flex flex-col gap-12 md:gap-16">
   <LowerThird level={headingLevel} text={section.heading} label={section.label} index={index} />
-  <GridFrame as="ul" columns={3}>
+  <GridFrame as="ul" columns={3} class="reveal-stagger">
     {
       apps.map((app, i) => (
         <li class="bg-surface">
