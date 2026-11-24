@@ -31,6 +31,61 @@ export type ImageLocation = { directory: string; publicPath: string };
 
 const required = { isRequired: true } as const;
 
+/**
+ * Mirrors `SECTION_BACKGROUNDS`, `SECTION_SPACINGS`, `APP_GRID_COLUMNS` and `STATS_ALIGNS` (option
+ * values in order, the first one the default except where `LAYOUT_DEFAULTS` says otherwise).
+ */
+export const LAYOUT_OPTIONS = {
+  background: [
+    { label: 'Default', value: 'default' },
+    { label: 'Subtle', value: 'subtle' },
+    { label: 'Contrast', value: 'contrast' },
+  ],
+  spacing: [
+    { label: 'Compact', value: 'compact' },
+    { label: 'Regular', value: 'regular' },
+    { label: 'Spacious', value: 'spacious' },
+  ],
+  columns: [
+    { label: 'Two', value: '2' },
+    { label: 'Three', value: '3' },
+  ],
+  align: [
+    { label: 'Start', value: 'start' },
+    { label: 'Centre', value: 'center' },
+  ],
+} as const;
+/** The values a block renders with when the field is left out (mirrors the Zod defaults). */
+export const LAYOUT_DEFAULTS = {
+  background: 'default',
+  spacing: 'regular',
+  columns: '3',
+  align: 'start',
+} as const;
+
+/** The shared band layout of every block but the hero (`layoutSchema`). */
+const layout = () =>
+  fields.object(
+    {
+      background: fields.select({
+        label: 'Background',
+        description: 'Subtle tints the band; Contrast inverts it (light band, dark text).',
+        options: LAYOUT_OPTIONS.background,
+        defaultValue: LAYOUT_DEFAULTS.background,
+      }),
+      spacing: fields.select({
+        label: 'Spacing',
+        description: 'Space above and below the section. Regular matches the rest of the page.',
+        options: LAYOUT_OPTIONS.spacing,
+        defaultValue: LAYOUT_DEFAULTS.spacing,
+      }),
+    },
+    {
+      label: 'Layout',
+      description: 'Optional. The defaults render the section like every other band.',
+    },
+  );
+
 const label = () =>
   fields.text({
     label: 'Label',
@@ -138,6 +193,13 @@ const richBlocks = (images: ImageLocation) => ({
           validation: { length: SECTION_LIMITS.stats },
         },
       ),
+      align: fields.select({
+        label: 'Alignment',
+        description: 'Where each figure sits in its column: Start (left) or Centre.',
+        options: LAYOUT_OPTIONS.align,
+        defaultValue: LAYOUT_DEFAULTS.align,
+      }),
+      layout: layout(),
     }),
   },
   logos: {
@@ -166,6 +228,7 @@ const richBlocks = (images: ImageLocation) => ({
           validation: { length: SECTION_LIMITS.logos },
         },
       ),
+      layout: layout(),
     }),
   },
   testimonial: {
@@ -176,6 +239,7 @@ const richBlocks = (images: ImageLocation) => ({
       role: requiredText('Role'),
       organization: requiredText('Organization'),
       portrait: rasterImage(images, 'Portrait (optional)', false),
+      layout: layout(),
     }),
   },
   'media-split': {
@@ -191,6 +255,7 @@ const richBlocks = (images: ImageLocation) => ({
         label: 'Image first',
         description: 'Puts the image before the text; alternate it on consecutive splits.',
       }),
+      layout: layout(),
     }),
   },
 });
@@ -199,7 +264,7 @@ const richBlocks = (images: ImageLocation) => ({
 const contentBlocks = (images: ImageLocation) => ({
   statement: {
     label: 'Statement',
-    schema: fields.object({ label: label(), text: requiredText('Text', true) }),
+    schema: fields.object({ label: label(), text: requiredText('Text', true), layout: layout() }),
   },
   'app-grid': {
     label: 'Application grid',
@@ -218,6 +283,13 @@ const contentBlocks = (images: ImageLocation) => ({
           itemLabel: (props) => props.value ?? '',
         },
       ),
+      columns: fields.select({
+        label: 'Columns',
+        description: 'Tiles per row on wide screens. Phones always show one, tablets two.',
+        options: LAYOUT_OPTIONS.columns,
+        defaultValue: LAYOUT_DEFAULTS.columns,
+      }),
+      layout: layout(),
     }),
   },
   'feature-list': {
@@ -243,11 +315,12 @@ const contentBlocks = (images: ImageLocation) => ({
           validation: { length: { min: 1, max: SECTION_LIMITS.items } },
         },
       ),
+      layout: layout(),
     }),
   },
   'rich-text': {
     label: 'Rich text',
-    schema: fields.object({ body: markdown('Body') }),
+    schema: fields.object({ body: markdown('Body'), layout: layout() }),
   },
   cta: {
     label: 'Call to action',
@@ -255,6 +328,7 @@ const contentBlocks = (images: ImageLocation) => ({
       heading: requiredText('Heading'),
       text: fields.text({ label: 'Text', multiline: true }),
       action: action(),
+      layout: layout(),
     }),
   },
   faq: {
@@ -266,6 +340,7 @@ const contentBlocks = (images: ImageLocation) => ({
         itemLabel: (props) => props.fields.q.value,
         validation: { length: { min: 1 } },
       }),
+      layout: layout(),
     }),
   },
   ...richBlocks(images),

@@ -16,21 +16,25 @@ import {
   navigationSchema,
 } from '../lib/navigation-schema.ts';
 import {
+  APP_GRID_COLUMNS,
   DURATION_PATTERN,
   LABEL_MAX,
   LOGOS_MAX,
   LOGOS_MIN,
   MAX_ACTIONS,
   MAX_ITEMS,
+  SECTION_BACKGROUNDS,
+  SECTION_SPACINGS,
   SECTION_TYPES,
   type SectionType,
+  STATS_ALIGNS,
   STATS_MAX,
   STATS_MIN,
   sectionSchemas,
 } from '../lib/sections-schema.ts';
 import { collections, DESCRIPTION_LIMIT, TAGLINE_LIMIT } from './collections.ts';
 import { LOCAL_CONFIG } from './keystatic-config.ts';
-import { DURATION_REGEX, SECTION_LIMITS } from './sections.ts';
+import { DURATION_REGEX, LAYOUT_DEFAULTS, LAYOUT_OPTIONS, SECTION_LIMITS } from './sections.ts';
 import {
   NAV_CHILDREN_LIMIT,
   NAV_HEADER_LABEL_LIMIT,
@@ -392,6 +396,81 @@ function linkPairs(): LinkPair[] {
   }
   return pairs;
 }
+
+/** The admin's select fields and the Zod rule each mirrors: path inside the block value. */
+const SELECTS: [SectionType, string[]][] = [
+  ...SECTION_TYPES.filter((type) => type !== 'hero').flatMap((type): [SectionType, string[]][] => [
+    [type, ['layout', 'background']],
+    [type, ['layout', 'spacing']],
+  ]),
+  ['app-grid', ['columns']],
+  ['stats', ['align']],
+];
+/** Values no select offers: near misses of real options and other types. */
+const SELECT_MISSES: unknown[] = [
+  '',
+  'Default',
+  'dark',
+  'huge',
+  '1',
+  '4',
+  3,
+  'end',
+  'centre',
+  null,
+];
+
+test('the layout options mirror the Zod enums, defaults first or named', () => {
+  const values = (options: readonly { value: string }[]) => options.map(({ value }) => value);
+  assert.deepEqual(values(LAYOUT_OPTIONS.background), [...SECTION_BACKGROUNDS]);
+  assert.deepEqual(values(LAYOUT_OPTIONS.spacing), [...SECTION_SPACINGS]);
+  assert.deepEqual(values(LAYOUT_OPTIONS.columns), [...APP_GRID_COLUMNS]);
+  assert.deepEqual(values(LAYOUT_OPTIONS.align), [...STATS_ALIGNS]);
+});
+
+test('every admin select offers what the build takes, with the same default', () => {
+  const schemas = sectionSchemas(context);
+  let checked = 0;
+  for (const name of COLLECTION_NAMES) {
+    const blocks = blockSchemas(name);
+    for (const [type, path] of SELECTS) {
+      const block = blocks[type];
+      assert.ok(block, `${name} ${type}`);
+      const field = fieldAt(block, path);
+      const zod = zodAt(schemas[type], path);
+      const where = `${name} ${type} ${path.join('.')}`;
+      assert.ok(field.kind === 'form' && 'options' in field, where);
+      if (field.kind !== 'form' || !('options' in field)) continue;
+      const options = (field.options as readonly { value: string }[]).map(({ value }) => value);
+      for (const value of options) assert.equal(zod.safeParse(value).success, true, where);
+      for (const value of SELECT_MISSES) {
+        assert.equal(zod.safeParse(value).success, false, `${where} ${JSON.stringify(value)}`);
+      }
+      assert.equal(field.defaultValue(), zod.parse(undefined), where);
+      assert.equal(
+        field.defaultValue(),
+        LAYOUT_DEFAULTS[path.at(-1) as keyof typeof LAYOUT_DEFAULTS],
+      );
+      checked += 1;
+    }
+  }
+  // Pages: 10 blocks with layout × 2 + columns + align; applications the same (no hero either way).
+  assert.equal(checked, COLLECTION_NAMES.length * (10 * 2 + 2));
+});
+
+test('every layout group and select tells the editor what it changes', () => {
+  for (const name of COLLECTION_NAMES) {
+    const blocks = blockSchemas(name);
+    for (const [type, block] of Object.entries(blocks)) {
+      if (type === 'hero') {
+        assert.equal(block.kind === 'object' && 'layout' in block.fields, false, name);
+        continue;
+      }
+      const layout = fieldAt(block, ['layout']);
+      assert.ok(layout.kind === 'object' && (layout.description ?? '') !== '', `${name} ${type}`);
+    }
+  }
+});
 
 test('every admin link takes and refuses what the build does, with a message', () => {
   const pairs = linkPairs();
