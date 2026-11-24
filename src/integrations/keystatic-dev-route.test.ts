@@ -10,6 +10,15 @@ test('routes api, deep links and passes the rest', () => {
   assert.equal(keystaticDevRoute('/about/'), 'pass');
 });
 
+test('the admin alias redirects, look-alikes pass', () => {
+  for (const path of ['/admin', '/admin/', '/admin/x', '/admin/collection/pagesEn']) {
+    assert.equal(keystaticDevRoute(path), 'redirect', path);
+  }
+  for (const path of ['/administrator/', '/adminx', '/tr/admin/', '/about/admin']) {
+    assert.equal(keystaticDevRoute(path), 'pass', path);
+  }
+});
+
 test('look-alike prefixes pass', () => {
   assert.equal(keystaticDevRoute('/api/keystatic'), 'pass');
   assert.equal(keystaticDevRoute('/api/keystaticx/tree'), 'pass');
