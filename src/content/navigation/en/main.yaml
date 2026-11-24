@@ -2,6 +2,7 @@ header:
   - label: Applications
     href: /applications/
     source: applications
+    children: []
     feature:
       heading: Not sure where to start?
       text: Tell us what you need and we will recommend the right application.
@@ -9,6 +10,7 @@ header:
         label: Request a quote
         href: /quote/
   - label: Company
+    source: ''
     children:
       - label: About
         href: /about/
@@ -16,8 +18,14 @@ header:
       - label: Privacy
         href: /privacy/
         description: How we handle your data.
+    feature:
+      action: {}
   - label: Contact
     href: /contact/
+    source: ''
+    children: []
+    feature:
+      action: {}
 footer:
   - label: About
     href: /about/

@@ -6,6 +6,8 @@
 import { fields, singleton } from '@keystatic/core';
 import { HEX_PATTERN } from '../lib/color.ts';
 import { type Locale, UI_KEYS } from '../lib/i18n.ts';
+import { LINK_HINT } from './link-hints.ts';
+import { LOCALE_NAMES } from './locale-names.ts';
 
 /**
  * Mirrors `NAV_CHILDREN_MAX` (`lib/navigation-schema.ts`), which is not imported because that
@@ -15,14 +17,14 @@ export const NAV_CHILDREN_LIMIT = 6;
 const UPLOADS_DIRECTORY = 'src/assets/uploads';
 /** Upload folder as seen from `src/content/settings/site.yaml` (what Astro `image()` resolves). */
 const SETTINGS_UPLOADS_PUBLIC_PATH = '../../assets/uploads/';
-const LOCALE_NAMES: Record<Locale, string> = { en: 'English', tr: 'Turkish' };
 
 const required = { isRequired: true } as const;
 
-const linkFields = () =>
+/** A labelled link; `hint` explains what the link may point at. */
+const linkFields = (hint: string) =>
   fields.object({
     label: fields.text({ label: 'Label', validation: required }),
-    href: fields.text({ label: 'Link', validation: required }),
+    href: fields.text({ label: 'Link', description: hint, validation: required }),
   });
 
 const settingsImage = (label: string) =>
@@ -71,7 +73,7 @@ const settings = singleton({
         validation: { length: { min: 1 } },
       },
     ),
-    socials: fields.array(linkFields(), {
+    socials: fields.array(linkFields('An https:// address.'), {
       label: 'Social links',
       itemLabel: (props) => props.fields.label.value,
     }),
@@ -98,7 +100,7 @@ const navigationSingleton = (locale: Locale) =>
           label: fields.text({ label: 'Label', validation: required }),
           href: fields.text({
             label: 'Link',
-            description: 'Leave empty for a menu-only parent (needs children or a source).',
+            description: `${LINK_HINT} Leave empty for a menu-only parent (needs children or a source).`,
           }),
           source: fields.select({
             label: 'Submenu source',
@@ -111,7 +113,11 @@ const navigationSingleton = (locale: Locale) =>
           children: fields.array(
             fields.object({
               label: fields.text({ label: 'Label', validation: required }),
-              href: fields.text({ label: 'Link', validation: required }),
+              href: fields.text({
+                label: 'Link',
+                description: LINK_HINT,
+                validation: required,
+              }),
               description: fields.text({ label: 'Description' }),
             }),
             {
@@ -128,7 +134,7 @@ const navigationSingleton = (locale: Locale) =>
               action: fields.object(
                 {
                   label: fields.text({ label: 'Button label' }),
-                  href: fields.text({ label: 'Button link' }),
+                  href: fields.text({ label: 'Button link', description: LINK_HINT }),
                 },
                 { label: 'Button' },
               ),
@@ -145,7 +151,7 @@ const navigationSingleton = (locale: Locale) =>
           validation: { length: { min: 1 } },
         },
       ),
-      footer: fields.array(linkFields(), {
+      footer: fields.array(linkFields(LINK_HINT), {
         label: 'Footer',
         itemLabel: (props) => props.fields.label.value,
       }),
@@ -172,11 +178,4 @@ export const singletons = {
   navigationTr: navigationSingleton('tr'),
   uiEn: uiSingleton('en'),
   uiTr: uiSingleton('tr'),
-};
-
-/** Sidebar groups (Keystatic `ui.navigation`). */
-export const SINGLETON_NAVIGATION: Record<string, (keyof typeof singletons)[]> = {
-  Site: ['settings'],
-  [LOCALE_NAMES.en]: ['navigationEn', 'uiEn'],
-  [LOCALE_NAMES.tr]: ['navigationTr', 'uiTr'],
 };

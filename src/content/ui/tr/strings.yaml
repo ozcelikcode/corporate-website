@@ -40,12 +40,20 @@ quoteConsent: Bilgilerimin bu talebi yanıtlamak için kullanılmasını kabul e
 quoteConsentLink: Gizlilik politikasını okuyun
 quoteSubmit: Talebi gönder
 quoteOptional: isteğe bağlı
-quoteNoScript: Bu form, insan olduğunuzu doğrulamak için JavaScript gerektirir. JavaScript olmadan aşağıdaki e-posta adresinden bize yazın.
+quoteNoScript: >-
+  Bu form, insan olduğunuzu doğrulamak için JavaScript gerektirir. JavaScript
+  olmadan aşağıdaki e-posta adresinden bize yazın.
 quoteSentTitle: Talebiniz alındı
 quoteSentBody: Teşekkürler. Ekibimizden biri iki iş günü içinde size dönüş yapacak.
 quoteErrorInvalidTitle: Formu kontrol edin
-quoteErrorInvalidBody: Bazı alanlar eksik veya geçersiz. Alanları gözden geçirip formu yeniden gönderin.
+quoteErrorInvalidBody: >-
+  Bazı alanlar eksik veya geçersiz. Alanları gözden geçirip formu yeniden
+  gönderin.
 quoteErrorVerifyTitle: Doğrulama başarısız
-quoteErrorVerifyBody: Talebi doğrulayamadık. Yeniden deneyin ya da aşağıdaki e-posta adresinden bize yazın.
+quoteErrorVerifyBody: >-
+  Talebi doğrulayamadık. Yeniden deneyin ya da aşağıdaki e-posta adresinden bize
+  yazın.
 quoteErrorSendTitle: Talep gönderilemedi
-quoteErrorSendBody: Bizim tarafımızda bir sorun oluştu. Daha sonra yeniden deneyin ya da aşağıdaki e-posta adresinden bize yazın.
+quoteErrorSendBody: >-
+  Bizim tarafımızda bir sorun oluştu. Daha sonra yeniden deneyin ya da aşağıdaki
+  e-posta adresinden bize yazın.
