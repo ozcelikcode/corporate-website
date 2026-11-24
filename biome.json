@@ -25,6 +25,10 @@
   },
   "overrides": [
     {
+      "includes": ["src/content/**"],
+      "formatter": { "enabled": false }
+    },
+    {
       "includes": ["worker/**"],
       "linter": {
         "rules": {

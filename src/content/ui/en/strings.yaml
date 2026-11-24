@@ -41,12 +41,18 @@ quoteConsent: I agree that my details are used to answer this request.
 quoteConsentLink: Read the privacy policy
 quoteSubmit: Send request
 quoteOptional: optional
-quoteNoScript: This form needs JavaScript to verify you are human. Without it, write to us at the email address below.
+quoteNoScript: >-
+  This form needs JavaScript to verify you are human. Without it, write to us at
+  the email address below.
 quoteSentTitle: Request received
 quoteSentBody: Thank you. A member of the team will reply within two working days.
 quoteErrorInvalidTitle: Check the form
 quoteErrorInvalidBody: Some fields are missing or invalid. Review them and send the form again.
 quoteErrorVerifyTitle: Verification failed
-quoteErrorVerifyBody: We could not verify the request. Try again, or write to us at the email address below.
+quoteErrorVerifyBody: >-
+  We could not verify the request. Try again, or write to us at the email
+  address below.
 quoteErrorSendTitle: Request not sent
-quoteErrorSendBody: Something went wrong on our side. Try again later, or write to us at the email address below.
+quoteErrorSendBody: >-
+  Something went wrong on our side. Try again later, or write to us at the email
+  address below.

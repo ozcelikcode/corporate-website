@@ -1,5 +1,7 @@
 @import "tailwindcss" source("../");
 @import "./tokens.css";
+/* Admin config words (such as `table: false`) are not public classes. */
+@source not "../keystatic";
 
 @layer base {
   html {

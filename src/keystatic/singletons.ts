@@ -6,6 +6,7 @@
 import { fields, singleton } from '@keystatic/core';
 import { HEX_PATTERN } from '../lib/color.ts';
 import { type Locale, UI_KEYS } from '../lib/i18n.ts';
+import { LOCALE_NAMES } from './locale-names.ts';
 
 /**
  * Mirrors `NAV_CHILDREN_MAX` (`lib/navigation-schema.ts`), which is not imported because that
@@ -15,7 +16,6 @@ export const NAV_CHILDREN_LIMIT = 6;
 const UPLOADS_DIRECTORY = 'src/assets/uploads';
 /** Upload folder as seen from `src/content/settings/site.yaml` (what Astro `image()` resolves). */
 const SETTINGS_UPLOADS_PUBLIC_PATH = '../../assets/uploads/';
-const LOCALE_NAMES: Record<Locale, string> = { en: 'English', tr: 'Turkish' };
 
 const required = { isRequired: true } as const;
 
@@ -172,11 +172,4 @@ export const singletons = {
   navigationTr: navigationSingleton('tr'),
   uiEn: uiSingleton('en'),
   uiTr: uiSingleton('tr'),
-};
-
-/** Sidebar groups (Keystatic `ui.navigation`). */
-export const SINGLETON_NAVIGATION: Record<string, (keyof typeof singletons)[]> = {
-  Site: ['settings'],
-  [LOCALE_NAMES.en]: ['navigationEn', 'uiEn'],
-  [LOCALE_NAMES.tr]: ['navigationTr', 'uiTr'],
 };

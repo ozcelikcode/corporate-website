@@ -1,7 +1,7 @@
 brandName: Brand
 logo: ../../assets/uploads/logo.svg
 logoAlt: Brand logo
-accent: "#ffb000"
+accent: '#ffb000'
 contacts:
   - kind: email
     value: hello@example.com
@@ -17,7 +17,7 @@ socials:
     href: https://www.linkedin.com/company/example
   - label: YouTube
     href: https://www.youtube.com/@example
-ogImage: ../../assets/uploads/og-default.png
+ogImage: ../../assets/uploads/ogImage.png
 organization:
   legalName: Brand Ltd.
   url: https://example.com

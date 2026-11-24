@@ -1,12 +1,22 @@
 title: Privacy policy
 description: Placeholder privacy policy. The operator must replace it with their own.
 sections:
-  - type: rich-text
-    body: |
-      ## Placeholder text
+  - discriminant: rich-text
+    value:
+      body: >
+        ## Placeholder text
 
-      This page is placeholder content shipped with the site template. The operator of this website must replace it with their own privacy policy before publishing.
 
-      ## What to cover
+        This page is placeholder content shipped with the site template. The
+        operator of this website must replace it with their own privacy policy
+        before publishing.
 
-      A complete policy states which personal data the site collects (for example, what is submitted through the quote form), why it is processed, who receives it, how long it is kept, and how visitors can exercise their rights. Add the operator's legal name and contact details from the site settings.
+
+        ## What to cover
+
+
+        A complete policy states which personal data the site collects (for
+        example, what is submitted through the quote form), why it is processed,
+        who receives it, how long it is kept, and how visitors can exercise
+        their rights. Add the operator's legal name and contact details from the
+        site settings.

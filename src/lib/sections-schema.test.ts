@@ -6,15 +6,18 @@ import {
   DURATION_PATTERN,
   LABEL_MAX,
   SECTION_TYPES,
+  type SectionType,
+  sectionSchemas,
   sectionsSchema,
 } from './sections-schema.ts';
 
 // The real `image()` helper needs the Astro content runtime; a string stands in for it.
-const schema = sectionsSchema({ image: () => z.string() } as never);
+const context = { image: () => z.string() } as never;
+const schema = sectionsSchema(context);
 const action = { label: 'Go', href: '/quote/' };
-const fixtures: Record<(typeof SECTION_TYPES)[number], Record<string, unknown>> = {
+/** Block values as Keystatic stores them (`{discriminant, value}`), without the discriminant. */
+const values: Record<SectionType, Record<string, unknown>> = {
   hero: {
-    type: 'hero',
     label: 'Intro',
     headline: 'One',
     headlineAccent: 'Two',
@@ -23,95 +26,119 @@ const fixtures: Record<(typeof SECTION_TYPES)[number], Record<string, unknown>> 
     image: 'x.png',
     imageAlt: 'Alt',
   },
-  statement: { type: 'statement', label: 'Mission', text: 'Text' },
-  'app-grid': { type: 'app-grid', label: 'Apps', heading: 'Apps' },
-  'feature-list': {
-    type: 'feature-list',
-    label: 'Why',
-    heading: 'Why',
-    items: [{ title: 'T', body: 'B' }],
-  },
-  'rich-text': { type: 'rich-text', body: '# Hi' },
-  cta: { type: 'cta', heading: 'Talk', action },
-  faq: { type: 'faq', label: 'FAQ', items: [{ q: 'Q', a: 'A' }] },
+  statement: { label: 'Mission', text: 'Text' },
+  'app-grid': { label: 'Apps', heading: 'Apps' },
+  'feature-list': { label: 'Why', heading: 'Why', items: [{ title: 'T', body: 'B' }] },
+  'rich-text': { body: '# Hi' },
+  cta: { heading: 'Talk', action },
+  faq: { label: 'FAQ', items: [{ q: 'Q', a: 'A' }] },
 };
+/** A stored block of `type`, its value overridden by `changes`. */
+const block = (type: SectionType, changes: Record<string, unknown> = {}) => ({
+  discriminant: type,
+  value: { ...values[type], ...changes },
+});
+/** A stored block of `type` without the value key `omitted`. */
+const blockWithout = (type: SectionType, omitted: string) => ({
+  discriminant: type,
+  value: Object.fromEntries(Object.entries(values[type]).filter(([key]) => key !== omitted)),
+});
 const parse = (section: unknown) => schema.safeParse([section]);
 
-test('accepts all seven section types', () => {
-  const parsed = schema.parse(SECTION_TYPES.map((type) => fixtures[type]));
+test('accepts all seven section types and returns them flat', () => {
+  const parsed = schema.parse(SECTION_TYPES.map((type) => block(type)));
   assert.deepEqual(
     parsed.map((s) => s.type),
     [...SECTION_TYPES],
   );
+  assert.deepEqual(parsed[SECTION_TYPES.indexOf('cta')], { type: 'cta', heading: 'Talk', action });
+});
+
+test('the old flat shape is rejected', () => {
+  for (const type of SECTION_TYPES) {
+    assert.equal(parse({ type, ...values[type] }).success, false, type);
+  }
+});
+
+test('section schemas cover every section type and only those', () => {
+  assert.deepEqual(Object.keys(sectionSchemas(context)), [...SECTION_TYPES]);
 });
 
 test('rejects an unknown type', () => {
-  assert.equal(parse({ type: 'video' }).success, false);
+  assert.equal(parse({ discriminant: 'video', value: {} }).success, false);
 });
 
 test('rejects three hero actions', () => {
-  assert.equal(parse({ ...fixtures.hero, actions: [action, action, action] }).success, false);
+  assert.equal(parse(block('hero', { actions: [action, action, action] })).success, false);
 });
 
 test('rejects javascript: and http: hrefs', () => {
   for (const href of ['javascript:alert(1)', 'http://example.com']) {
-    assert.equal(
-      parse({ ...fixtures.hero, actions: [{ label: 'Go', href }] }).success,
-      false,
-      href,
-    );
+    assert.equal(parse(block('hero', { actions: [{ label: 'Go', href }] })).success, false, href);
   }
 });
 
 test('rejects a label over the maximum length', () => {
-  assert.equal(parse({ ...fixtures.statement, label: 'x'.repeat(LABEL_MAX + 1) }).success, false);
-  assert.equal(parse({ ...fixtures.statement, label: 'x'.repeat(LABEL_MAX) }).success, true);
+  assert.equal(parse(block('statement', { label: 'x'.repeat(LABEL_MAX + 1) })).success, false);
+  assert.equal(parse(block('statement', { label: 'x'.repeat(LABEL_MAX) })).success, true);
 });
 
 test('app-grid apps defaults to an empty list', () => {
-  const [section] = schema.parse([fixtures['app-grid']]);
+  const [section] = schema.parse([block('app-grid')]);
   assert.deepEqual(section?.type === 'app-grid' ? section.apps : undefined, []);
 });
 
 test('null hero actions and null app-grid apps (cleared in the CMS) parse as empty lists', () => {
   const [hero, grid] = schema.parse([
-    { ...fixtures.hero, actions: null },
-    { ...fixtures['app-grid'], apps: null },
+    block('hero', { actions: null }),
+    block('app-grid', { apps: null }),
   ]);
   assert.deepEqual(hero?.type === 'hero' ? hero.actions : undefined, []);
   assert.deepEqual(grid?.type === 'app-grid' ? grid.apps : undefined, []);
 });
 
-test('hero without an actions key parses to an empty list', () => {
-  const { actions: _omitted, ...withoutActions } = fixtures.hero;
-  const [section] = schema.parse([withoutActions]);
-  assert.deepEqual(section?.type === 'hero' ? section.actions : undefined, []);
+test('blank optionals in a stored block parse as absent', () => {
+  const [missingText, emptyText] = schema.parse([
+    blockWithout('cta', 'text'),
+    block('cta', { text: '' }),
+  ]);
+  assert.equal(missingText?.type === 'cta' ? missingText.text : 'x', undefined);
+  assert.equal(emptyText?.type === 'cta' ? emptyText.text : 'x', undefined);
+
+  const [features] = schema.parse([block('feature-list', { items: [{ title: 'T', body: 'B' }] })]);
+  assert.equal(features?.type === 'feature-list' ? features.items[0]?.duration : 'x', undefined);
+
+  for (const hero of [blockWithout('hero', 'actions'), block('hero', { actions: [] })]) {
+    const [section] = schema.parse([hero]);
+    assert.deepEqual(section?.type === 'hero' ? section.actions : undefined, []);
+  }
+  const [nullActions] = schema.parse([block('hero', { actions: null })]);
+  assert.deepEqual(nullActions?.type === 'hero' ? nullActions.actions : undefined, []);
 });
 
 test('feature-list rejects 0 and 9 items', () => {
   const item = { title: 'T', body: 'B' };
-  const list = fixtures['feature-list'];
-  assert.equal(parse({ ...list, items: [] }).success, false);
-  assert.equal(parse({ ...list, items: Array.from({ length: 9 }, () => item) }).success, false);
-  assert.equal(parse({ ...list, items: Array.from({ length: 8 }, () => item) }).success, true);
+  const items = (length: number) => Array.from({ length }, () => item);
+  assert.equal(parse(block('feature-list', { items: [] })).success, false);
+  assert.equal(parse(block('feature-list', { items: items(9) })).success, false);
+  assert.equal(parse(block('feature-list', { items: items(8) })).success, true);
 });
 
 test('rejects protocol-relative hrefs and accepts site-relative ones', () => {
-  const withHref = (href: string) => parse({ ...fixtures.hero, actions: [{ label: 'Go', href }] });
+  const withHref = (href: string) => parse(block('hero', { actions: [{ label: 'Go', href }] }));
   assert.equal(withHref('//evil.com').success, false);
   assert.equal(withHref('/\\evil.com').success, false);
   assert.equal(withHref('/about/').success, true);
 });
 
 test('rejects an unknown key on a section', () => {
-  assert.equal(parse({ ...fixtures.statement, extra: 'typo' }).success, false);
+  assert.equal(parse(block('statement', { extra: 'typo' })).success, false);
 });
 
 test('feature-list item duration is optional HH:MM:SS display timecode', () => {
-  const list = fixtures['feature-list'];
   const withDuration = (duration: unknown) =>
-    parse({ ...list, items: [{ title: 'T', body: 'B', duration }] }).success;
-  assert.equal(parse(list).success, true);
+    parse(block('feature-list', { items: [{ title: 'T', body: 'B', duration }] })).success;
+  assert.equal(parse(block('feature-list')).success, true);
   for (const ok of ['00:00:30', '01:59:59', '99:00:00']) assert.equal(withDuration(ok), true, ok);
   for (const bad of ['0:30', '00:30', '00:60:00', '00:00:60', '00:00:30:00', 'x'])
     assert.equal(withDuration(bad), false, bad);
@@ -119,10 +146,8 @@ test('feature-list item duration is optional HH:MM:SS display timecode', () => {
 
 test('a blank duration (cleared in the CMS) parses as no duration', () => {
   for (const blank of ['', '  ', null]) {
-    const result = parse({
-      ...fixtures['feature-list'],
-      items: [{ title: 'T', body: 'B', duration: blank }],
-    });
+    const items = [{ title: 'T', body: 'B', duration: blank }];
+    const result = parse(block('feature-list', { items }));
     assert.equal(result.success, true, String(blank));
     const [section] = result.success ? result.data : [];
     assert.equal(section?.type === 'feature-list' ? section.items[0]?.duration : 'x', undefined);
@@ -131,7 +156,7 @@ test('a blank duration (cleared in the CMS) parses as no duration', () => {
 
 test('a blank cta text (cleared in the CMS) parses as no text', () => {
   for (const blank of ['', ' ', null]) {
-    const result = parse({ ...fixtures.cta, text: blank });
+    const result = parse(block('cta', { text: blank }));
     assert.equal(result.success, true, String(blank));
     const [section] = result.success ? result.data : [];
     assert.equal(section?.type === 'cta' ? section.text : 'x', undefined);
@@ -148,26 +173,37 @@ const issueMessages = (sections: unknown[]) => {
   return result.success ? [] : result.error.issues.map((issue) => issue.message);
 };
 
+test('Markdoc tag syntax in rich-text body or faq answer fails, naming the section', () => {
+  assert.deepEqual(
+    issueMessages([block('statement'), block('rich-text', { body: 'Hi {% x %}' })]),
+    ['Markdoc tag syntax "{%" is not allowed (section 2)'],
+  );
+  assert.deepEqual(issueMessages([block('faq', { items: [{ q: 'Q', a: 'A {% /x %}' }] })]), [
+    'Markdoc tag syntax "{%" is not allowed (section 1)',
+  ]);
+  assert.deepEqual(issueMessages([block('rich-text', { body: 'Braces { and % alone pass' })]), []);
+});
+
 test('accepts a page without a hero and a page whose hero comes first', () => {
-  assert.deepEqual(issueMessages([fixtures.statement]), []);
-  assert.deepEqual(issueMessages([fixtures.hero, fixtures.statement]), []);
+  assert.deepEqual(issueMessages([block('statement')]), []);
+  assert.deepEqual(issueMessages([block('hero'), block('statement')]), []);
 });
 
 test('rejects a hero that is not the first section', () => {
-  assert.deepEqual(issueMessages([fixtures.statement, fixtures.hero]), [
+  assert.deepEqual(issueMessages([block('statement'), block('hero')]), [
     'A hero section must be the first section (found at position 2)',
   ]);
 });
 
 test('rejects a second hero', () => {
-  assert.deepEqual(issueMessages([fixtures.hero, fixtures.statement, fixtures.hero]), [
+  assert.deepEqual(issueMessages([block('hero'), block('statement'), block('hero')]), [
     'Only one hero section is allowed (another one at position 3)',
   ]);
 });
 
 test('application sections reject a hero (the application page owns the h1)', () => {
-  const applicationSchema = applicationSectionsSchema({ image: () => z.string() } as never);
-  const result = applicationSchema.safeParse([fixtures.hero]);
+  const applicationSchema = applicationSectionsSchema(context);
+  const result = applicationSchema.safeParse([block('hero')]);
   assert.equal(result.success, false);
   assert.deepEqual(
     result.error?.issues.map((issue) => issue.message),
@@ -175,5 +211,5 @@ test('application sections reject a hero (the application page owns the h1)', ()
       'An application page cannot have a hero section (found at position 1): the page header holds the h1',
     ],
   );
-  assert.equal(applicationSchema.safeParse([fixtures.statement]).success, true);
+  assert.equal(applicationSchema.safeParse([block('statement')]).success, true);
 });

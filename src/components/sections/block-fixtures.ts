@@ -5,11 +5,12 @@
  * action and a Markdown link, then reversed without either). Existing uploads stand in for logos
  * and the portrait until I1 adds the placeholder marks.
  */
-import archive from '../../assets/uploads/cover-archive-search.png';
-import newsroom from '../../assets/uploads/cover-newsroom-desk.png';
-import playout from '../../assets/uploads/cover-playout-control.png';
-import og from '../../assets/uploads/og-default.png';
-import transmitter from '../../assets/uploads/transmitter.png';
+// Paths are the ones Keystatic itself writes, so saving an unchanged entry keeps them.
+import archive from '../../assets/uploads/applications/en/archive-search/cover.png';
+import newsroom from '../../assets/uploads/applications/en/newsroom-desk/cover.png';
+import playout from '../../assets/uploads/applications/en/playout-control/cover.png';
+import og from '../../assets/uploads/ogImage.png';
+import transmitter from '../../assets/uploads/pages/en/home/sections/0/value/image.png';
 import type { LogosContent, PreviewBlock } from './block-content.ts';
 
 const LOGO_IMAGES = [archive, newsroom, playout, og, transmitter];
