@@ -15,8 +15,8 @@ import Label from '../ui/Label.astro';
 interface Props {
   /**
    * Resolved header items (`current`: exact page, `aria-current`; `active`: current page or its
-   * section, visual). Until the submenu accordions land, the sheet lists the items that have a
-   * page of their own, as top-level rows.
+   * section, visual). An item with children is an exclusive accordion (open when active, plus an
+   * overview row for its own page); any other item is a plain row.
    */
   items: readonly NavItem[];
   quote: { label: string; href: string };
@@ -77,7 +77,7 @@ const SUB_ROW =
             </li>
           ) : (
             <li>
-              <details name={GROUP_NAME} class="group/accordion">
+              <details name={GROUP_NAME} class="group/accordion" open={active || undefined}>
                 <summary
                   class:list={[ROW, 'min-h-16 cursor-pointer list-none [&::-webkit-details-marker]:hidden']}
                   data-active={active ? '' : undefined}
