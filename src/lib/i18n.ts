@@ -64,6 +64,7 @@ export const UI_KEYS = [
   'noSignal',
   'appBrochure',
   'footerContact',
+  'footerApplications',
   'footerSocial',
   'footerRights',
   'quoteName',

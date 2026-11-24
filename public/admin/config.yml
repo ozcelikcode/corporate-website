@@ -192,6 +192,10 @@ collections:
         widget: string
         i18n: true
         required: [en]
+      - name: footerApplications
+        widget: string
+        i18n: true
+        required: [en]
       - name: footerSocial
         widget: string
         i18n: true

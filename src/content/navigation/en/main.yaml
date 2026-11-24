@@ -19,8 +19,6 @@ header:
   - label: Contact
     href: /contact/
 footer:
-  - label: Applications
-    href: /applications/
   - label: About
     href: /about/
   - label: Contact
