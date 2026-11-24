@@ -12,6 +12,7 @@ import {
   NAV_CHILDREN_MAX,
   NAV_HEADER_LABEL_MAX,
   NAV_HEADER_MAX,
+  NAV_QUOTE_MAX,
   navigationSchema,
 } from '../lib/navigation-schema.ts';
 import {
@@ -34,6 +35,7 @@ import {
   NAV_CHILDREN_LIMIT,
   NAV_HEADER_LABEL_LIMIT,
   NAV_HEADER_LIMIT,
+  NAV_QUOTE_LIMIT,
   singletons,
 } from './singletons.ts';
 
@@ -229,6 +231,13 @@ test('the admin limits and patterns match the Zod schemas', () => {
   assert.equal(NAV_CHILDREN_LIMIT, NAV_CHILDREN_MAX);
   assert.equal(NAV_HEADER_LIMIT, NAV_HEADER_MAX);
   assert.equal(NAV_HEADER_LABEL_LIMIT, NAV_HEADER_LABEL_MAX);
+  assert.equal(NAV_QUOTE_LIMIT, NAV_QUOTE_MAX);
+  for (const ui of [singletons.uiEn, singletons.uiTr]) {
+    const quote = ui.schema.navQuote;
+    assert.ok(quote, `${ui.path}: navQuote`);
+    assert.equal(adminRefusal(quote, 'x'.repeat(NAV_QUOTE_MAX)), undefined);
+    assert.ok(adminRefusal(quote, 'x'.repeat(NAV_QUOTE_MAX + 1)));
+  }
   for (const nav of [singletons.navigationEn, singletons.navigationTr]) {
     assert.deepEqual(nav.schema.header.validation?.length, { min: 1, max: NAV_HEADER_MAX });
     const label = nav.schema.header.element.fields.label;

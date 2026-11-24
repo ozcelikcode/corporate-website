@@ -3,8 +3,9 @@
  * (Schibsted Grotesk, weight 500, no letter spacing). Measured in Chromium on 2026-11-24 (40
  * repeats of each glyph at the nav size, rounded up). The sum of advances ignores kerning, which
  * only ever tightens these pairs, so it is an upper bound: "Applications" sums to 5.930em and
- * renders at 5.856em. A glyph not in the table counts as the widest one (`W`). Re-measure if the
- * nav face, weight or tracking changes.
+ * renders at 5.856em. A glyph not in the table counts as `UNKNOWN_GLYPH_PER_MILLE`, above every
+ * glyph measured up to U+024F and common punctuation (the widest are the digraphs `Ǆ`/`Ǳ` at 1393,
+ * then `Œ` at 1114; `W` is 982). Re-measure if the nav face, weight or tracking changes.
  */
 
 const ADVANCE_PER_MILLE: Readonly<Record<string, number>> = {
@@ -94,8 +95,8 @@ const ADVANCE_PER_MILLE: Readonly<Record<string, number>> = {
   ')': 277,
 };
 
-/** The widest measured glyph; any glyph outside the table counts as this wide. */
-const WIDEST_PER_MILLE = 982;
+/** Any glyph outside the table counts as this wide: an upper bound, not a measured advance. */
+const UNKNOWN_GLYPH_PER_MILLE = 1400;
 
 export const labelWidthPerMille = (label: string): number =>
-  [...label].reduce((sum, glyph) => sum + (ADVANCE_PER_MILLE[glyph] ?? WIDEST_PER_MILLE), 0);
+  [...label].reduce((sum, glyph) => sum + (ADVANCE_PER_MILLE[glyph] ?? UNKNOWN_GLYPH_PER_MILLE), 0);

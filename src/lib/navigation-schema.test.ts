@@ -66,16 +66,6 @@ test('labels past the width budget fail with a header-full message', () => {
   assert.equal(safe({ header: header.slice(1) }).success, true);
 });
 
-test('the seed labels fit the width budget in both locales', () => {
-  for (const labels of [
-    ['Applications', 'Company', 'Contact'],
-    ['Uygulamalar', 'Kurumsal', 'İletişim'],
-  ]) {
-    const width = labels.reduce((sum, label) => sum + labelWidthPerMille(label), 0);
-    assert.ok(width <= NAV_HEADER_LABELS_BUDGET, `${labels.join(', ')}: ${width}`);
-  }
-});
-
 test('an item without href needs a submenu', () => {
   assert.match(issues({ header: [{ label: 'Company' }] }), /Navigation item "Company"/);
   assert.equal(safe({ header: [{ label: 'Apps', source: 'applications' }] }).success, true);

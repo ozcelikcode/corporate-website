@@ -7,5 +7,7 @@ test('a label sums the advances of its glyphs', () => {
   assert.equal(labelWidthPerMille(''), 0);
 });
 
-test('a glyph outside the table counts as the widest one', () =>
-  assert.equal(labelWidthPerMille('é'), labelWidthPerMille('W')));
+test('a glyph outside the table counts wider than any measured one', () => {
+  assert.ok(labelWidthPerMille('Œ') > labelWidthPerMille('W'));
+  assert.equal(labelWidthPerMille('Œ'), labelWidthPerMille('Ǆ'));
+});

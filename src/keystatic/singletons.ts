@@ -18,7 +18,9 @@ import { SECTION_LIMITS } from './sections.ts';
  */
 export const NAV_CHILDREN_LIMIT = 6;
 export const NAV_HEADER_LIMIT = 4;
-export const NAV_HEADER_LABEL_LIMIT = 18;
+export const NAV_HEADER_LABEL_LIMIT = 17;
+/** Mirrors `NAV_QUOTE_MAX` (`lib/navigation-schema.ts`); the build also checks the width. */
+export const NAV_QUOTE_LIMIT = 15;
 /** Upload folder as seen from `src/content/settings/site.yaml` (what Astro `image()` resolves). */
 const SETTINGS_UPLOADS_PUBLIC_PATH = '../../assets/uploads/';
 
@@ -189,10 +191,18 @@ const uiSingleton = (locale: Locale) =>
     path: `src/content/ui/${locale}/strings`,
     format: 'yaml',
     schema: Object.fromEntries(
-      UI_KEYS.map((key) => [
-        key,
-        fields.text({ label: key, validation: { isRequired: locale === 'en' } }),
-      ]),
+      UI_KEYS.map((key) =>
+        key === 'navQuote'
+          ? [
+              key,
+              fields.text({
+                label: key,
+                description: `Header quote key. At most ${NAV_QUOTE_LIMIT} characters and no wider than "Request a quote" (the build checks the width).`,
+                validation: { isRequired: locale === 'en', length: { max: NAV_QUOTE_LIMIT } },
+              }),
+            ]
+          : [key, fields.text({ label: key, validation: { isRequired: locale === 'en' } })],
+      ),
     ),
   });
 

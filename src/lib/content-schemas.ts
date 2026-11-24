@@ -9,6 +9,8 @@ import { listField, optionalField, withoutBlankValues } from './blank.ts';
 import { accentContrast, HEX_PATTERN, MIN_ACCENT_CONTRAST } from './color.ts';
 import { UI_KEYS } from './i18n.ts';
 import { CONTACT_HREF_PATTERN, SOCIAL_HREF_PATTERN } from './link-patterns.ts';
+import { labelWidthPerMille } from './nav-label-width.ts';
+import { NAV_QUOTE_MAX, NAV_QUOTE_WIDTH_MAX } from './navigation-schema.ts';
 import {
   actionSchema,
   applicationSectionsSchema,
@@ -65,10 +67,23 @@ export const settingsSchema = ({ image }: SchemaContext) =>
     }),
   });
 
-/** TR may be partial and a blank string counts as missing: both fall back to EN (`t()`). */
+/**
+ * TR may be partial and a blank string counts as missing: both fall back to EN (`t()`).
+ * `navQuote` captions the header quote key, which shares the measured header budget
+ * (`NAV_HEADER_LABELS_BUDGET`): it may not outgrow the label that budget was measured with.
+ */
 export const uiSchema = z.preprocess(
   withoutBlankValues,
-  z.partialRecord(z.enum(UI_KEYS), z.string().min(1)),
+  z.partialRecord(z.enum(UI_KEYS), z.string().min(1)).superRefine((strings, ctx) => {
+    const quote = strings.navQuote;
+    if (quote === undefined) return;
+    if ([...quote].length > NAV_QUOTE_MAX || labelWidthPerMille(quote) > NAV_QUOTE_WIDTH_MAX) {
+      ctx.addIssue({
+        code: 'custom',
+        message: `ui navQuote "${quote}" is too long for the header bar; use at most ${NAV_QUOTE_MAX} characters, about as wide as "Request a quote"`,
+      });
+    }
+  }),
 );
 
 export const pageSchema = (context: SchemaContext) =>
