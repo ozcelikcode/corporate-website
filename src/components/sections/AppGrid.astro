@@ -33,7 +33,7 @@ const apps = selectApps(await listApplications(locale), section.apps);
 ---
 <div class="reveal-group flex flex-col gap-12 md:gap-16">
   <LowerThird level={headingLevel} text={section.heading} label={section.label} index={index} />
-  <GridFrame as="ul" columns={3} class="reveal-stagger">
+  <GridFrame as="ul" columns={3} motion="reveal-stagger">
     {
       apps.map((app, i) => (
         <li class="bg-surface">

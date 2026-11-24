@@ -51,7 +51,7 @@ if (wall === undefined) throw new Error(`Logos takes 4–12 logos, got ${section
 ---
 <div class="reveal-group flex flex-col gap-12 md:gap-16">
   <LowerThird level={headingLevel} text={section.heading} label={section.label} index={index} />
-  <ul class:list={['reveal-stagger grid grid-cols-2 gap-2', wall.columns]}>
+  <ul class:list={['grid grid-cols-2 gap-2', wall.columns]}>
     {section.items.map(({ image, alt, href }) => (
       <li class="group bg-surface">
         {href === undefined ? (

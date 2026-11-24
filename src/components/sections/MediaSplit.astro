@@ -32,7 +32,7 @@ const { section, index, headingLevel, localize } = Astro.props;
 const html = await renderMarkdown(section.text, sectionIdPrefix(index), localize);
 const sides = section.reverse ? ORDER.media : ORDER.text;
 ---
-<GridFrame columns={12} class="reveal-group">
+<GridFrame columns={12} motion="reveal-group">
   {
     sides.map((side) =>
       side === 'text' ? (

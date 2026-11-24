@@ -37,7 +37,7 @@ const STRAP_JOIN = ' · ';
 const { section, index } = Astro.props;
 const strap = `${section.role}${STRAP_JOIN}${section.organization}`;
 ---
-<GridFrame columns={12} class="reveal-group">
+<GridFrame columns={12} motion="reveal-group">
   <div class="lg:col-span-3"><Label index={index} /></div>
   <figure class="flex min-w-0 flex-col items-start gap-8 md:gap-10 lg:col-span-9">
     <blockquote class={PULL_QUOTE_CLASS}>
