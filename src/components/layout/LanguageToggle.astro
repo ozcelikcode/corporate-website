@@ -1,7 +1,8 @@
 ---
 /**
- * `EN / TR` switch. Codes come from `LOCALES`, uppercased. The current locale is plain text
- * with `aria-current`; every other one links to its twin of this page (or that locale's home).
+ * `EN / TR` switch. Codes come from `LOCALES`, uppercased in JS (`toUpperCase`; the sans `label`
+ * does not transform case). The current locale is plain text with `aria-current`; every other one
+ * links to its twin of this page (or that locale's home).
  */
 import { LOCALES, type Locale, toggleTarget } from '../../lib/i18n.ts';
 
