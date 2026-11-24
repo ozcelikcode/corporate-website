@@ -1,7 +1,7 @@
 ---
 /**
  * One header item's submenu from `lg`: a full-width `surface` sheet directly under the header rule
- * (it draws no border of its own: the rule above is its edge). Inside the page container, a link
+ * (it draws no border of its own: the rule above is its edge; see the placement note below). Inside the page container, a link
  * column (label, optional description; the current page carries `aria-current` and the accent key)
  * and, when the navigation entry sets one, a `canvas` feature tile with a heading, text and a small
  * action, 8/4. The panel is a `popover` (`id` is what the item's button targets); DesktopNav owns
@@ -69,17 +69,25 @@ const { id, links, feature } = Astro.props;
 </div>
 
 <style>
+  /*
+   * The panel starts at the bottom of the bar, so it overlaps the header rule: its top edge is a
+   * transparent hairline border with the fill clipped below it. The rule shows through, and the
+   * strip still belongs to the panel, so a pointer moving from the item into the panel never
+   * leaves the item's `:hover`, even with no close delay (reduced motion zeroes it).
+   */
   .mega-panel {
     position: fixed;
-    inset: calc(var(--header-bar) + var(--border-hairline)) 0 auto;
+    inset: var(--header-bar) 0 auto;
     display: block;
     width: auto;
     max-width: none;
     height: auto;
-    max-height: calc(100svh - var(--header-bar) - var(--border-hairline));
+    max-height: calc(100svh - var(--header-bar));
     margin: 0;
     padding: 0;
     border: 0;
+    border-block-start: var(--border-hairline) solid transparent;
+    background-clip: padding-box;
     overflow-y: auto;
     overscroll-behavior: contain;
   }

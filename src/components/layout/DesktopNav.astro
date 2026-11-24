@@ -76,48 +76,84 @@ const entries = items.flatMap((item, index) => {
 <style>
   /*
    * When a panel shows. Each item sets four state variables; its panel (visibility and a short
-   * fade) and its chevron (a half turn) read them, so every state is one rule. Closed by default,
-   * leaving after `--menu-intent-close`. Open at once while open as a popover (tap, click, Enter)
-   * or while focus is inside the panel. With a fine pointer, open after `--menu-intent-open` while
-   * the pointer rests on the item or its panel; hovering another item hands over on that same beat
-   * (the old panel leaves as the new one arrives), so two panels never stack. The global
-   * reduced-motion rule zeroes the delays, which is safe: the path from item to panel has no gap.
+   * fade) and its chevron (a half turn) read them, so every state is one rule.
+   *
+   * Closed by default, at once: Escape, a tap or click outside, or opening another panel hide it
+   * without a linger. Open at once while open as a popover (tap, click, Enter) or while focus is
+   * inside the panel. With a fine pointer, an item opens after `--menu-intent-open` while the
+   * pointer rests on it or its panel and closes `--menu-intent-close` after the pointer leaves;
+   * hovering another item hands over on the open beat (the old panel leaves as the new one
+   * arrives), so two panels never stack. Keyboard focus shown anywhere outside an item closes its
+   * open popover, so a panel left open never covers the focused control (WCAG 2.4.11); taps and
+   * mouse clicks do not match `:focus-visible`, so touch is unaffected. The global reduced-motion
+   * rule zeroes every delay, which is safe: the panel overlaps the header rule, so the path from
+   * item to panel has no gap.
    */
   .nav-item {
     --menu-shown: hidden;
     --menu-fade: 0;
-    --menu-turn: 0turn;
-    --menu-delay: var(--menu-intent-close);
+    --menu-turn: var(--menu-chevron-closed);
+    --menu-delay: 0s;
   }
 
   .nav-item:has(> [data-mega-panel]:popover-open) {
     --menu-shown: visible;
     --menu-fade: 1;
-    --menu-turn: 0.5turn;
+    --menu-turn: var(--menu-chevron-open);
     --menu-delay: 0s;
   }
 
   .nav-item:has(> [data-mega-panel]:focus-within) {
     --menu-shown: visible;
     --menu-fade: 1;
-    --menu-turn: 0.5turn;
+    --menu-turn: var(--menu-chevron-open);
     --menu-delay: 0s;
   }
 
   @media (hover: hover) and (pointer: fine) {
+    .nav-item {
+      --menu-delay: var(--menu-intent-close);
+    }
+
+    /* Keyboard focus on the item's own controls (Escape returns it there): close at once. */
+    .nav-item:has(:focus-visible) {
+      --menu-delay: 0s;
+    }
+
     .nav-item:hover {
       --menu-shown: visible;
       --menu-fade: 1;
-      --menu-turn: 0.5turn;
+      --menu-turn: var(--menu-chevron-open);
       --menu-delay: var(--menu-intent-open);
     }
 
     .nav-list:has(> .nav-item:hover) > .nav-item:not(:hover, :has(> [data-mega-panel]:focus-within)) {
       --menu-shown: hidden;
       --menu-fade: 0;
-      --menu-turn: 0turn;
+      --menu-turn: var(--menu-chevron-closed);
       --menu-delay: var(--menu-intent-open);
     }
+
+    /* Another panel opened as a popover: the one it replaced leaves at once. */
+    .nav-list:has(> .nav-item > [data-mega-panel]:popover-open)
+      > .nav-item:not(:hover, :has(> [data-mega-panel]:popover-open)) {
+      --menu-delay: 0s;
+    }
+  }
+
+  /*
+   * Focus inside the panel is tested on the panel itself: Chromium does not match `:focus-within`
+   * on the item while focus sits in its open (top-layer) popover.
+   */
+  :global(:root:has(:focus-visible))
+    .nav-list
+    > .nav-item:not(:focus-within, :has(> [data-mega-panel]:focus-within)):has(
+      > [data-mega-panel]:popover-open
+    ) {
+    --menu-shown: hidden;
+    --menu-fade: 0;
+    --menu-turn: var(--menu-chevron-closed);
+    --menu-delay: 0s;
   }
 
   .nav-item > :global([data-mega-panel]) {

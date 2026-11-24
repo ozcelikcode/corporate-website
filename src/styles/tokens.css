@@ -139,6 +139,9 @@
      */
     --menu-intent-open: 120ms;
     --menu-intent-close: 300ms;
+    /* Submenu chevron: points down while closed, turns a half turn to point up while open. */
+    --menu-chevron-closed: 0turn;
+    --menu-chevron-open: 0.5turn;
     --ease-signal: cubic-bezier(0.2, 0, 0, 1);
   }
 }
