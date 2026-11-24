@@ -1,11 +1,12 @@
 ---
 /**
  * Arrow glyphs drawn as inline SVG: the font subsets lack → and ↗, so the marks never fall back
- * to a system font. Square caps and mitred joins match the 0-radius language; the stroke takes
- * the surrounding text colour. Sized to the label type token.
+ * to a system font. `⌄` is the submenu chevron (it points down; the menu turns it when open).
+ * Square caps and mitred joins match the 0-radius language; the stroke takes the surrounding
+ * text colour. Sized to the label type token.
  */
 
-type GlyphName = '→' | '↗';
+type GlyphName = '→' | '↗' | '⌄';
 
 interface Props {
   name: GlyphName;
@@ -16,10 +17,11 @@ interface Props {
 const VIEWBOX_SIZE = 16;
 const STROKE_WIDTH = 1.5;
 
-/** Shaft plus head for each arrow, inside the VIEWBOX_SIZE square. */
+/** Shaft plus head for each arrow (the chevron is a head alone), inside the VIEWBOX_SIZE square. */
 const PATHS = {
   '→': 'M2 8H14M9 3L14 8L9 13',
   '↗': 'M4 12L12 4M5 4H12V11',
+  '⌄': 'M3 6L8 11L13 6',
 } as const satisfies Record<GlyphName, string>;
 
 const { name, class: className } = Astro.props;

@@ -15,8 +15,15 @@ import SeoHead from '../components/layout/SeoHead.astro';
 import SiteFooter from '../components/layout/SiteFooter.astro';
 import SiteHeader from '../components/layout/SiteHeader.astro';
 import TallyStrip from '../components/layout/TallyStrip.astro';
-import { getNavigation, getSettings, getUiDictionary, hrefLocalizer } from '../lib/content.ts';
+import {
+  getNavigation,
+  getSettings,
+  getUiDictionary,
+  hrefLocalizer,
+  listApplications,
+} from '../lib/content.ts';
 import { type Locale, localizePath, pagePath, t, type UiKey } from '../lib/i18n.ts';
+import { resolveNavItems } from '../lib/nav-items.ts';
 import { QUOTE_SLUG } from '../lib/page-slugs.ts';
 import { absoluteUrl, formatTitle, hreflangLinks } from '../lib/seo.ts';
 import '../styles/global.css';
@@ -60,11 +67,12 @@ const {
 const site = Astro.site;
 if (site === undefined) throw new Error('BaseLayout needs `site` in astro.config.ts');
 
-const [settings, dict, navigation, localize] = await Promise.all([
+const [settings, dict, navigation, localize, applications] = await Promise.all([
   getSettings(),
   getUiDictionary(),
   getNavigation(locale),
   hrefLocalizer(locale),
+  listApplications(locale),
 ]);
 const ui = (key: UiKey) => t(dict, locale, key);
 
@@ -84,13 +92,23 @@ const homeHref = localize(HOME_PATH);
 const quote = { label: ui('navQuote'), href: localize(pagePath(QUOTE_SLUG)) };
 const localizeLinks = (links: readonly { label: string; href: string }[]) =>
   links.map((link) => ({ ...link, href: localize(link.href) }));
-const currentPath = Astro.url.pathname;
-/** Top-level links only; B3 replaces this with the submenu-aware `resolveNavItems`. */
-const headerLinks = localizeLinks(
-  navigation.data.header.flatMap(({ label, href }) =>
-    href === undefined ? [] : [{ label, href }],
-  ),
-);
+/**
+ * Header items, built once for both navs. `listApplications` gives each application in `locale`,
+ * else its EN entry (name and tagline then stay EN), and the localizer keeps the EN URL of an
+ * untranslated one, so a TR menu never links a missing `/tr/` page.
+ */
+const navItems = resolveNavItems({
+  entries: navigation.data.header,
+  applications: applications.map(({ data }) => ({
+    slug: data.slug,
+    name: data.name,
+    tagline: data.tagline,
+    order: data.order,
+  })),
+  locale,
+  localize,
+  currentPath: Astro.url.pathname,
+});
 ---
 <!doctype html>
 <html lang={locale} style={{ '--accent-seed': settings.accent }}>
@@ -124,14 +142,14 @@ const headerLinks = localizeLinks(
       locale={locale}
       neutralPath={neutralPath}
       availableLocales={availableLocales}
-      currentPath={currentPath}
       homeHref={homeHref}
       logo={settings.logo}
       logoAlt={settings.logoAlt}
-      links={headerLinks}
+      items={navItems}
       quote={quote}
       labels={{
         nav: ui('navPrimaryLabel'),
+        submenu: ui('navSubmenu'),
         language: ui('languageLabel'),
         menuOpen: ui('menuOpen'),
         menuClose: ui('menuClose'),
