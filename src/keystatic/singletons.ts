@@ -6,6 +6,7 @@
 import { fields, singleton } from '@keystatic/core';
 import { HEX_PATTERN } from '../lib/color.ts';
 import { type Locale, UI_KEYS } from '../lib/i18n.ts';
+import { UPLOADS_DIRECTORY } from '../lib/upload-paths.ts';
 import { LINK_HINT } from './link-hints.ts';
 import { LOCALE_NAMES } from './locale-names.ts';
 
@@ -14,7 +15,6 @@ import { LOCALE_NAMES } from './locale-names.ts';
  * module would pull Zod into the admin bundle; `parity.test.ts` checks the two agree.
  */
 export const NAV_CHILDREN_LIMIT = 6;
-const UPLOADS_DIRECTORY = 'src/assets/uploads';
 /** Upload folder as seen from `src/content/settings/site.yaml` (what Astro `image()` resolves). */
 const SETTINGS_UPLOADS_PUBLIC_PATH = '../../assets/uploads/';
 

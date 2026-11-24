@@ -13,20 +13,30 @@ type Props = BlockProps<'logos'>;
 
 const LOOSE = 'p-6 md:p-8';
 const DENSE = 'p-4 lg:p-5'; // five or more across: tighter, so logos keep their size
+/**
+ * Image `sizes` per layout: a tile's share of the viewport at each step (2 across on phones), so
+ * a six-across wall fetches the small variant.
+ */
+const SIZES = {
+  three: '(min-width: 48rem) 30vw, 45vw',
+  four: '(min-width: 48rem) 22vw, 45vw',
+  five: '(min-width: 48rem) 17vw, 45vw',
+  threeThenFive: '(min-width: 64rem) 17vw, (min-width: 48rem) 30vw, 45vw',
+  threeThenSix: '(min-width: 64rem) 14vw, (min-width: 48rem) 30vw, 45vw',
+} as const;
 /** Columns per logo count (2 on phones); wider steps divide the count, so rows end full. */
-const WALL: Record<number, { columns: string; pad: string }> = {
-  4: { columns: 'md:grid-cols-4', pad: LOOSE },
-  5: { columns: 'md:grid-cols-3 lg:grid-cols-5', pad: DENSE },
-  6: { columns: 'md:grid-cols-3 lg:grid-cols-6', pad: DENSE }, // one calm strip from `lg`
-  7: { columns: 'md:grid-cols-4', pad: LOOSE },
-  8: { columns: 'md:grid-cols-4', pad: LOOSE },
-  9: { columns: 'md:grid-cols-3', pad: LOOSE },
-  10: { columns: 'md:grid-cols-5', pad: DENSE },
-  11: { columns: 'md:grid-cols-3 lg:grid-cols-6', pad: DENSE },
-  12: { columns: 'md:grid-cols-3 lg:grid-cols-6', pad: DENSE },
+const WALL: Record<number, { columns: string; pad: string; sizes: string }> = {
+  4: { columns: 'md:grid-cols-4', pad: LOOSE, sizes: SIZES.four },
+  5: { columns: 'md:grid-cols-3 lg:grid-cols-5', pad: DENSE, sizes: SIZES.threeThenFive },
+  6: { columns: 'md:grid-cols-3 lg:grid-cols-6', pad: DENSE, sizes: SIZES.threeThenSix }, // one calm strip from `lg`
+  7: { columns: 'md:grid-cols-4', pad: LOOSE, sizes: SIZES.four },
+  8: { columns: 'md:grid-cols-4', pad: LOOSE, sizes: SIZES.four },
+  9: { columns: 'md:grid-cols-3', pad: LOOSE, sizes: SIZES.three },
+  10: { columns: 'md:grid-cols-5', pad: DENSE, sizes: SIZES.five },
+  11: { columns: 'md:grid-cols-3 lg:grid-cols-6', pad: DENSE, sizes: SIZES.threeThenSix },
+  12: { columns: 'md:grid-cols-3 lg:grid-cols-6', pad: DENSE, sizes: SIZES.threeThenSix },
 };
 const LOGO_WIDTHS = [240, 480]; // tiles run about 9rem (six across) to 20rem wide
-const SIZES = '(min-width: 64rem) 22vw, (min-width: 48rem) 30vw, 45vw';
 const TILE = 'relative flex aspect-3/2 items-center justify-center';
 const MUTED = 'size-full object-contain opacity-60 grayscale';
 const HOVER = 'group-hover:opacity-100 group-hover:grayscale-0';
@@ -46,11 +56,11 @@ if (wall === undefined) throw new Error(`Logos takes 4–12 logos, got ${section
       <li class="group bg-surface">
         {href === undefined ? (
           <div class:list={[TILE, wall.pad]}>
-            <Image src={image} alt={alt} widths={LOGO_WIDTHS} sizes={SIZES} class={MUTED} />
+            <Image src={image} alt={alt} widths={LOGO_WIDTHS} sizes={wall.sizes} class={MUTED} />
           </div>
         ) : (
           <a href={localize(href)} class:list={[TILE, wall.pad, INSET_FOCUS]}>
-            <Image src={image} alt={alt} widths={LOGO_WIDTHS} sizes={SIZES} class={LIVE} />
+            <Image src={image} alt={alt} widths={LOGO_WIDTHS} sizes={wall.sizes} class={LIVE} />
             <Glyph name="↗" class={MARK} />
           </a>
         )}

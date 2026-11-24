@@ -162,7 +162,8 @@ const richBlocks = (images: ImageLocation) => ({
           image: rasterImage(images, 'Logo', true),
           alt: fields.text({
             label: 'Name (alt text)',
-            description: 'Names the organization; screen readers read it.',
+            description:
+              'Names the organization; screen readers read it. Spaces alone are refused at build.',
             validation: { isRequired: true, length: { min: 1 } },
           }),
           href: fields.text({

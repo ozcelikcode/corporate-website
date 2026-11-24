@@ -38,7 +38,7 @@ export const HTTPS_HREF_PATTERN = /^https:\/\/\S+$/;
  */
 const MARKDOC_TAG_PATTERN = /\{%/;
 const label = z.string().max(LABEL_MAX); // tally label, e.g. "Mission"
-/** Required text that is more than whitespace (alt text that names something). */
+/** Required text that is more than whitespace (alt text, stat figures and their labels). */
 const filled = z.string().trim().min(1);
 export const actionSchema = z.strictObject({
   label,
@@ -104,7 +104,13 @@ export const sectionSchemas = ({ image }: SchemaContext) =>
     stats: z.strictObject({
       label,
       items: z
-        .array(z.strictObject({ value: z.string(), label, note: optionalField(z.string()) }))
+        .array(
+          z.strictObject({
+            value: filled,
+            label: filled.max(LABEL_MAX),
+            note: optionalField(z.string()),
+          }),
+        )
         .min(STATS_MIN)
         .max(STATS_MAX),
     }),
@@ -134,7 +140,7 @@ export const sectionSchemas = ({ image }: SchemaContext) =>
       heading: z.string(),
       text: md,
       image: rasterImage(image, 'media-split image'),
-      imageAlt: z.string(),
+      imageAlt: filled,
       action: optionalObjectField(actionSchema),
       reverse: z.boolean().default(false),
     }),

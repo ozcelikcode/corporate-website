@@ -9,8 +9,8 @@
  */
 import { collection, fields } from '@keystatic/core';
 import type { Locale } from '../lib/i18n.ts';
+import { ENTRY_UPLOADS_PUBLIC_PATH, UPLOADS_DIRECTORY } from '../lib/upload-paths.ts';
 import { LOCALE_NAMES } from './locale-names.ts';
-import { ENTRY_UPLOADS_PUBLIC_PATH, UPLOADS_DIRECTORY } from './paths.ts';
 import {
   action,
   applicationSections,

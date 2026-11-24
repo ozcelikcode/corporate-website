@@ -11,7 +11,7 @@
  */
 import { existsSync } from 'node:fs';
 import { extname, join, relative, resolve, sep } from 'node:path';
-import { ENTRY_UPLOADS_PUBLIC_PATH, UPLOADS_DIRECTORY } from '../keystatic/paths.ts';
+import { ENTRY_UPLOADS_PUBLIC_PATH, UPLOADS_DIRECTORY } from './upload-paths.ts';
 
 const PROJECT_UPLOADS = join(process.cwd(), UPLOADS_DIRECTORY);
 const STORED_PREFIX = `${ENTRY_UPLOADS_PUBLIC_PATH}/`;

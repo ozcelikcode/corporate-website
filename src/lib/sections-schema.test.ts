@@ -329,6 +329,20 @@ test('a logo needs non-empty alt text', () => {
   }
 });
 
+test('a stat value or label and a media-split imageAlt must be more than whitespace', () => {
+  for (const blank of ['', '   ']) {
+    for (const item of [
+      { value: blank, label: 'L' },
+      { value: '1', label: blank },
+    ]) {
+      const items = listOf(item, STATS_MIN);
+      assert.equal(parse(block('stats', { items })).success, false, JSON.stringify(item));
+    }
+    const result = parse(block('media-split', { imageAlt: blank }));
+    assert.equal(result.success, false, JSON.stringify(blank));
+  }
+});
+
 test('a missing or blank testimonial portrait parses as absent', () => {
   assert.equal(only('testimonial').portrait, 'portrait.webp');
   for (const portrait of ['', ' ', null]) {
