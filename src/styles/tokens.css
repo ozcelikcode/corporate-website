@@ -146,5 +146,26 @@
     --menu-chevron-closed: 0turn;
     --menu-chevron-open: 0.5turn;
     --ease-signal: cubic-bezier(0.2, 0, 0, 1);
+
+    /*
+     * Content motion (documented exception to the 240ms UI-motion rule: these are one-time
+     * entrances, not feedback to an action). Opacity and transform only; see `global.css`.
+     * - Page opener on load: each step follows the previous by `--motion-enter-step`; the media
+     *   frame fades in from the third step (no rise: the ASCII tune-in is its entrance), so the
+     *   whole entrance ends at 800ms.
+     * - Scroll reveals: a unit rises in over the first `--motion-reveal-span` of scroll after its
+     *   top enters the viewport; each stagger step starts `--motion-reveal-step` later. Both are
+     *   capped by the viewport height, so a short screen never holds a faded band: at most three
+     *   steps (18rem, or 34% of the screen, in all), which the footer below the last band always
+     *   leaves room for.
+     */
+    --motion-enter-rise: 1rem;
+    --motion-enter-duration: 560ms;
+    --motion-enter-step: 80ms;
+    --motion-enter-media-delay: calc(var(--motion-enter-step) * 2);
+    --motion-reveal-rise: 0.75rem;
+    --motion-reveal-span: min(12rem, 22svh);
+    --motion-reveal-step: min(2rem, 4svh);
+    --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
   }
 }

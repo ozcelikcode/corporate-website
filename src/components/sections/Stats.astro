@@ -25,13 +25,13 @@ const { section, index, headingLevel } = Astro.props;
 const HeadingTag = `h${headingLevel}` as const;
 const columns = section.items.length === FOUR_UP ? COLUMNS.four : COLUMNS.three;
 ---
-<GridFrame columns={12}>
+<GridFrame columns={12} motion="reveal-group">
   <HeadingTag class="lg:col-span-3">
     <Label as="span" text={section.label} index={index} />
   </HeadingTag>
   <ul
     class:list={[
-      'grid gap-x-6 gap-y-10 bg-surface p-6 md:gap-x-8 md:p-8 lg:col-span-9',
+      'reveal-stagger grid gap-x-6 gap-y-10 bg-surface p-6 md:gap-x-8 md:p-8 lg:col-span-9',
       columns,
     ]}
   >

@@ -6,6 +6,7 @@
 - Final fix wave (2026-11-24): admin link fields carry the Zod patterns (shared zod-free `lib/link-patterns.ts`, pinned per field in `parity.test.ts`); optional groups (nav feature card, media-split button) say "Fill all fields or leave all empty"; `resolveNavItems` drops an applications menu with no applications and no link (both navs agree); the admin `<title>` lives in `src/keystatic/paths.ts`; `toApiResult` always normalises through `Headers`; AppGrid tiles of untranslated applications carry `lang="en"` on `/tr/` (`fallbackLang`); runbook lists the WCAG 1.4.13 hover limitation.
 - Menu owner fixes (2026-11-24) on `fix/menu-hover-size`, cut from `feat/keystatic-menu` for PR #3: pointer cursor on buttons, no phantom hover zone (only visible controls are hit-tested), larger and stronger desktop menu. Details in `systemPatterns.md` (mega menu hit areas, menu type).
 - Gate on the branch: build 14 pages, check 0/0/0, lint clean, 276 tests; guards clean.
+- Content motion (2026-11-24) on `feat/motion-reveals`, cut from `feat/keystatic-menu` (132177f): CSS-only hero entrance and scroll-driven reveals (`systemPatterns.md`, "Content motion"). Not pushed; owner to review the feel in a browser.
 
 ## Next step
 - Open the PR from `feat/keystatic-menu` to `main`. The PR must state the hard precondition: no editor gets access before the owner's first real GitHub login (S2), the `main` ruleset (runbook 3.4) and runbook check 5(a).

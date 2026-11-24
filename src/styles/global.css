@@ -210,3 +210,83 @@
     border-block-start: var(--border-hairline) solid var(--color-line);
   }
 }
+
+/*
+ * Content motion: content arrives once, on opacity and translate only (tokens: `--motion-*`).
+ * - `enter`: the page opener's children rise in on load, in order (label, headline, lede,
+ *   actions; a fifth child shares the fourth step). `enter-media`, the hero or cover frame, fades
+ *   in from the third step without rising: its ASCII figure's tune-in is its entrance.
+ * - `reveal`: one unit rises in as it scrolls into view.
+ * - `reveal-group`: each child is a unit; the first (the label or heading) leads, the rest follow.
+ * - `reveal-stagger`: a grid's items follow the heading in order, capped at three steps, so a long
+ *   list never trickles in. Inside a `reveal-group` it reveals through its items, not as a unit.
+ * - `motion-still`: nothing inside reveals (the 404 keeps only its own signal pattern).
+ * A unit holding focus is always in its final state (keyboard users never land on faded content).
+ * Motion runs only on screens, with motion allowed and the HOLD key off; scroll reveals only where
+ * view timelines and their ranges exist. Everywhere else (reduced motion, HOLD, print, older
+ * browsers) the content is simply there: nothing starts hidden outside a running animation.
+ */
+@layer components {
+  .enter > :nth-child(2),
+  .reveal-group > * + *,
+  .reveal-stagger > :first-child {
+    --motion-step: 1;
+  }
+
+  .enter > :nth-child(3),
+  .reveal-stagger > :nth-child(2) {
+    --motion-step: 2;
+  }
+
+  .enter > :nth-child(n + 4),
+  .reveal-stagger > :nth-child(n + 3) {
+    --motion-step: 3;
+  }
+
+  @media screen and (prefers-reduced-motion: no-preference) {
+    html:not(:has([data-motion-hold]:checked)) {
+      & :is(.enter > *, .enter-media) {
+        --motion-rise: var(--motion-enter-rise);
+
+        animation: motion-rise var(--motion-enter-duration) var(--ease-reveal) both;
+        animation-delay: calc(var(--motion-step) * var(--motion-enter-step));
+      }
+
+      & .enter-media {
+        --motion-rise: 0;
+
+        animation-delay: var(--motion-enter-media-delay);
+      }
+
+      @supports (animation-timeline: view()) and (animation-range: entry 0% entry 100%) {
+        &
+          :is(.reveal, .reveal-group > :not(.reveal-stagger), .reveal-stagger > *):not(
+            .motion-still *,
+            :focus-within
+          ) {
+          --motion-rise: var(--motion-reveal-rise);
+          --motion-reveal-start: calc(var(--motion-step) * var(--motion-reveal-step));
+
+          animation: motion-rise auto var(--ease-reveal) both;
+          animation-timeline: view();
+          animation-range: entry var(--motion-reveal-start) entry
+            calc(var(--motion-reveal-start) + var(--motion-reveal-span));
+        }
+      }
+    }
+  }
+}
+
+/* A unit's own place in its sequence: never inherited, so nested units start from 0. */
+@property --motion-step {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@keyframes motion-rise {
+  from {
+    opacity: 0;
+    translate: 0 var(--motion-rise);
+  }
+}
