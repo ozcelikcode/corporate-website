@@ -3,9 +3,11 @@
  * Testimonial: one pull-quote with an on-air name strap. The `[NN]` index sits in the
  * three-column gutter; the `<figure>` takes the other nine. The quote is set like the statement
  * (`text-quote`, regular weight, `quote` measure) inside the page language's own quotation marks
- * (`open-quote`/`close-quote`, accent, large text only; the opening one hangs). The caption is a lower third: the name
- * above, role and organization in the strap below; an optional small duotone portrait sits beside
- * it, cropped square and decorative (`alt=""`), because the name next to it carries the person.
+ * (`open-quote`/`close-quote`). The marks are decorative graphic punctuation in accent (3:1 holds
+ * as a graphic at every size) with empty alt text, so they are never announced; the opening one
+ * hangs. The caption is a lower third: the name above, role and organization in the strap below;
+ * an optional small duotone portrait sits beside it, cropped square and decorative (`alt=""`),
+ * because the name next to it carries the person.
  */
 import DuotoneCover from '../ui/DuotoneCover.astro';
 import GridFrame from '../ui/GridFrame.astro';
@@ -19,9 +21,12 @@ const PORTRAIT_WIDTHS = [96, 192];
 const PORTRAIT_SIZES = '(min-width: 48rem) 5rem, 4rem';
 /** Any upload is cropped to a square, so a wide portrait never stretches the strap. */
 const PORTRAIT = 'w-16 shrink-0 md:w-20 [&_img]:aspect-square [&_img]:object-cover';
-/** The opening mark hangs into the margin by its own width, so the words align with the name. */
+/**
+ * Decorative marks (`content: open-quote / ""`: empty alt text, not announced). The opening mark
+ * hangs into the margin by its own width, so the words align with the name.
+ */
 const MARKS =
-  'relative before:absolute before:-translate-x-full before:text-accent before:content-[open-quote] after:text-accent after:content-[close-quote]';
+  'relative before:absolute before:-translate-x-full before:text-accent before:content-[open-quote_/_""] after:text-accent after:content-[close-quote_/_""]';
 /**
  * Role and organization share the strap, split by the middle dot the page title uses (a comma
  * takes a figure-wide advance under the label's tabular figures and looks spaced).
