@@ -30,6 +30,7 @@ Dev dependencies:
 - Fonts via Astro fonts API (`fonts` top-level config, stable since Astro 6), `fontProviders.local()`; see "Fonts" below.
 
 ## Fonts (Task 2)
+- The single-mono-weight reduction (design §5.1) does not apply: mono is still used by AsciiImage, Timecode, rundown durations, PGM/PVW tallies and prose `code`. No font change.
 - Files: `src/assets/fonts/schibsted-grotesk/{latin,latin-ext}-wght-{normal,italic}.woff2` and `src/assets/fonts/martian-mono/{latin,latin-ext}-wght-normal.woff2`, each folder with `OFL.txt`.
 - Source: Fontsource CDN, variable builds pinned at 5.3.0: `https://cdn.jsdelivr.net/fontsource/fonts/schibsted-grotesk:vf@5.3.0/<subset>-wght-<style>.woff2` and `.../martian-mono:vf@5.3.0/<subset>-wght-normal.woff2` (verified `wOF2` magic). `OFL.txt` from google/fonts `ofl/schibstedgrotesk/OFL.txt` and `ofl/martianmono/OFL.txt` (SIL OFL 1.1). `unicode-range` values copied from `@fontsource-variable/*@5.3.0` CSS into named constants in `astro.config.ts`.
 - Option shape (Astro 7.4.13, read from `node_modules/astro/dist/assets/fonts`): `{ provider: fontProviders.local(), name, cssVariable, fallbacks, options: { variants: [{ src: [path], weight: '400 900', style, unicodeRange }] } }`. Weights: Schibsted `400 900` (normal + italic), Martian `100 800` (the vf instance has `wght` only; `wdth` is fixed). Fallbacks: `system-ui, sans-serif` / `ui-monospace, monospace` (Astro adds metric-matched Arial/Courier fallbacks).

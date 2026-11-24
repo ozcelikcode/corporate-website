@@ -52,3 +52,6 @@
 
 ## Left to the builder (verify during implementation)
 i18n fallback in static dynamic routes, `astro/zod` bundling in the Worker, Workers Builds Node/pnpm support, `send_email` on free plan, CSP vs inline scripts. Sveltia open checks are listed in `techContext.md`.
+
+## Keystatic and menu branch (2026-11-24)
+- Branch `feat/keystatic-menu` implements `docs/superpowers/plans/2026-11-24-keystatic-menu-richness.md`. Sveltia to Keystatic decided by the owner 2026-11-24 (Payload rejected: needs a database and a paid Workers plan).

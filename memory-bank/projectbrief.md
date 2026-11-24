@@ -5,7 +5,7 @@ A static, brand-agnostic corporate showcase site. It presents the brand's identi
 
 ## Principles
 1. Small beats feature-rich. "Efficient and beautiful" beats "feature-rich". Every file, dependency and block must earn its place.
-2. Hand-crafted, not templated. Control-room monitor-wall look: calm spacing with hairlines in moderation, sharp corners, a few broadcast details, mono tally labels, one two-tone headline, one ASCII hero image.
+2. Hand-crafted, not templated. Control-room monitor-wall look: calm spacing with hairlines in moderation, sharp corners, a few broadcast details, sans labels, mono only on signal cues, one two-tone headline, one ASCII hero image.
 3. Platform first. Use forms, `<dialog>`, Popover API and `<details>` before any JS.
 4. Content is data. Every user-facing string lives in typed content.
 
