@@ -34,12 +34,11 @@ const CONTROL = 'flex min-h-11 items-center hover:text-ink';
 
 const { items, navLabel, submenuLabel } = Astro.props;
 
-const entries = items.flatMap((item, index) => {
-  const hasPanel = item.children.length > 0;
-  // An auto list with no applications and no page of its own has nothing to show.
-  if (!hasPanel && item.href === undefined) return [];
-  const panelId = hasPanel ? `${PANEL_ID_PREFIX}${index + FIRST_POSITION}` : undefined;
-  return [{ ...item, panelId, buttonLabel: `${item.label} ${submenuLabel}` }];
+// `resolveNavItems` already dropped items with neither a page nor a submenu.
+const entries = items.map((item, index) => {
+  const panelId =
+    item.children.length > 0 ? `${PANEL_ID_PREFIX}${index + FIRST_POSITION}` : undefined;
+  return { ...item, panelId, buttonLabel: `${item.label} ${submenuLabel}` };
 });
 ---
 <nav aria-label={navLabel} class="hidden self-stretch lg:flex">

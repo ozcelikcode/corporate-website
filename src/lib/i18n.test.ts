@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import {
   applicationPath,
+  fallbackLang,
   isLocale,
   localizePath,
   pagePath,
@@ -72,4 +73,10 @@ test('TR ui strings use only UI_KEYS', () => {
 test('UI_KEYS has the broadcast tally and slate keys', () => {
   for (const key of ['tallyProgram', 'tallyPreview', 'noSignal'])
     assert.ok((UI_KEYS as readonly string[]).includes(key), key);
+});
+
+test('fallbackLang marks only content in another language than the page', () => {
+  assert.equal(fallbackLang('en', 'tr'), 'en');
+  assert.equal(fallbackLang('tr', 'tr'), undefined);
+  assert.equal(fallbackLang('en', 'en'), undefined);
 });

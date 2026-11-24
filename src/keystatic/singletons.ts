@@ -7,8 +7,9 @@ import { fields, singleton } from '@keystatic/core';
 import { HEX_PATTERN } from '../lib/color.ts';
 import { type Locale, UI_KEYS } from '../lib/i18n.ts';
 import { UPLOADS_DIRECTORY } from '../lib/upload-paths.ts';
-import { LINK_HINT } from './link-hints.ts';
+import { ALL_OR_NONE_HINT, LINK_HINT, type LinkRule, linkPattern } from './link-hints.ts';
 import { LOCALE_NAMES } from './locale-names.ts';
+import { SECTION_LIMITS } from './sections.ts';
 
 /**
  * Mirrors `NAV_CHILDREN_MAX` (`lib/navigation-schema.ts`), which is not imported because that
@@ -20,11 +21,15 @@ const SETTINGS_UPLOADS_PUBLIC_PATH = '../../assets/uploads/';
 
 const required = { isRequired: true } as const;
 
-/** A labelled link; `hint` explains what the link may point at. */
-const linkFields = (hint: string) =>
+/** A labelled link; `hint` explains what the link may point at, `rule` checks it. */
+const linkFields = (hint: string, rule: LinkRule) =>
   fields.object({
     label: fields.text({ label: 'Label', validation: required }),
-    href: fields.text({ label: 'Link', description: hint, validation: required }),
+    href: fields.text({
+      label: 'Link',
+      description: hint,
+      validation: { isRequired: true, pattern: linkPattern(rule) },
+    }),
   });
 
 const settingsImage = (label: string) =>
@@ -63,7 +68,7 @@ const settings = singleton({
         href: fields.text({
           label: 'Link',
           description: 'mailto:, tel: or https://',
-          validation: required,
+          validation: { isRequired: true, pattern: linkPattern('contact') },
         }),
       }),
       {
@@ -73,7 +78,7 @@ const settings = singleton({
         validation: { length: { min: 1 } },
       },
     ),
-    socials: fields.array(linkFields('An https:// address.'), {
+    socials: fields.array(linkFields('An https:// address.', 'social'), {
       label: 'Social links',
       itemLabel: (props) => props.fields.label.value,
     }),
@@ -81,7 +86,10 @@ const settings = singleton({
     organization: fields.object(
       {
         legalName: fields.text({ label: 'Legal name', validation: required }),
-        url: fields.text({ label: 'Website (https)', validation: required }),
+        url: fields.text({
+          label: 'Website (https)',
+          validation: { isRequired: true, pattern: linkPattern('https') },
+        }),
         address: fields.text({ label: 'Address' }),
       },
       { label: 'Organization' },
@@ -101,6 +109,7 @@ const navigationSingleton = (locale: Locale) =>
           href: fields.text({
             label: 'Link',
             description: `${LINK_HINT} Leave empty for a menu-only parent (needs children or a source).`,
+            validation: { pattern: linkPattern('nav', true) },
           }),
           source: fields.select({
             label: 'Submenu source',
@@ -116,7 +125,7 @@ const navigationSingleton = (locale: Locale) =>
               href: fields.text({
                 label: 'Link',
                 description: LINK_HINT,
-                validation: required,
+                validation: { isRequired: true, pattern: linkPattern('nav') },
               }),
               description: fields.text({ label: 'Description' }),
             }),
@@ -133,15 +142,22 @@ const navigationSingleton = (locale: Locale) =>
               text: fields.text({ label: 'Text', multiline: true }),
               action: fields.object(
                 {
-                  label: fields.text({ label: 'Button label' }),
-                  href: fields.text({ label: 'Button link', description: LINK_HINT }),
+                  label: fields.text({
+                    label: 'Button label',
+                    validation: { length: { max: SECTION_LIMITS.label } },
+                  }),
+                  href: fields.text({
+                    label: 'Button link',
+                    description: LINK_HINT,
+                    validation: { pattern: linkPattern('action', true) },
+                  }),
                 },
                 { label: 'Button' },
               ),
             },
             {
               label: 'Feature card',
-              description: 'Optional; leave every field empty for none. Needs a submenu.',
+              description: `Optional. ${ALL_OR_NONE_HINT} Heading, text, button label and button link go together; needs a submenu.`,
             },
           ),
         }),
@@ -151,7 +167,7 @@ const navigationSingleton = (locale: Locale) =>
           validation: { length: { min: 1 } },
         },
       ),
-      footer: fields.array(linkFields(LINK_HINT), {
+      footer: fields.array(linkFields(LINK_HINT, 'nav'), {
         label: 'Footer',
         itemLabel: (props) => props.fields.label.value,
       }),

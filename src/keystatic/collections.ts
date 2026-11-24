@@ -10,6 +10,7 @@
 import { collection, fields } from '@keystatic/core';
 import type { Locale } from '../lib/i18n.ts';
 import { ENTRY_UPLOADS_PUBLIC_PATH, UPLOADS_DIRECTORY } from '../lib/upload-paths.ts';
+import { linkPattern } from './link-hints.ts';
 import { LOCALE_NAMES } from './locale-names.ts';
 import {
   action,
@@ -35,8 +36,6 @@ function imageLocation(name: CollectionName, locale: Locale): ImageLocation {
   };
 }
 
-/** Mirrors the https-only rule of `brochure` in `lib/content-schemas.ts`; empty means none. */
-export const OPTIONAL_HTTPS_REGEX = /^$|^https:\/\/\S+$/;
 const ADDRESS_HINT = 'The address. Changing it moves the entry and its images.';
 /** A Turkish entry translates the English entry with the same address. */
 const addressHint = (locale: Locale) =>
@@ -116,9 +115,7 @@ const applications = (locale: Locale) =>
       brochure: fields.text({
         label: 'Brochure',
         description: 'Optional https:// link to the PDF (large files live in R2).',
-        validation: {
-          pattern: { regex: OPTIONAL_HTTPS_REGEX, message: 'Use an https:// address' },
-        },
+        validation: { pattern: linkPattern('https', true) },
       }),
       sections: applicationSections(imageLocation('applications', locale)),
     },

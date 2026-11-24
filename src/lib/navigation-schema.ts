@@ -5,10 +5,10 @@
  */
 import { z } from 'astro/zod';
 import { listField, optionalField, optionalObjectField } from './blank.ts';
+import { LINK_HREF_PATTERN } from './link-patterns.ts';
 import { actionSchema } from './sections-schema.ts';
 
 export const NAV_CHILDREN_MAX = 6;
-const LINK_HREF_PATTERN = /^(\/(?![/\\])|https:\/\/|mailto:)/;
 const NAV_SOURCES = ['applications'] as const;
 
 const href = z.string().regex(LINK_HREF_PATTERN);

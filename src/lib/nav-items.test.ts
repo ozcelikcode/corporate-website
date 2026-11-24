@@ -114,3 +114,15 @@ test('resolved children keep the language mark of a fallback entry', () => {
   });
   assert.equal(items[0]?.children[0]?.lang, 'en');
 });
+
+test('an applications menu with no applications and no page of its own is dropped', () => {
+  const entries = [
+    entry({ label: 'Apps', source: 'applications' }),
+    entry({ label: 'Apps page', href: '/applications/', source: 'applications' }),
+    entry({ label: 'About', href: '/about/' }),
+  ];
+  assert.deepEqual(
+    resolve(entries, '/').map((item) => item.label),
+    ['Apps page', 'About'],
+  );
+});

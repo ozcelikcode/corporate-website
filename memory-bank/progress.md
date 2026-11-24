@@ -23,9 +23,18 @@
 - 2026-11-23: I1 fix (owner-approved, on PR #1): content hrefs localized at render time; M1, M2, M3.
 
 ## Next
-- The PR from `feat/site-v1` to `main`.
+- The PR from `feat/keystatic-menu` to `main` (PR #1 `feat/site-v1` and PR #2 `fix/hero-type-admin` are merged).
 - Owner: run `docs/runbook.md` section 3 (setup) and section 5 (production acceptance and manual checks: CMS end to end incl. the CMS parity checks, Turnstile on production, HOLD key, Lighthouse, axe).
 - Open verifications: Workers Builds Node 26 / pnpm 12, live email delivery, preview-host variable (see runbook section 6).
+
+## Owner checks open (Keystatic and menu branch)
+- Real GitHub login (S2), the `main` ruleset (runbook 3.4) and runbook check 5(a), all before any editor gets access.
+- Safari/WebKit and Firefox walk (mega panel, accordions, admin).
+- Real reduced motion, and touch at desktop widths (lg and up).
+- Lighthouse 95 or more, mobile and desktop.
+- Keystatic in Safari, local mode.
+- Sign-off on the WCAG 1.4.13 hover limitation (runbook "Known limitations").
+- On the first real login: if `ADMIN_CSP` blocks the GitHub avatar, confirm and allow its exact host in `img-src`.
 
 ## Blocked
 - Quote email delivery: blocked until a domain is on the Cloudflare account with Email Routing enabled; until then the endpoint redirects to the error state.
@@ -78,3 +87,5 @@
 - 2026-11-24: A3 done (merge `68893ca`, branch `worktree-agent-a05cabd65a36650ee`, fix round `fix(worker): test routing and keep admin fallback total`): pure `routeFor` (`worker/route.ts`), `toApiResult`, shared `src/keystatic/paths.ts`, `/keystatic/*` always serves the shell, admin headers (ADMIN_CSP, DENY, noindex, no-store on the shell). Gate after merge: build, check (0 errors), lint and test (275/275) green; Worker dry-run about 134 KiB gzip.
 - 2026-11-24: A4 done: Sveltia removed (config, admin page, parity test), `/admin` 301 to `/keystatic/` via `public/_redirects` (checked with `wrangler dev`), robots/sitemap/slug/href updates with tests, `_headers` admin block dropped, runbook and README rewritten for Keystatic, memory bank made consistent.
 - 2026-11-24: I1 done (merge `c3a6926`; commits `aa5a180`, `bead0c4`, fix round `9cdb9aa`): stats, logos, testimonial and media-split in the schema, Keystatic blocks, seeds (29 seed rasters) and components; hero `imagePath` and deterministic `resolveUploadPath`; `/blocks-preview/` and its fixtures removed; README lists eleven blocks. Admin round trip byte-identical. Gate: build 14 pages, check 0 errors/0 warnings, lint clean, test 273/273.
+- 2026-11-24: F1 acceptance (Chromium): gate green; 13 public pages, one h1 each; 0 broken internal links; Worker dry-run about 134 KiB gzip; public JS unchanged (ASCII module 1751 B gzip, byte-identical before and after the branch); walk passed at 360/768/1024/1440. The admin's Google Fonts request is blocked by the admin CSP on purpose (system-font fallback, one console error). Whole-branch review: "Ready after fixes".
+- 2026-11-24: Final fix wave on `feat/keystatic-menu`: admin link fields validated with the Zod patterns (shared zod-free `lib/link-patterns.ts`; `parity.test.ts` runs 29 admin link fields against their Zod rule on 14 sample values), "Fill all fields or leave all empty" on the nav feature card and media-split button, nav feature button label capped at 32; `resolveNavItems` drops an empty applications menu; admin title in `src/keystatic/paths.ts`; `toApiResult` always through `Headers`; AppGrid fallback tiles `lang="en"` on `/tr/` (`fallbackLang`, shared with the menu); runbook known limitation (WCAG 1.4.13 hover). Checked in `pnpm dev`: `/keystatic/` refuses `www.example.com` as a social link ("Use an https:// address") and `about/` as a nav link. Gate: build 14 pages, check 0/0/0, lint clean, test 276/276; guard greps and dist script guard clean; 13 pages one h1; 444 internal links, 0 broken; Worker dry-run 133.95 KiB gzip; admin bundle 917,891 B gzip (+155 B); ASCII module byte-identical (1751 B gzip).

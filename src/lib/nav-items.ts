@@ -1,8 +1,9 @@
 /**
- * Header navigation as the layout renders it: the auto applications list expanded, every href
- * localized, and the current-page state resolved (no Astro runtime, so it can be tested).
+ * Header navigation as the layout renders it: the auto applications list expanded, an item with
+ * nothing to show dropped, every href localized, and the current-page state resolved (no Astro
+ * runtime, so it can be tested).
  */
-import { applicationPath, type Locale } from './i18n.ts';
+import { applicationPath, fallbackLang, type Locale } from './i18n.ts';
 import { isCurrentPage, isSectionActive } from './nav-state.ts';
 import type { NavChildEntry, NavEntry, NavFeature } from './navigation-schema.ts';
 
@@ -35,12 +36,15 @@ export function applicationLinks(apps: readonly NavApplication[], locale: Locale
   return [...apps]
     .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name, locale))
     .slice(0, NAV_APPLICATIONS_MAX)
-    .map((app) => ({
-      label: app.name,
-      description: app.tagline,
-      href: applicationPath(app.slug),
-      ...(app.locale === locale ? {} : { lang: app.locale }),
-    }));
+    .map((app) => {
+      const lang = fallbackLang(app.locale, locale);
+      return {
+        label: app.name,
+        description: app.tagline,
+        href: applicationPath(app.slug),
+        ...(lang === undefined ? {} : { lang }),
+      };
+    });
 }
 
 export function resolveNavItems(input: {
@@ -51,9 +55,11 @@ export function resolveNavItems(input: {
   currentPath: string;
 }): NavItem[] {
   const { entries, applications, locale, localize, currentPath } = input;
-  return entries.map((entry) => {
+  return entries.flatMap((entry) => {
     const rawChildren =
       entry.source === 'applications' ? applicationLinks(applications, locale) : entry.children;
+    // An auto list with no applications and no page of its own has nothing to show in either nav.
+    if (rawChildren.length === 0 && entry.href === undefined) return [];
     const children = rawChildren.map((child) => {
       const href = localize(child.href);
       return { ...child, href, current: isCurrentPage(currentPath, href) };
@@ -68,6 +74,6 @@ export function resolveNavItems(input: {
       ...entry.feature,
       action: { ...entry.feature.action, href: localize(entry.feature.action.href) },
     };
-    return { label: entry.label, href, current, active, children, feature };
+    return [{ label: entry.label, href, current, active, children, feature }];
   });
 }

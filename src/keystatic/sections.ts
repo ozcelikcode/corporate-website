@@ -6,7 +6,7 @@
  * sections).
  */
 import { fields } from '@keystatic/core';
-import { LINK_HINT } from './link-hints.ts';
+import { ALL_OR_NONE_HINT, LINK_HINT, linkPattern } from './link-hints.ts';
 
 /**
  * Mirrors `LABEL_MAX`, `MAX_ACTIONS`, `MAX_ITEMS`, `STATS_MIN/MAX` and `LOGOS_MIN/MAX` of
@@ -19,13 +19,6 @@ export const SECTION_LIMITS = {
   stats: { min: 3, max: 4 },
   logos: { min: 4, max: 12 },
 } as const;
-/** Mirrors `ACTION_HREF_PATTERN`. */
-export const HREF_REGEX = /^(\/(?![/\\])|https:\/\/)/;
-/** Keystatic checks a pattern on empty text too: an optional link also takes `''`. */
-export const OPTIONAL_HREF_REGEX = new RegExp(`^$|${HREF_REGEX.source}`);
-/** Mirrors `HTTPS_HREF_PATTERN` (outbound logo links). */
-export const HTTPS_HREF_REGEX = /^https:\/\/\S+$/;
-const OPTIONAL_HTTPS_HREF_REGEX = new RegExp(`^$|${HTTPS_HREF_REGEX.source}`);
 export const RASTER_HINT = 'PNG, JPEG or WebP.';
 /** Mirrors `DURATION_PATTERN`. */
 export const DURATION_REGEX = /^\d{2}:[0-5]\d:[0-5]\d$/;
@@ -67,10 +60,7 @@ export const action = () =>
       href: fields.text({
         label: 'Link',
         description: LINK_HINT,
-        validation: {
-          isRequired: true,
-          pattern: { regex: HREF_REGEX, message: 'Use a site path (/…) or an https:// address' },
-        },
+        validation: { isRequired: true, pattern: linkPattern('action') },
       }),
     },
     { label: 'Action' },
@@ -107,7 +97,7 @@ const rasterImage = (images: ImageLocation, fieldLabel: string, isRequired: bool
     validation: { isRequired },
   });
 
-/** An optional button: leave both fields empty for none (stored as `{}`, read as absent). */
+/** An optional button: both fields or none (stored as `{}`, read as absent). */
 const optionalAction = () =>
   fields.object(
     {
@@ -118,15 +108,13 @@ const optionalAction = () =>
       href: fields.text({
         label: 'Button link',
         description: LINK_HINT,
-        validation: {
-          pattern: {
-            regex: OPTIONAL_HREF_REGEX,
-            message: 'Use a site path (/…) or an https:// address',
-          },
-        },
+        validation: { pattern: linkPattern('action', true) },
       }),
     },
-    { label: 'Button', description: 'Optional; leave both fields empty for none.' },
+    {
+      label: 'Button',
+      description: `Optional. ${ALL_OR_NONE_HINT} Button label and button link go together.`,
+    },
   );
 
 /** The four richer blocks; each may store images in the entry's uploads folder. */
@@ -169,9 +157,7 @@ const richBlocks = (images: ImageLocation) => ({
           href: fields.text({
             label: 'Link',
             description: 'Optional https:// address of their site.',
-            validation: {
-              pattern: { regex: OPTIONAL_HTTPS_HREF_REGEX, message: 'Use an https:// address' },
-            },
+            validation: { pattern: linkPattern('https', true) },
           }),
         }),
         {
