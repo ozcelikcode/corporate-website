@@ -16,8 +16,8 @@ A static, brand-agnostic corporate showcase site. It presents the brand's identi
 - English at `/`; optional Turkish at `/tr/` (translated entries only, EN fallback).
 - `/keystatic/` serves the CMS (static page); `/admin/` redirects to it.
 
-### The 7 section blocks
-`hero`, `statement`, `app-grid`, `feature-list`, `rich-text`, `cta`, `faq`. Pages and applications compose them through a typed `sections[]` union.
+### The 11 section blocks
+`hero`, `statement`, `app-grid`, `feature-list`, `rich-text`, `cta`, `faq`, `stats`, `logos`, `testimonial`, `media-split`. Pages and applications compose them through a typed `sections[]` union.
 
 ### Roles
 - Visitor: reads the site, submits the quote form. No account.
