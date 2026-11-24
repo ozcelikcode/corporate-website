@@ -50,13 +50,13 @@ function isConfigured(env: KeystaticEnv): boolean {
   );
 }
 
-/** Pair arrays pass through; a Headers object is expanded (iteration yields each Set-Cookie). */
+/** Any header init becomes pairs through `Headers` (its iteration yields each Set-Cookie). */
 export function toApiResult({
   body,
   status = STATUS_OK,
   headers = [],
 }: KeystaticHandlerResult): KeystaticApiResult {
-  return { body, status, headers: Array.isArray(headers) ? headers : [...new Headers(headers)] };
+  return { body, status, headers: [...new Headers(headers)] };
 }
 
 async function handleApi(
