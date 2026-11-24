@@ -119,6 +119,13 @@ Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fie
   - `parity.test.ts` reads Zod 4 internals (`_zod.def`): re-check it on an `astro/zod` upgrade.
   - `astro dev` daemonizes (Astro 7): `astro dev stop|status|logs`, and it picks the next free port.
 
+## Keystatic collections (A2)
+- Image convention (Keystatic 0.6.10 writes it): `src/assets/uploads/<collection>/<locale>/<slug>/<field path>.<ext>`, e.g. the hero is `…/pages/en/home/sections/0/value/image.png`; the stored string is `../../../assets/uploads/…` (relative to the entry). Singletons have no slug segment; settings stay `src/assets/uploads/<field>.<ext>`. The uploaded file's own name is ignored. Covers are `applications/<locale>/<slug>/cover.png`.
+- Legacy flat paths open as empty in the admin: a required image (hero) then blocks Save, and an optional one (`ogImage`) is silently dropped on save. Removing an optional image deletes its file. An unchanged entry is not saved.
+- Biome does not format `src/content/**` (Keystatic owns the YAML: single quotes, `>-` folding). `src/styles/global.css` has `@source not "../keystatic"` (otherwise Tailwind emits `.table`).
+- Admin bundle 3,015,199 B raw / 914,933 B gzip.
+- Local save checks (all reverted): optional keys omitted when cleared, `actions: []` on hero, `feature: { action: {} }` on nav; each followed by a build.
+
 ## Tooling notes
 - pnpm 12 blocks install scripts: `pnpm-workspace.yaml` has `allowBuilds` for esbuild and workerd, and `minimumReleaseAgeExclude` for `@cloudflare/workers-types@5.20261123.1`.
 - Biome 2.6: `linter.rules.preset: "recommended"`; Markdown formatter/linter disabled (docs are not reformatted); `.superpowers` and `.code-review-graph` excluded.
