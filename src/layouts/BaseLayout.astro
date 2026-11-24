@@ -23,7 +23,7 @@ import {
   listApplications,
 } from '../lib/content.ts';
 import { type Locale, localizePath, pagePath, t, type UiKey } from '../lib/i18n.ts';
-import { resolveNavItems } from '../lib/nav-items.ts';
+import { applicationLinks, resolveNavItems } from '../lib/nav-items.ts';
 import { QUOTE_SLUG } from '../lib/page-slugs.ts';
 import { absoluteUrl, formatTitle, hreflangLinks } from '../lib/seo.ts';
 import '../styles/global.css';
@@ -93,23 +93,29 @@ const quote = { label: ui('navQuote'), href: localize(pagePath(QUOTE_SLUG)) };
 const localizeLinks = (links: readonly { label: string; href: string }[]) =>
   links.map((link) => ({ ...link, href: localize(link.href) }));
 /**
- * Header items, built once for both navs. `listApplications` gives each application in `locale`,
- * else its EN entry (name and tagline then stay EN), and the localizer keeps the EN URL of an
- * untranslated one, so a TR menu never links a missing `/tr/` page.
+ * `listApplications` gives each application in `locale`, else its EN entry (name and tagline then
+ * stay EN, flagged by `lang`), and the localizer keeps the EN URL of an untranslated one, so
+ * neither the menu nor the footer ever links a missing `/tr/` page.
  */
+const navApplications = applications.map(({ data, locale: entryLocale }) => ({
+  slug: data.slug,
+  name: data.name,
+  tagline: data.tagline,
+  order: data.order,
+  locale: entryLocale,
+}));
+/** Header items, built once for both navs. */
 const navItems = resolveNavItems({
   entries: navigation.data.header,
-  applications: applications.map(({ data, locale: entryLocale }) => ({
-    slug: data.slug,
-    name: data.name,
-    tagline: data.tagline,
-    order: data.order,
-    locale: entryLocale,
-  })),
+  applications: navApplications,
   locale,
   localize,
   currentPath: Astro.url.pathname,
 });
+/** The footer lists the same applications in the same order and cap as the menu. */
+const footerApplications = applicationLinks(navApplications, locale).map(
+  ({ label, href, lang }) => ({ label, href: localize(href), lang }),
+);
 ---
 <!doctype html>
 <html lang={locale} style={{ '--accent-seed': settings.accent }}>
@@ -178,10 +184,12 @@ const navItems = resolveNavItems({
       address={settings.organization.address}
       links={localizeLinks(navigation.data.footer)}
       contacts={settings.contacts}
+      applications={footerApplications}
       socials={settings.socials}
       labels={{
         nav: ui('navFooterLabel'),
         contact: ui('footerContact'),
+        applications: ui('footerApplications'),
         social: ui('footerSocial'),
         rights: ui('footerRights'),
       }}
