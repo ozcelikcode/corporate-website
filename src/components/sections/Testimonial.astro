@@ -12,9 +12,10 @@
 import DuotoneCover from '../ui/DuotoneCover.astro';
 import GridFrame from '../ui/GridFrame.astro';
 import Label from '../ui/Label.astro';
-import type { BlockPreviewProps, TestimonialContent } from './block-content.ts';
+import { PULL_QUOTE_CLASS } from '../ui/pull-quote-class.ts';
+import type { BlockProps } from './block-props.ts';
 
-type Props = BlockPreviewProps<TestimonialContent>;
+type Props = BlockProps<'testimonial'>;
 
 /** The portrait is 4rem wide (5rem from `md`); one width plus its double for dense screens. */
 const PORTRAIT_WIDTHS = [96, 192];
@@ -39,7 +40,7 @@ const strap = `${section.role}${STRAP_JOIN}${section.organization}`;
 <GridFrame columns={12}>
   <div class="lg:col-span-3"><Label index={index} /></div>
   <figure class="flex min-w-0 flex-col items-start gap-8 md:gap-10 lg:col-span-9">
-    <blockquote class="max-w-quote text-quote font-normal text-ink wrap-break-word">
+    <blockquote class={PULL_QUOTE_CLASS}>
       <p class={MARKS}>{section.quote}</p>
     </blockquote>
     <figcaption class="flex items-center gap-4 md:gap-5">

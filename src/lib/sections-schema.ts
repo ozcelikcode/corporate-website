@@ -1,6 +1,6 @@
 import type { SchemaContext } from 'astro:content';
 import { z } from 'astro/zod';
-import { listField, optionalField } from './blank.ts';
+import { listField, optionalField, optionalObjectField } from './blank.ts';
 import { toFlatSection } from './stored-block.ts';
 
 export const SECTION_TYPES = [
@@ -11,6 +11,10 @@ export const SECTION_TYPES = [
   'rich-text',
   'cta',
   'faq',
+  'stats',
+  'logos',
+  'testimonial',
+  'media-split',
 ] as const;
 
 export type SectionType = (typeof SECTION_TYPES)[number];
@@ -18,14 +22,24 @@ export type SectionType = (typeof SECTION_TYPES)[number];
 export const MAX_ACTIONS = 2;
 export const MAX_ITEMS = 8;
 export const LABEL_MAX = 32;
+/** An on-air stat bar holds 3 or 4 figures. */
+export const STATS_MIN = 3;
+export const STATS_MAX = 4;
+/** A logo wall holds 4 to 12 logos (the Logos block lays out each count). */
+export const LOGOS_MIN = 4;
+export const LOGOS_MAX = 12;
 /** Site-relative (never protocol-relative) or https. */
 export const ACTION_HREF_PATTERN = /^(\/(?![/\\])|https:\/\/)/;
+/** Outbound links that leave the site (a logo's partner page): https only. */
+export const HTTPS_HREF_PATTERN = /^https:\/\/\S+$/;
 /**
  * Markdoc tag syntax. Keystatic's rich-text editor saves a typed `{% x %}` as a tag and the entry
  * then no longer opens in the editor, so the build refuses it in every Markdown field.
  */
 const MARKDOC_TAG_PATTERN = /\{%/;
 const label = z.string().max(LABEL_MAX); // tally label, e.g. "Mission"
+/** Required text that is more than whitespace (alt text that names something). */
+const filled = z.string().trim().min(1);
 export const actionSchema = z.strictObject({
   label,
   href: z.string().regex(ACTION_HREF_PATTERN),
@@ -35,6 +49,12 @@ const md = z.string(); // Markdown, rendered by lib/markdown.ts; checked for MAR
 export const DURATION_PATTERN = /^\d{2}:[0-5]\d:[0-5]\d$/;
 
 export type Action = z.infer<typeof actionSchema>;
+
+/** Rasters only (the CMS field hints it; the build refuses an SVG), named in the message. */
+export const rasterImage = (image: SchemaContext['image'], field: string) =>
+  image().refine((metadata) => metadata.format !== 'svg', {
+    message: `${field} must be a PNG, JPEG or WebP image, not an SVG`,
+  });
 
 /**
  * The fields of each section type (a stored block's `value`), keyed by type; the Keystatic
@@ -81,7 +101,71 @@ export const sectionSchemas = ({ image }: SchemaContext) =>
       label,
       items: z.array(z.strictObject({ q: z.string(), a: md })).min(1),
     }),
+    stats: z.strictObject({
+      label,
+      items: z
+        .array(z.strictObject({ value: z.string(), label, note: optionalField(z.string()) }))
+        .min(STATS_MIN)
+        .max(STATS_MAX),
+    }),
+    logos: z.strictObject({
+      label,
+      heading: z.string(),
+      items: z
+        .array(
+          z.strictObject({
+            image: rasterImage(image, 'logos image'),
+            alt: filled, // the linked tile's only name
+            href: optionalField(z.string().regex(HTTPS_HREF_PATTERN)),
+          }),
+        )
+        .min(LOGOS_MIN)
+        .max(LOGOS_MAX),
+    }),
+    testimonial: z.strictObject({
+      quote: z.string(),
+      name: z.string(),
+      role: z.string(),
+      organization: z.string(),
+      portrait: optionalField(rasterImage(image, 'testimonial portrait')),
+    }),
+    'media-split': z.strictObject({
+      label,
+      heading: z.string(),
+      text: md,
+      image: rasterImage(image, 'media-split image'),
+      imageAlt: z.string(),
+      action: optionalObjectField(actionSchema),
+      reverse: z.boolean().default(false),
+    }),
   }) satisfies Record<SectionType, z.ZodObject>;
+
+const IMAGE_PATH = 'imagePath';
+
+/**
+ * The hero value, plus `imagePath`: the image path exactly as the YAML stores it, before
+ * `image()` turns it into image metadata. The ASCII renderer reads the upload from that path
+ * (`resolveUploadPath`), the same in dev and build. The key is derived, so a YAML that sets it
+ * fails. Without a stored path `imagePath` is left empty: the `image` issue reports it alone.
+ */
+function heroValue(hero: ReturnType<typeof sectionSchemas>['hero']) {
+  return z.preprocess(
+    (value, ctx) => {
+      if (typeof value !== 'object' || value === null || Array.isArray(value)) return value;
+      if (Object.hasOwn(value, IMAGE_PATH)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: [IMAGE_PATH],
+          message: `${IMAGE_PATH} is derived from image; remove it from the YAML`,
+        });
+        return value;
+      }
+      const stored: unknown = Reflect.get(value, 'image');
+      return { ...value, [IMAGE_PATH]: typeof stored === 'string' ? stored : '' };
+    },
+    hero.extend({ [IMAGE_PATH]: z.string() }),
+  );
+}
 
 /**
  * Keystatic's stored blocks, `{ discriminant, value }`, read as flat sections. The stored shape
@@ -91,7 +175,9 @@ export const sectionSchemas = ({ image }: SchemaContext) =>
 const section = (context: SchemaContext) => {
   const s = sectionSchemas(context);
   return z.discriminatedUnion('discriminant', [
-    z.strictObject({ discriminant: z.literal('hero'), value: s.hero }).transform(toFlatSection),
+    z
+      .strictObject({ discriminant: z.literal('hero'), value: heroValue(s.hero) })
+      .transform(toFlatSection),
     z
       .strictObject({ discriminant: z.literal('statement'), value: s.statement })
       .transform(toFlatSection),
@@ -106,6 +192,14 @@ const section = (context: SchemaContext) => {
       .transform(toFlatSection),
     z.strictObject({ discriminant: z.literal('cta'), value: s.cta }).transform(toFlatSection),
     z.strictObject({ discriminant: z.literal('faq'), value: s.faq }).transform(toFlatSection),
+    z.strictObject({ discriminant: z.literal('stats'), value: s.stats }).transform(toFlatSection),
+    z.strictObject({ discriminant: z.literal('logos'), value: s.logos }).transform(toFlatSection),
+    z
+      .strictObject({ discriminant: z.literal('testimonial'), value: s.testimonial })
+      .transform(toFlatSection),
+    z
+      .strictObject({ discriminant: z.literal('media-split'), value: s['media-split'] })
+      .transform(toFlatSection),
   ]);
 };
 type FlatSection = z.output<ReturnType<typeof section>>;
@@ -113,6 +207,7 @@ type FlatSection = z.output<ReturnType<typeof section>>;
 /** The Markdown fields of a section (relative to its stored value), for the Markdoc tag check. */
 function markdownOf(section: FlatSection): [(string | number)[], string][] {
   if (section.type === 'rich-text') return [[['body'], section.body]];
+  if (section.type === 'media-split') return [[['text'], section.text]];
   if (section.type === 'faq') return section.items.map((item, i) => [['items', i, 'a'], item.a]);
   return [];
 }

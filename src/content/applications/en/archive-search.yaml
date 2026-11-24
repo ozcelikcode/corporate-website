@@ -11,6 +11,16 @@ status: Beta
 order: 3
 links: []
 sections:
+  - discriminant: stats
+    value:
+      label: At a glance
+      items:
+        - value: 3,200
+          label: Hours logged each month
+        - value: < 2 s
+          label: Typical search
+        - value: 1 click
+          label: Back to playout
   - discriminant: feature-list
     value:
       label: Capabilities
@@ -31,6 +41,18 @@ sections:
             Send a selected range to the editing system or the rundown in one
             step.
           duration: '00:01:25'
+  - discriminant: media-split
+    value:
+      label: Search
+      heading: Find the shot, not the file
+      text: >
+        Search by face, place or spoken word. Results open at the exact
+        timecode, so a clip goes back to air without scrubbing.
+      image: >-
+        ../../../assets/uploads/applications/en/archive-search/sections/2/value/image.webp
+      imageAlt: A waveform above transcript lines, one spoken phrase found
+      action: {}
+      reverse: true
   - discriminant: cta
     value:
       heading: Curious how it would index your archive?

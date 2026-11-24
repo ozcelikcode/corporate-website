@@ -5,8 +5,12 @@ import {
   applicationSectionsSchema,
   DURATION_PATTERN,
   LABEL_MAX,
+  LOGOS_MAX,
+  LOGOS_MIN,
   SECTION_TYPES,
   type SectionType,
+  STATS_MAX,
+  STATS_MIN,
   sectionSchemas,
   sectionsSchema,
 } from './sections-schema.ts';
@@ -15,6 +19,8 @@ import {
 const context = { image: () => z.string() } as never;
 const schema = sectionsSchema(context);
 const action = { label: 'Go', href: '/quote/' };
+const stat = { value: '24/7', label: 'Playout', note: 'Every day.' };
+const logo = { image: 'logo.webp', alt: 'Regional broadcaster', href: 'https://example.com/' };
 /** Block values as Keystatic stores them (`{discriminant, value}`), without the discriminant. */
 const values: Record<SectionType, Record<string, unknown>> = {
   hero: {
@@ -32,6 +38,24 @@ const values: Record<SectionType, Record<string, unknown>> = {
   'rich-text': { body: '# Hi' },
   cta: { heading: 'Talk', action },
   faq: { label: 'FAQ', items: [{ q: 'Q', a: 'A' }] },
+  stats: { label: 'On air', items: [stat, stat, stat] },
+  logos: { label: 'Partners', heading: 'Trusted by', items: [logo, logo, logo, logo] },
+  testimonial: {
+    quote: 'It just works.',
+    name: 'Maren Holt',
+    role: 'Head of presentation',
+    organization: 'Regional broadcaster',
+    portrait: 'portrait.webp',
+  },
+  'media-split': {
+    label: 'Newsroom',
+    heading: 'One rundown',
+    text: 'Stories and graphics share **one** page.',
+    image: 'media.webp',
+    imageAlt: 'A monitor wall',
+    action,
+    reverse: true,
+  },
 };
 /** A stored block of `type`, its value overridden by `changes`. */
 const block = (type: SectionType, changes: Record<string, unknown> = {}) => ({
@@ -45,7 +69,7 @@ const blockWithout = (type: SectionType, omitted: string) => ({
 });
 const parse = (section: unknown) => schema.safeParse([section]);
 
-test('accepts all seven section types and returns them flat', () => {
+test('accepts every section type and returns them flat', () => {
   const parsed = schema.parse(SECTION_TYPES.map((type) => block(type)));
   assert.deepEqual(
     parsed.map((s) => s.type),
@@ -242,4 +266,105 @@ test('application sections reject a hero (the application page owns the h1)', ()
     ],
   );
   assert.equal(applicationSchema.safeParse([block('statement')]).success, true);
+});
+
+/** The one parsed section of a stored block of `type`. */
+function only<T extends SectionType>(type: T, changes: Record<string, unknown> = {}) {
+  const [section] = schema.parse([block(type, changes)]);
+  assert.equal(section?.type, type);
+  return section as Extract<NonNullable<typeof section>, { type: T }>;
+}
+const listOf = <T>(item: T, length: number) => Array.from({ length }, () => item);
+
+test('stats take 3 to 4 figures', () => {
+  assert.deepEqual([STATS_MIN, STATS_MAX], [3, 4]);
+  for (const length of [STATS_MIN - 1, STATS_MAX + 1]) {
+    assert.equal(
+      parse(block('stats', { items: listOf(stat, length) })).success,
+      false,
+      `${length}`,
+    );
+  }
+  for (const length of [STATS_MIN, STATS_MAX]) {
+    assert.equal(parse(block('stats', { items: listOf(stat, length) })).success, true, `${length}`);
+  }
+});
+
+test('a missing or blank stat note parses as absent', () => {
+  for (const note of [undefined, '', '  ', null]) {
+    const items = listOf({ value: '1', label: 'L', note }, STATS_MIN);
+    assert.equal(only('stats', { items }).items[0]?.note, undefined, String(note));
+  }
+});
+
+test('logos take 4 to 12 logos', () => {
+  assert.deepEqual([LOGOS_MIN, LOGOS_MAX], [4, 12]);
+  for (const length of [LOGOS_MIN - 1, LOGOS_MAX + 1]) {
+    assert.equal(
+      parse(block('logos', { items: listOf(logo, length) })).success,
+      false,
+      `${length}`,
+    );
+  }
+  for (const length of [LOGOS_MIN, LOGOS_MAX]) {
+    assert.equal(parse(block('logos', { items: listOf(logo, length) })).success, true, `${length}`);
+  }
+});
+
+test('a logo link is https only; a missing or blank one parses as absent', () => {
+  for (const href of ['http://example.com/', '/about/', '//example.com/', 'mailto:a@example.com']) {
+    const items = listOf({ ...logo, href }, LOGOS_MIN);
+    assert.equal(parse(block('logos', { items })).success, false, href);
+  }
+  for (const href of [undefined, '', ' ', null]) {
+    const items = listOf({ ...logo, href }, LOGOS_MIN);
+    assert.equal(only('logos', { items }).items[0]?.href, undefined, String(href));
+  }
+});
+
+test('a logo needs non-empty alt text', () => {
+  for (const alt of [undefined, '', '   ']) {
+    const items = listOf({ ...logo, alt }, LOGOS_MIN);
+    assert.equal(parse(block('logos', { items })).success, false, String(alt));
+  }
+});
+
+test('a missing or blank testimonial portrait parses as absent', () => {
+  assert.equal(only('testimonial').portrait, 'portrait.webp');
+  for (const portrait of ['', ' ', null]) {
+    assert.equal(only('testimonial', { portrait }).portrait, undefined, String(portrait));
+  }
+  const [missing] = schema.parse([blockWithout('testimonial', 'portrait')]);
+  assert.equal(missing?.type === 'testimonial' ? missing.portrait : 'x', undefined);
+});
+
+test('media-split reverse defaults to false', () => {
+  const [section] = schema.parse([blockWithout('media-split', 'reverse')]);
+  assert.equal(section?.type === 'media-split' ? section.reverse : undefined, false);
+  assert.equal(only('media-split').reverse, true);
+});
+
+test('a missing or emptied media-split action parses as absent', () => {
+  assert.deepEqual(only('media-split').action, action);
+  for (const cleared of [{}, { label: '', href: '' }, null, '']) {
+    const parsed = only('media-split', { action: cleared });
+    assert.equal(parsed.action, undefined, JSON.stringify(cleared));
+  }
+  const [missing] = schema.parse([blockWithout('media-split', 'action')]);
+  assert.equal(missing?.type === 'media-split' ? missing.action : 'x', undefined);
+  assert.equal(parse(block('media-split', { action: { label: 'Go', href: '' } })).success, false);
+});
+
+test('media-split text refuses Markdoc tag syntax, naming the stored path', () => {
+  const sections = [block('statement'), block('media-split', { text: 'A {% x %}' })];
+  assert.deepEqual(issuePaths(sections), [[1, 'value', 'text']]);
+  assert.deepEqual(issueMessages(sections), ['Markdoc tag syntax "{%" is not allowed (section 2)']);
+});
+
+test('the hero keeps its stored image path for the ASCII renderer', () => {
+  const stored = '../../../assets/uploads/pages/en/home/sections/0/value/image.png';
+  assert.equal(only('hero', { image: stored }).imagePath, stored);
+  // Derived from `image`, never stored: the YAML may not set it.
+  assert.equal(parse(block('hero', { imagePath: stored })).success, false);
+  assert.deepEqual(issuePaths([blockWithout('hero', 'image')]), [[0, 'value', 'image']]);
 });

@@ -7,6 +7,33 @@ sections:
       text: >-
         We are a small team of broadcast engineers and software developers. We
         build the tools we wished we had on the studio floor.
+  - discriminant: stats
+    value:
+      label: In numbers
+      items:
+        - value: '16'
+          label: Years in broadcast
+        - value: '40'
+          label: Engineers and developers
+        - value: '12'
+          label: Countries on air
+        - value: 3,200
+          label: Hours archived each month
+  - discriminant: media-split
+    value:
+      label: The team
+      heading: Engineers who have run a gallery
+      text: >
+        Most of us have sat in a control room during a breaking story. That is
+        why our tools stay quiet when everything else is loud.
+
+
+        Every release is tested with operators before it ships, and a named
+        engineer is on call during your on-air hours.
+      image: ../../../assets/uploads/pages/en/about/sections/2/value/image.webp
+      imageAlt: A row of preview monitors above a bank of faders, one fader raised
+      action: {}
+      reverse: false
   - discriminant: feature-list
     value:
       label: How we work

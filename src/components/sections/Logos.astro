@@ -7,9 +7,9 @@
 import { Image } from 'astro:assets';
 import Glyph from '../ui/Glyph.astro';
 import LowerThird from '../ui/LowerThird.astro';
-import type { BlockPreviewProps, LogosContent } from './block-content.ts';
+import type { BlockProps } from './block-props.ts';
 
-type Props = BlockPreviewProps<LogosContent>;
+type Props = BlockProps<'logos'>;
 
 const LOOSE = 'p-6 md:p-8';
 const DENSE = 'p-4 lg:p-5'; // five or more across: tighter, so logos keep their size
@@ -17,7 +17,7 @@ const DENSE = 'p-4 lg:p-5'; // five or more across: tighter, so logos keep their
 const WALL: Record<number, { columns: string; pad: string }> = {
   4: { columns: 'md:grid-cols-4', pad: LOOSE },
   5: { columns: 'md:grid-cols-3 lg:grid-cols-5', pad: DENSE },
-  6: { columns: 'md:grid-cols-3', pad: LOOSE },
+  6: { columns: 'md:grid-cols-3 lg:grid-cols-6', pad: DENSE }, // one calm strip from `lg`
   7: { columns: 'md:grid-cols-4', pad: LOOSE },
   8: { columns: 'md:grid-cols-4', pad: LOOSE },
   9: { columns: 'md:grid-cols-3', pad: LOOSE },

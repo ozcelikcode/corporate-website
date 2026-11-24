@@ -12,11 +12,16 @@ import { NAV_CHILDREN_MAX, navigationSchema } from '../lib/navigation-schema.ts'
 import {
   ACTION_HREF_PATTERN,
   DURATION_PATTERN,
+  HTTPS_HREF_PATTERN,
   LABEL_MAX,
+  LOGOS_MAX,
+  LOGOS_MIN,
   MAX_ACTIONS,
   MAX_ITEMS,
   SECTION_TYPES,
   type SectionType,
+  STATS_MAX,
+  STATS_MIN,
   sectionSchemas,
 } from '../lib/sections-schema.ts';
 import {
@@ -26,7 +31,13 @@ import {
   TAGLINE_LIMIT,
 } from './collections.ts';
 import { LOCAL_CONFIG } from './keystatic-config.ts';
-import { DURATION_REGEX, HREF_REGEX, SECTION_LIMITS } from './sections.ts';
+import {
+  DURATION_REGEX,
+  HREF_REGEX,
+  HTTPS_HREF_REGEX,
+  OPTIONAL_HREF_REGEX,
+  SECTION_LIMITS,
+} from './sections.ts';
 import { NAV_CHILDREN_LIMIT, singletons } from './singletons.ts';
 
 // The real `image()` helper needs the Astro content runtime; a string stands in for it.
@@ -219,8 +230,15 @@ test('every block field key equals its SECTION_SCHEMAS key', () => {
 
 test('the admin limits and patterns match the Zod schemas', () => {
   assert.equal(NAV_CHILDREN_LIMIT, NAV_CHILDREN_MAX);
-  assert.deepEqual(SECTION_LIMITS, { label: LABEL_MAX, actions: MAX_ACTIONS, items: MAX_ITEMS });
+  assert.deepEqual(SECTION_LIMITS, {
+    label: LABEL_MAX,
+    actions: MAX_ACTIONS,
+    items: MAX_ITEMS,
+    stats: { min: STATS_MIN, max: STATS_MAX },
+    logos: { min: LOGOS_MIN, max: LOGOS_MAX },
+  });
   assert.equal(HREF_REGEX.source, ACTION_HREF_PATTERN.source);
+  assert.equal(HTTPS_HREF_REGEX.source, HTTPS_HREF_PATTERN.source);
   assert.equal(DURATION_REGEX.source, DURATION_PATTERN.source);
   const { description } = pageSchema(context).shape;
   const { tagline } = applicationSchema(context).shape;
@@ -231,6 +249,13 @@ test('the admin limits and patterns match the Zod schemas', () => {
     assert.equal(field.safeParse('x'.repeat(limit)).success, true);
     assert.equal(field.safeParse('x'.repeat(limit + 1)).success, false);
   }
+});
+
+test('the admin optional action link takes what an action takes, or nothing', () => {
+  for (const href of ['/quote/', 'https://example.com/', 'http://example.com/', '//x', 'x']) {
+    assert.equal(OPTIONAL_HREF_REGEX.test(href), ACTION_HREF_PATTERN.test(href), href);
+  }
+  assert.equal(OPTIONAL_HREF_REGEX.test(''), true);
 });
 
 test('the admin brochure rule matches the Zod one (https only, empty for none)', () => {
@@ -273,7 +298,8 @@ test('every seed image path resolves to a file, where Keystatic writes it', asyn
       images += assertImagesInPlace(collections[name].schema, entry, file, slug);
     }
   }
-  // logo, ogImage, two hero images and three covers
-  const SEED_IMAGES = 7;
+  // Settings logo and ogImage, three covers; per home (EN, TR): hero, two media, six logos and a
+  // portrait; one media image on about and on each application.
+  const SEED_IMAGES = 2 + 3 + 2 * (1 + 2 + 6 + 1) + 1 + 3;
   assert.equal(images, SEED_IMAGES);
 });

@@ -7,6 +7,7 @@
  */
 import GridFrame from '../ui/GridFrame.astro';
 import Label from '../ui/Label.astro';
+import { PULL_QUOTE_CLASS } from '../ui/pull-quote-class.ts';
 import type { BlockProps } from './block-props.ts';
 
 type Props = BlockProps<'statement'>;
@@ -17,7 +18,5 @@ const { section, index } = Astro.props;
   <div class="lg:col-span-3">
     <Label text={section.label} index={index} />
   </div>
-  <p class="max-w-quote text-quote font-normal text-ink wrap-break-word lg:col-span-9">
-    {section.text}
-  </p>
+  <p class:list={[PULL_QUOTE_CLASS, 'lg:col-span-9']}>{section.text}</p>
 </GridFrame>

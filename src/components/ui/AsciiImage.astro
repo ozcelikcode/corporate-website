@@ -15,19 +15,19 @@
  * every 2.5 s, with a little glyph grain. The TallyStrip HOLD key pauses all of it.
  * Nothing changes the grid's box: transforms, opacity and same-width glyphs only.
  */
-import type { ImageMetadata } from 'astro';
 import { ASCII_COLUMNS, ASCII_COLUMNS_COMPACT, renderAscii } from '../../lib/ascii.ts';
 import { CHAR_ASPECT } from '../../lib/ascii-glyphs.ts';
 import { asciiMarkup, assertAsciiBudget } from '../../lib/ascii-markup.ts';
 import { resolveUploadPath } from '../../lib/ascii-source.ts';
 
 interface Props {
-  image: ImageMetadata;
+  /** The image path as the entry's YAML stores it (the hero's `imagePath`). */
+  imagePath: string;
   alt: string;
 }
 
-const { image, alt } = Astro.props;
-const source = resolveUploadPath(image);
+const { imagePath, alt } = Astro.props;
+const source = resolveUploadPath(imagePath);
 const [wide, compact] = await Promise.all([
   renderAscii(source, ASCII_COLUMNS),
   renderAscii(source, ASCII_COLUMNS_COMPACT),
