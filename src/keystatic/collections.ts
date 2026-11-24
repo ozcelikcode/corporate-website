@@ -37,7 +37,14 @@ function imageLocation(name: CollectionName, locale: Locale): ImageLocation {
   };
 }
 
-const slugDescription = 'The address. Changing it moves the page and its images.';
+/** Mirrors the https-only rule of `brochure` in `lib/content-schemas.ts`; empty means none. */
+export const OPTIONAL_HTTPS_REGEX = /^$|^https:\/\/\S+$/;
+const ADDRESS_HINT = 'The address. Changing it moves the entry and its images.';
+/** A Turkish entry translates the English entry with the same address. */
+const addressHint = (locale: Locale) =>
+  locale === 'en'
+    ? ADDRESS_HINT
+    : `${ADDRESS_HINT} Use the English entry's address to translate it; without one the English entry is shown.`;
 
 const pages = (locale: Locale) => {
   const images = imageLocation('pages', locale);
@@ -49,7 +56,7 @@ const pages = (locale: Locale) => {
     schema: {
       title: fields.slug({
         name: { label: 'Title', validation: required },
-        slug: { label: 'Address', description: slugDescription },
+        slug: { label: 'Address', description: addressHint(locale) },
       }),
       description: fields.text({
         label: 'Description',
@@ -75,7 +82,7 @@ const applications = (locale: Locale) =>
     schema: {
       name: fields.slug({
         name: { label: 'Name', validation: required },
-        slug: { label: 'Address', description: slugDescription },
+        slug: { label: 'Address', description: addressHint(locale) },
       }),
       slug: fields.text({
         label: 'Slug',
@@ -108,7 +115,13 @@ const applications = (locale: Locale) =>
         label: 'Links',
         itemLabel: (props) => props.fields.label.value,
       }),
-      brochure: fields.url({ label: 'Brochure', description: 'Optional https:// link.' }),
+      brochure: fields.text({
+        label: 'Brochure',
+        description: 'Optional https:// link to the PDF (large files live in R2).',
+        validation: {
+          pattern: { regex: OPTIONAL_HTTPS_REGEX, message: 'Use an https:// address' },
+        },
+      }),
       sections: applicationSections(),
     },
   });

@@ -19,7 +19,12 @@ import {
   type SectionType,
   sectionSchemas,
 } from '../lib/sections-schema.ts';
-import { collections, DESCRIPTION_LIMIT, TAGLINE_LIMIT } from './collections.ts';
+import {
+  collections,
+  DESCRIPTION_LIMIT,
+  OPTIONAL_HTTPS_REGEX,
+  TAGLINE_LIMIT,
+} from './collections.ts';
 import { LOCAL_CONFIG } from './keystatic-config.ts';
 import { DURATION_REGEX, HREF_REGEX, SECTION_LIMITS } from './sections.ts';
 import { NAV_CHILDREN_LIMIT, singletons } from './singletons.ts';
@@ -203,8 +208,11 @@ test('every block field key equals its SECTION_SCHEMAS key', () => {
     const expected = name.startsWith('pages') ? SECTION_TYPES : applicationTypes;
     assert.deepEqual(Object.keys(blocks), [...expected], name);
     for (const [type, block] of Object.entries(blocks)) {
-      const { type: _discriminant, ...keys } = zodKeys(schemas[type as SectionType]) ?? {};
-      assert.deepEqual(keystaticKeys(block), keys, `${name} ${type}`);
+      assert.deepEqual(
+        keystaticKeys(block),
+        zodKeys(schemas[type as SectionType]),
+        `${name} ${type}`,
+      );
     }
   }
 });
@@ -222,6 +230,13 @@ test('the admin limits and patterns match the Zod schemas', () => {
   ] as const) {
     assert.equal(field.safeParse('x'.repeat(limit)).success, true);
     assert.equal(field.safeParse('x'.repeat(limit + 1)).success, false);
+  }
+});
+
+test('the admin brochure rule matches the Zod one (https only, empty for none)', () => {
+  const { brochure } = applicationSchema(context).shape;
+  for (const value of ['https://example.com/a.pdf', 'http://example.com/a.pdf', 'ftp://x', '']) {
+    assert.equal(OPTIONAL_HTTPS_REGEX.test(value), brochure.safeParse(value).success, value);
   }
 });
 

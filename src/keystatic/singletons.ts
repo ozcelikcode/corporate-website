@@ -6,6 +6,7 @@
 import { fields, singleton } from '@keystatic/core';
 import { HEX_PATTERN } from '../lib/color.ts';
 import { type Locale, UI_KEYS } from '../lib/i18n.ts';
+import { LINK_HINT } from './link-hints.ts';
 import { LOCALE_NAMES } from './locale-names.ts';
 
 /**
@@ -19,10 +20,11 @@ const SETTINGS_UPLOADS_PUBLIC_PATH = '../../assets/uploads/';
 
 const required = { isRequired: true } as const;
 
-const linkFields = () =>
+/** A labelled link; `hint` explains what the link may point at. */
+const linkFields = (hint: string) =>
   fields.object({
     label: fields.text({ label: 'Label', validation: required }),
-    href: fields.text({ label: 'Link', validation: required }),
+    href: fields.text({ label: 'Link', description: hint, validation: required }),
   });
 
 const settingsImage = (label: string) =>
@@ -71,7 +73,7 @@ const settings = singleton({
         validation: { length: { min: 1 } },
       },
     ),
-    socials: fields.array(linkFields(), {
+    socials: fields.array(linkFields('An https:// address.'), {
       label: 'Social links',
       itemLabel: (props) => props.fields.label.value,
     }),
@@ -98,7 +100,7 @@ const navigationSingleton = (locale: Locale) =>
           label: fields.text({ label: 'Label', validation: required }),
           href: fields.text({
             label: 'Link',
-            description: 'Leave empty for a menu-only parent (needs children or a source).',
+            description: `${LINK_HINT} Leave empty for a menu-only parent (needs children or a source).`,
           }),
           source: fields.select({
             label: 'Submenu source',
@@ -111,7 +113,11 @@ const navigationSingleton = (locale: Locale) =>
           children: fields.array(
             fields.object({
               label: fields.text({ label: 'Label', validation: required }),
-              href: fields.text({ label: 'Link', validation: required }),
+              href: fields.text({
+                label: 'Link',
+                description: LINK_HINT,
+                validation: required,
+              }),
               description: fields.text({ label: 'Description' }),
             }),
             {
@@ -128,7 +134,7 @@ const navigationSingleton = (locale: Locale) =>
               action: fields.object(
                 {
                   label: fields.text({ label: 'Button label' }),
-                  href: fields.text({ label: 'Button link' }),
+                  href: fields.text({ label: 'Button link', description: LINK_HINT }),
                 },
                 { label: 'Button' },
               ),
@@ -145,7 +151,7 @@ const navigationSingleton = (locale: Locale) =>
           validation: { length: { min: 1 } },
         },
       ),
-      footer: fields.array(linkFields(), {
+      footer: fields.array(linkFields(LINK_HINT), {
         label: 'Footer',
         itemLabel: (props) => props.fields.label.value,
       }),

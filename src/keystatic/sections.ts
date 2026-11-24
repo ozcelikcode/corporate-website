@@ -6,6 +6,7 @@
  * sections).
  */
 import { fields } from '@keystatic/core';
+import { LINK_HINT } from './link-hints.ts';
 
 /** Mirrors `LABEL_MAX`, `MAX_ACTIONS` and `MAX_ITEMS` of `lib/sections-schema.ts`. */
 export const SECTION_LIMITS = { label: 32, actions: 2, items: 8 } as const;
@@ -50,7 +51,7 @@ export const action = () =>
       }),
       href: fields.text({
         label: 'Link',
-        description: 'A site path such as /quote/, or an https:// address.',
+        description: LINK_HINT,
         validation: {
           isRequired: true,
           pattern: { regex: HREF_REGEX, message: 'Use a site path (/…) or an https:// address' },

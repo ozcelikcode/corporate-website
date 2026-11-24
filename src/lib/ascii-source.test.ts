@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { test } from 'node:test';
+import { type TestContext, test } from 'node:test';
 import type { ImageMetadata } from 'astro';
 import { resolveUploadPath } from './ascii-source.ts';
 
@@ -42,8 +42,9 @@ test('resolveUploadPath names a hero image that is not a PNG, JPEG or WebP raste
 });
 
 /** Two locales' hero uploads, same file name, different bytes; plus the build's emitted copy. */
-function sameNamedUploads() {
+function sameNamedUploads(t: TestContext) {
   const root = mkdtempSync(join(tmpdir(), 'ascii-source-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
   const uploads = join(root, 'uploads');
   const outDir = join(root, 'dist');
   const en = join(uploads, 'pages/en/home/sections/0/value/image.png');
@@ -61,16 +62,16 @@ function sameNamedUploads() {
   return { roots: { uploads, outDir }, en, tr };
 }
 
-test('two uploads with the same file name in different folders resolve to the referenced one', () => {
-  const { roots, en, tr } = sameNamedUploads();
+test('two uploads with the same file name in different folders resolve to the referenced one', (t) => {
+  const { roots, en, tr } = sameNamedUploads(t);
   assert.equal(resolveUploadPath(image('/_astro/image.TRhash1.png'), roots), tr);
   assert.equal(resolveUploadPath(image('/_astro/image.ENhash1.png'), roots), en);
   assert.equal(resolveUploadPath(image(`/@fs${tr}?origWidth=1280`), roots), tr);
   assert.equal(resolveUploadPath(image(`/@fs${en}?origWidth=1280`), roots), en);
 });
 
-test('same-named uploads that the build output cannot tell apart fail loudly, naming both', () => {
-  const { roots } = sameNamedUploads();
+test('same-named uploads that the build output cannot tell apart fail loudly, naming both', (t) => {
+  const { roots } = sameNamedUploads(t);
   assert.throws(
     () => resolveUploadPath(image('/_astro/image.Missing1.png'), roots),
     /image\.Missing1\.png .*pages\/en\/home\/sections\/0\/value\/image\.png.*pages\/tr\/home/,

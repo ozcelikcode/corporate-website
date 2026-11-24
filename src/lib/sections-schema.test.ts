@@ -60,6 +60,36 @@ test('the old flat shape is rejected', () => {
   }
 });
 
+test('a stored block with extra keys, a type inside its value or no value object is rejected', () => {
+  for (const stored of [
+    { ...block('statement'), type: 'statement' },
+    block('statement', { type: 'statement' }),
+    { discriminant: 'statement', value: null },
+    { discriminant: 'statement' },
+  ]) {
+    assert.equal(parse(stored).success, false, JSON.stringify(stored));
+  }
+});
+
+const issuePaths = (sections: unknown[]) => {
+  const result = schema.safeParse(sections);
+  return result.success ? [] : result.error.issues.map((issue) => issue.path);
+};
+
+test('field errors name the stored YAML path (sections.<n>.value.<field>)', () => {
+  assert.deepEqual(issuePaths([block('statement'), block('cta', { heading: 1 })]), [
+    [1, 'value', 'heading'],
+  ]);
+  assert.deepEqual(
+    issuePaths([block('feature-list', { items: [{ title: 'T', body: 'B', duration: 'x' }] })]),
+    [[0, 'value', 'items', 0, 'duration']],
+  );
+  assert.deepEqual(issuePaths([{ discriminant: 'video', value: {} }]), [[0, 'discriminant']]);
+  assert.deepEqual(issuePaths([block('faq', { items: [{ q: 'Q', a: '{% x %}' }] })]), [
+    [0, 'value', 'items', 0, 'a'],
+  ]);
+});
+
 test('section schemas cover every section type and only those', () => {
   assert.deepEqual(Object.keys(sectionSchemas(context)), [...SECTION_TYPES]);
 });
