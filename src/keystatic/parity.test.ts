@@ -32,7 +32,8 @@ import {
   STATS_MIN,
   sectionSchemas,
 } from '../lib/sections-schema.ts';
-import { collections, DESCRIPTION_LIMIT, TAGLINE_LIMIT } from './collections.ts';
+import { collections, DESCRIPTION_LIMIT, PAGE_TEMPLATES, TAGLINE_LIMIT } from './collections.ts';
+import { GRID_COLUMNS } from './field-layout.ts';
 import { LOCAL_CONFIG } from './keystatic-config.ts';
 import { DURATION_REGEX, LAYOUT_DEFAULTS, LAYOUT_OPTIONS, SECTION_LIMITS } from './sections.ts';
 import {
@@ -554,4 +555,68 @@ test('every seed image path resolves to a file, where Keystatic writes it', asyn
   // portrait; one media image on about and on each application.
   const SEED_IMAGES = 2 + 3 + 2 * (1 + 2 + 6 + 1) + 1 + 3;
   assert.equal(images, SEED_IMAGES);
+});
+
+test('every grid layout has one span per field and fills whole rows', () => {
+  let layouts = 0;
+  const visit = (schema: ComponentSchema, where: string) => {
+    if (schema.kind === 'object') {
+      const keys = Object.keys(schema.fields);
+      if (schema.layout) {
+        layouts += 1;
+        assert.equal(schema.layout.length, keys.length, where);
+        assert.ok(
+          schema.layout.every((span) => span > 0 && span <= GRID_COLUMNS),
+          where,
+        );
+        assert.equal(schema.layout.reduce((sum, span) => sum + span, 0) % GRID_COLUMNS, 0, where);
+      }
+      for (const [key, field] of Object.entries(schema.fields)) visit(field, `${where}.${key}`);
+    } else if (schema.kind === 'array') {
+      visit(schema.element, `${where}[]`);
+    } else if (schema.kind === 'conditional') {
+      for (const [key, value] of Object.entries(schema.values)) visit(value, `${where}.${key}`);
+    }
+  };
+  for (const name of COLLECTION_NAMES) visit(fields.object(collections[name].schema), name);
+  assert.ok(layouts > 0);
+});
+
+test('every block row shows its type, then the text that tells blocks apart', () => {
+  // Props where every field reads "Sample"; markdown-only blocks have no readable text.
+  const sample = {
+    fields: new Proxy({}, { get: () => ({ value: 'Sample' }) }),
+  };
+  for (const name of COLLECTION_NAMES) {
+    const sections: ComponentSchema = collections[name].schema.sections;
+    assert.equal(sections.kind, 'array', name);
+    if (sections.kind !== 'array') continue;
+    const rowLabel = sections.itemLabel;
+    assert.ok(rowLabel, name);
+    for (const type of Object.keys(blockSchemas(name))) {
+      const label = rowLabel?.({ discriminant: type, value: sample }) ?? '';
+      if (type === 'rich-text') assert.equal(label, 'Rich text', `${name} ${type}`);
+      else assert.match(label, / · Sample/, `${name} ${type}`);
+    }
+  }
+});
+
+test('page templates parse with the page schema, and the build never loads them', async () => {
+  const reader = createReader(process.cwd(), {
+    ...LOCAL_CONFIG,
+    collections: { templates: { ...collections.pagesEn, path: 'src/content/templates/*' } },
+  });
+  const schema = pageSchema(context);
+  for (const [locale, template] of Object.entries(PAGE_TEMPLATES)) {
+    assert.ok(existsSync(`${template}.yaml`), template);
+    assert.equal(collections[locale === 'en' ? 'pagesEn' : 'pagesTr'].template, template);
+    for (const root of SEED_ROOTS) assert.equal(template.startsWith(root), false, template);
+    const entry = await reader.collections.templates.read(template.split('/').at(-1) ?? '');
+    assert.ok(entry, template);
+    const { ogImage, ...rest } = entry;
+    const parsed = schema.safeParse({ ...rest, ...(ogImage === null ? {} : { ogImage }) });
+    assert.equal(parsed.success, true, `${template}: ${JSON.stringify(parsed.error?.issues)}`);
+    const types = entry.sections.map((section) => section.discriminant);
+    assert.deepEqual(types, ['hero', 'statement', 'cta'], template);
+  }
 });

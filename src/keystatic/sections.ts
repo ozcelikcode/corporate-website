@@ -5,7 +5,14 @@
  * `parity.test.ts`. Zod stays the build authority (it also turns the stored shape back into flat
  * sections).
  */
-import { fields } from '@keystatic/core';
+import {
+  type ComponentSchema,
+  fields,
+  type GenericPreviewProps,
+  type ObjectField,
+} from '@keystatic/core';
+import { SPAN } from './field-layout.ts';
+import { itemLabel } from './item-label.ts';
 import { ALL_OR_NONE_HINT, LINK_HINT, linkPattern } from './link-hints.ts';
 
 /**
@@ -83,26 +90,55 @@ const layout = () =>
     {
       label: 'Layout',
       description: 'Optional. The defaults render the section like every other band.',
+      layout: [SPAN.half, SPAN.half],
     },
   );
 
 const label = () =>
   fields.text({
     label: 'Label',
-    description: 'Short tally label above the section.',
+    description: 'Small label above the section, a few words.',
     validation: { isRequired: true, length: { max: SECTION_LIMITS.label } },
   });
 
-const requiredText = (fieldLabel: string, multiline = false) =>
-  fields.text({ label: fieldLabel, multiline, validation: required });
+const requiredText = (fieldLabel: string, multiline = false, description?: string) =>
+  fields.text({
+    label: fieldLabel,
+    ...(description === undefined ? {} : { description }),
+    multiline,
+    validation: required,
+  });
 
 /** Markdown with headings, lists, links and inline marks; stored as a string in the YAML. */
-const markdown = (fieldLabel: string) =>
+const markdown = (fieldLabel: string, description = '') =>
   fields.markdoc.inline({
     label: fieldLabel,
-    description: 'Never type "{%": it would lock the entry, so the build refuses it.',
+    description:
+      `${description} Never type "{%": it would lock the entry, so the build refuses it.`.trim(),
     options: { table: false, image: false, codeBlock: false, divider: false },
   });
+
+type Fields = Record<string, ComponentSchema>;
+type BlockFields<F extends Fields> = {
+  readonly [K in keyof F]: GenericPreviewProps<F[K], unknown>;
+};
+
+/**
+ * One block type: its menu name, schema and the list row label ("<name> · <text>"). `summary`
+ * picks the text that tells two blocks of one type apart; markdown fields cannot be read there.
+ */
+function block<F extends Fields>(
+  name: string,
+  schema: ObjectField<F>,
+  summary: (values: BlockFields<F>) => string,
+) {
+  return {
+    label: name,
+    schema,
+    itemLabel: (props: GenericPreviewProps<ObjectField<F>, unknown>) =>
+      itemLabel(name, summary(props.fields)),
+  };
+}
 
 /** A link button (`actionSchema`): label and a site path or https address. */
 export const action = () =>
@@ -110,6 +146,7 @@ export const action = () =>
     {
       label: fields.text({
         label: 'Label',
+        description: 'Text on the button.',
         validation: { isRequired: true, length: { max: SECTION_LIMITS.label } },
       }),
       href: fields.text({
@@ -118,36 +155,57 @@ export const action = () =>
         validation: { isRequired: true, pattern: linkPattern('action') },
       }),
     },
-    { label: 'Action' },
+    { label: 'Action', layout: [SPAN.half, SPAN.half] },
   );
 
-const hero = (images: ImageLocation) => ({
-  label: 'Hero',
-  schema: fields.object({
-    label: label(),
-    headline: requiredText('Headline'),
-    headlineAccent: requiredText('Headline accent (second line)'),
-    lede: requiredText('Lede', true),
-    actions: fields.array(action(), {
-      label: 'Actions',
-      itemLabel: (props) => props.fields.label.value,
-      validation: { length: { max: SECTION_LIMITS.actions } },
-    }),
-    image: fields.image({
-      label: 'Image (PNG, JPEG or WebP)',
-      description: 'Rendered as the ASCII signal picture.',
-      ...images,
-      validation: required,
-    }),
-    imageAlt: requiredText('Image alt text'),
-  }),
-});
+const hero = (images: ImageLocation) =>
+  block(
+    'Hero',
+    fields.object(
+      {
+        label: label(),
+        headline: requiredText('Headline', false, 'Large first line of the page.'),
+        headlineAccent: requiredText(
+          'Headline accent (second line)',
+          false,
+          'Second line, shown in the accent colour.',
+        ),
+        lede: requiredText('Lede', true, 'Short paragraph under the headline.'),
+        actions: fields.array(action(), {
+          label: 'Actions',
+          description: 'Buttons under the lede, at most two.',
+          itemLabel: (props) => itemLabel('Action', props.fields.label.value),
+          validation: { length: { max: SECTION_LIMITS.actions } },
+        }),
+        image: fields.image({
+          label: 'Image (PNG, JPEG or WebP)',
+          description: 'Rendered as the animated ASCII picture beside the headline.',
+          ...images,
+          validation: required,
+        }),
+        imageAlt: requiredText(
+          'Image alt text',
+          false,
+          'Describes the picture for screen readers.',
+        ),
+      },
+      {
+        layout: [SPAN.full, SPAN.half, SPAN.half, SPAN.full, SPAN.full, SPAN.full, SPAN.full],
+      },
+    ),
+    (values) => values.headline.value,
+  );
 
 /** An image field stored in the entry's own uploads folder; rasters only (the build checks). */
-const rasterImage = (images: ImageLocation, fieldLabel: string, isRequired: boolean) =>
+const rasterImage = (
+  images: ImageLocation,
+  fieldLabel: string,
+  isRequired: boolean,
+  description = '',
+) =>
   fields.image({
     label: fieldLabel,
-    description: RASTER_HINT,
+    description: `${description} ${RASTER_HINT}`.trim(),
     ...images,
     validation: { isRequired },
   });
@@ -169,27 +227,34 @@ const optionalAction = () =>
     {
       label: 'Button',
       description: `Optional. ${ALL_OR_NONE_HINT} Button label and button link go together.`,
+      layout: [SPAN.half, SPAN.half],
     },
   );
 
 /** The four richer blocks; each may store images in the entry's uploads folder. */
 const richBlocks = (images: ImageLocation) => ({
-  stats: {
-    label: 'Stats',
-    schema: fields.object({
+  stats: block(
+    'Stats',
+    fields.object({
       label: label(),
       items: fields.array(
-        fields.object({
-          value: requiredText('Value'),
-          label: fields.text({
-            label: 'Label',
-            validation: { isRequired: true, length: { max: SECTION_LIMITS.label } },
-          }),
-          note: fields.text({ label: 'Note', description: 'Optional, one short line.' }),
-        }),
+        fields.object(
+          {
+            value: requiredText('Value', false, 'The big figure, e.g. 16 or 3,200.'),
+            label: fields.text({
+              label: 'Label',
+              description: 'What the figure counts.',
+              validation: { isRequired: true, length: { max: SECTION_LIMITS.label } },
+            }),
+            note: fields.text({ label: 'Note', description: 'Optional, one short line.' }),
+          },
+          { layout: [SPAN.third, SPAN.twoThirds, SPAN.full] },
+        ),
         {
           label: 'Figures',
-          itemLabel: (props) => props.fields.value.value,
+          description: 'Three or four figures shown side by side.',
+          itemLabel: (props) =>
+            itemLabel('Figure', `${props.fields.value.value} ${props.fields.label.value}`),
           validation: { length: SECTION_LIMITS.stats },
         },
       ),
@@ -201,55 +266,67 @@ const richBlocks = (images: ImageLocation) => ({
       }),
       layout: layout(),
     }),
-  },
-  logos: {
-    label: 'Logos',
-    schema: fields.object({
+    (values) => values.label.value,
+  ),
+  logos: block(
+    'Logos',
+    fields.object({
       label: label(),
-      heading: requiredText('Heading'),
+      heading: requiredText('Heading', false, 'Line above the row of logos.'),
       items: fields.array(
-        fields.object({
-          image: rasterImage(images, 'Logo', true),
-          alt: fields.text({
-            label: 'Name (alt text)',
-            description:
-              'Names the organization; screen readers read it. Spaces alone are refused at build.',
-            validation: { isRequired: true, length: { min: 1 } },
-          }),
-          href: fields.text({
-            label: 'Link',
-            description: 'Optional https:// address of their site.',
-            validation: { pattern: linkPattern('https', true) },
-          }),
-        }),
+        fields.object(
+          {
+            image: rasterImage(images, 'Logo', true),
+            alt: fields.text({
+              label: 'Name (alt text)',
+              description:
+                'Names the organization; screen readers read it. Spaces alone are refused at build.',
+              validation: { isRequired: true, length: { min: 1 } },
+            }),
+            href: fields.text({
+              label: 'Link',
+              description: 'Optional https:// address of their site.',
+              validation: { pattern: linkPattern('https', true) },
+            }),
+          },
+          { layout: [SPAN.full, SPAN.half, SPAN.half] },
+        ),
         {
           label: 'Logos',
-          itemLabel: (props) => props.fields.alt.value,
+          description: 'Shown in greyscale, in this order.',
+          itemLabel: (props) => itemLabel('Logo', props.fields.alt.value),
           validation: { length: SECTION_LIMITS.logos },
         },
       ),
       layout: layout(),
     }),
-  },
-  testimonial: {
-    label: 'Testimonial',
-    schema: fields.object({
-      quote: requiredText('Quote', true),
-      name: requiredText('Name'),
-      role: requiredText('Role'),
-      organization: requiredText('Organization'),
-      portrait: rasterImage(images, 'Portrait (optional)', false),
-      layout: layout(),
-    }),
-  },
-  'media-split': {
-    label: 'Media and text',
-    schema: fields.object({
+    (values) => values.heading.value,
+  ),
+  testimonial: block(
+    'Testimonial',
+    fields.object(
+      {
+        quote: requiredText('Quote', true, 'The quotation, shown large.'),
+        name: requiredText('Name', false, 'Who said it.'),
+        role: requiredText('Role', false, 'Their job title.'),
+        organization: requiredText('Organization'),
+        portrait: rasterImage(images, 'Portrait (optional)', false, 'Small photo beside the name.'),
+        layout: layout(),
+      },
+      {
+        layout: [SPAN.full, SPAN.half, SPAN.half, SPAN.full, SPAN.full, SPAN.full],
+      },
+    ),
+    (values) => values.name.value,
+  ),
+  'media-split': block(
+    'Media and text',
+    fields.object({
       label: label(),
       heading: requiredText('Heading'),
-      text: markdown('Text'),
+      text: markdown('Text', 'Paragraphs beside the image.'),
       image: rasterImage(images, 'Image', true),
-      imageAlt: requiredText('Image alt text'),
+      imageAlt: requiredText('Image alt text', false, 'Describes the picture for screen readers.'),
       action: optionalAction(),
       reverse: fields.checkbox({
         label: 'Image first',
@@ -257,20 +334,26 @@ const richBlocks = (images: ImageLocation) => ({
       }),
       layout: layout(),
     }),
-  },
+    (values) => values.heading.value,
+  ),
 });
 
 /** Every block but the hero. */
 const contentBlocks = (images: ImageLocation) => ({
-  statement: {
-    label: 'Statement',
-    schema: fields.object({ label: label(), text: requiredText('Text', true), layout: layout() }),
-  },
-  'app-grid': {
-    label: 'Application grid',
-    schema: fields.object({
+  statement: block(
+    'Statement',
+    fields.object({
       label: label(),
-      heading: requiredText('Heading'),
+      text: requiredText('Text', true, 'One large paragraph that states a position.'),
+      layout: layout(),
+    }),
+    (values) => values.text.value,
+  ),
+  'app-grid': block(
+    'Application grid',
+    fields.object({
+      label: label(),
+      heading: requiredText('Heading', false, 'Line above the application tiles.'),
       apps: fields.array(
         fields.relationship({
           label: 'Application',
@@ -280,7 +363,7 @@ const contentBlocks = (images: ImageLocation) => ({
         {
           label: 'Applications',
           description: 'Leave empty to show every application, by order.',
-          itemLabel: (props) => props.value ?? '',
+          itemLabel: (props) => itemLabel('Application', props.value),
         },
       ),
       columns: fields.select({
@@ -291,58 +374,75 @@ const contentBlocks = (images: ImageLocation) => ({
       }),
       layout: layout(),
     }),
-  },
-  'feature-list': {
-    label: 'Feature list',
-    schema: fields.object({
+    (values) => values.heading.value,
+  ),
+  'feature-list': block(
+    'Feature list',
+    fields.object({
       label: label(),
-      heading: requiredText('Heading'),
+      heading: requiredText('Heading', false, 'Line above the list.'),
       items: fields.array(
         fields.object({
           title: requiredText('Title'),
-          body: requiredText('Body', true),
+          body: requiredText('Body', true, 'A sentence or two under the title.'),
           duration: fields.text({
             label: 'Duration (HH:MM:SS)',
             description: 'Optional rundown timecode, display only.',
             validation: {
-              pattern: { regex: OPTIONAL_DURATION_REGEX, message: 'Use HH:MM:SS, e.g. 00:01:30' },
+              pattern: {
+                regex: OPTIONAL_DURATION_REGEX,
+                message: 'Use HH:MM:SS, e.g. 00:01:30',
+              },
             },
           }),
         }),
         {
           label: 'Items',
-          itemLabel: (props) => props.fields.title.value,
+          description: 'Up to eight rows, numbered in this order.',
+          itemLabel: (props) => itemLabel('Item', props.fields.title.value),
           validation: { length: { min: 1, max: SECTION_LIMITS.items } },
         },
       ),
       layout: layout(),
     }),
-  },
-  'rich-text': {
-    label: 'Rich text',
-    schema: fields.object({ body: markdown('Body'), layout: layout() }),
-  },
-  cta: {
-    label: 'Call to action',
-    schema: fields.object({
-      heading: requiredText('Heading'),
-      text: fields.text({ label: 'Text', multiline: true }),
+    (values) => values.heading.value,
+  ),
+  'rich-text': block(
+    'Rich text',
+    fields.object({
+      body: markdown('Body', 'Free text with headings, lists and links.'),
+      layout: layout(),
+    }),
+    () => '',
+  ),
+  cta: block(
+    'Call to action',
+    fields.object({
+      heading: requiredText('Heading', false, 'The invitation, shown large.'),
+      text: fields.text({
+        label: 'Text',
+        description: 'Optional line under the heading.',
+        multiline: true,
+      }),
       action: action(),
       layout: layout(),
     }),
-  },
-  faq: {
-    label: 'Questions',
-    schema: fields.object({
+    (values) => values.heading.value,
+  ),
+  faq: block(
+    'Questions',
+    fields.object({
       label: label(),
       items: fields.array(fields.object({ q: requiredText('Question'), a: markdown('Answer') }), {
         label: 'Questions',
-        itemLabel: (props) => props.fields.q.value,
+        description: 'Shown as an open list, in this order.',
+        itemLabel: (props) => itemLabel('Question', props.fields.q.value),
         validation: { length: { min: 1 } },
       }),
       layout: layout(),
     }),
-  },
+    (values) => values.label.value,
+  ),
   ...richBlocks(images),
 });
 
@@ -350,9 +450,17 @@ const contentBlocks = (images: ImageLocation) => ({
 export const pageSections = (images: ImageLocation) =>
   fields.blocks(
     { hero: hero(images), ...contentBlocks(images) },
-    { label: SECTIONS_LABEL, description: 'At most one hero, and only as the first section.' },
+    {
+      label: SECTIONS_LABEL,
+      description:
+        'The page, top to bottom. Drag the handle to reorder. At most one hero, and only first.',
+    },
   );
 
 /** Application sections: no hero, since the application header holds the h1 (the build checks it). */
 export const applicationSections = (images: ImageLocation) =>
-  fields.blocks(contentBlocks(images), { label: SECTIONS_LABEL });
+  fields.blocks(contentBlocks(images), {
+    label: SECTIONS_LABEL,
+    description:
+      'The page below the application header, top to bottom. Drag the handle to reorder.',
+  });
