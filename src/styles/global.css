@@ -109,6 +109,35 @@
   }
 }
 
+/*
+ * Section band backgrounds (`layout.background`, set by SectionRenderer). Each band remaps the
+ * colour tokens inside it, so blocks, links, buttons and focus rings take its palette with no
+ * variant of their own (tokens and contrast notes: `tokens.css`, "Section band backgrounds").
+ * Derived tokens (accent wash, ink band) are mixed again here: custom properties resolve where
+ * they are declared, so the root mixes would keep the page palette.
+ */
+@utility band-subtle {
+  --color-surface: var(--color-canvas);
+
+  background-color: var(--band-subtle);
+}
+
+@utility band-contrast {
+  --color-canvas: var(--contrast-canvas);
+  --color-surface: var(--contrast-surface);
+  --color-ink: var(--contrast-ink);
+  --color-ink-muted: var(--contrast-ink-muted);
+  --color-line: var(--contrast-line);
+  --color-critical: var(--contrast-critical);
+  --color-accent: var(--contrast-accent);
+  --color-accent-wash: color-mix(in oklab, var(--contrast-accent) 12%, var(--contrast-canvas));
+  --ink-band: color-mix(in oklab, var(--contrast-ink) 6%, transparent);
+
+  color-scheme: light;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+}
+
 /* Documented exception: hard-stop raster lines, hero only. Static, so no motion concerns. */
 @utility scanlines {
   --scanline-rule: var(--border-hairline);

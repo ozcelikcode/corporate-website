@@ -111,6 +111,26 @@
     --ink-band: color-mix(in oklab, var(--color-ink) 6%, transparent);
 
     /*
+     * Section band backgrounds (`layout.background`; the `band-*` utilities in global.css remap
+     * the colour tokens inside the band to these, so every block keeps AA there):
+     * - subtle: the band takes the surface tint and its tiles drop to the canvas, so tiles stay
+     *   apart and every pair inside is one the page already uses.
+     * - contrast: the page inverted, a light band with dark ink (16.5:1). Measured: muted ink
+     *   7.4:1 on the ground and 6.3:1 on tiles; line-strong (unchanged) 4.8:1 and 4.1:1. The
+     *   accent is darkened toward the band's ink, so even a white seed (the worst case) keeps
+     *   4.3:1 on the ground and 3.7:1 on tiles (focus rings, keys, button borders); the button
+     *   glyph, in the ground colour, sits on it at the same ratio. The default amber: 6.3:1.
+     */
+    --band-subtle: var(--color-surface);
+    --contrast-canvas: var(--color-ink);
+    --contrast-surface: oklch(0.9 0.006 255);
+    --contrast-ink: var(--color-canvas);
+    --contrast-ink-muted: oklch(0.42 0.01 255);
+    --contrast-line: oklch(0.82 0.008 255);
+    --contrast-critical: oklch(0.5 0.17 30);
+    --contrast-accent: color-mix(in oklab, var(--accent-seed) 45%, var(--contrast-ink));
+
+    /*
      * Masthead: the sticky header bar (plus its bottom rule) and the tally strip under it. The
      * hero fills the first screen below it (`--first-screen`, small viewport height: no shift
      * when a mobile toolbar shows or hides).
