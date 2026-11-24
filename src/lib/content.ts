@@ -62,7 +62,7 @@ export async function getPage(locale: Locale, slug: string): Promise<Resolved<Pa
 
 /**
  * Pages that exist in `locale` itself. A translation without an EN twin, or a slug that would
- * shadow `/admin/`, `/api/` or a locale root, fails the build.
+ * shadow `/keystatic/`, `/api/` or a locale root, fails the build.
  */
 export async function listTranslatedPages(locale: Locale): Promise<Resolved<PageData>[]> {
   const entries = await getCollection('pages');

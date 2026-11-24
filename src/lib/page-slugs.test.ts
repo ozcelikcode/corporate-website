@@ -4,7 +4,7 @@ import { LOCALES } from './i18n.ts';
 import { assertPageSlug, FORBIDDEN_PAGE_SLUGS, isOwnRoutePage } from './page-slugs.ts';
 
 test('FORBIDDEN_PAGE_SLUGS covers the CMS, the Worker API and every locale code', () => {
-  for (const slug of ['admin', 'api', ...LOCALES])
+  for (const slug of ['admin', 'keystatic', 'api', ...LOCALES])
     assert.ok(FORBIDDEN_PAGE_SLUGS.includes(slug), slug);
 });
 
@@ -13,6 +13,7 @@ test('assertPageSlug fails the build on a forbidden slug and names it', () => {
     assert.throws(() => assertPageSlug(`en/${slug}`), new RegExp(`"${slug}"`), slug);
   }
   assert.throws(() => assertPageSlug('tr/api'), /tr\/api/);
+  assert.throws(() => assertPageSlug('en/keystatic'), /keystatic/);
 });
 
 test('assertPageSlug accepts ordinary and own-route slugs', () => {
