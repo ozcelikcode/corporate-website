@@ -30,7 +30,7 @@ test('children and source together fail, naming the item', () =>
 
 test(`more than ${NAV_CHILDREN_MAX} children fail`, () => {
   const children = Array.from({ length: NAV_CHILDREN_MAX + 1 }, () => child);
-  assert.equal(safe(item({ children })).success, false);
+  assert.match(issues(item({ children })), /^Navigation item "Company"/);
   assert.equal(safe(item({ children: children.slice(1) })).success, true);
 });
 

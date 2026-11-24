@@ -30,7 +30,7 @@ const navEntry = z
   .strictObject({
     label: z.string(),
     href: optionalField(href),
-    children: listField(z.array(navChild).max(NAV_CHILDREN_MAX)),
+    children: listField(z.array(navChild)),
     source: optionalField(z.enum(NAV_SOURCES)),
     feature: optionalObjectField(navFeature),
   })
@@ -41,6 +41,9 @@ const navEntry = z
     const fail = (message: string) => ctx.addIssue({ code: 'custom', message });
     if (hasChildren && entry.source !== undefined) {
       fail(`${name} sets both children and source; use one`);
+    }
+    if (entry.children.length > NAV_CHILDREN_MAX) {
+      fail(`${name} has ${entry.children.length} children; the limit is ${NAV_CHILDREN_MAX}`);
     }
     if (entry.href === undefined && !hasSubmenu) {
       fail(`${name} needs an href or a submenu (children or source)`);
