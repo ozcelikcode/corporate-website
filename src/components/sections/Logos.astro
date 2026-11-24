@@ -1,0 +1,60 @@
+---
+/**
+ * Logo wall: spaced `surface` tiles of contained, muted greyscale logos under a lower third. A
+ * linked tile is one outbound link named by its `alt`, marked ↗, full colour on hover and focus
+ * (instant: filters never animate), with an inset focus ring; an unlinked tile stays muted.
+ */
+import { Image } from 'astro:assets';
+import Glyph from '../ui/Glyph.astro';
+import LowerThird from '../ui/LowerThird.astro';
+import type { BlockPreviewProps, LogosContent } from './block-content.ts';
+
+type Props = BlockPreviewProps<LogosContent>;
+
+const LOOSE = 'p-6 md:p-8';
+const DENSE = 'p-4 lg:p-5'; // five or more across: tighter, so logos keep their size
+/** Columns per logo count (2 on phones); wider steps divide the count, so rows end full. */
+const WALL: Record<number, { columns: string; pad: string }> = {
+  4: { columns: 'md:grid-cols-4', pad: LOOSE },
+  5: { columns: 'md:grid-cols-3 lg:grid-cols-5', pad: DENSE },
+  6: { columns: 'md:grid-cols-3', pad: LOOSE },
+  7: { columns: 'md:grid-cols-4', pad: LOOSE },
+  8: { columns: 'md:grid-cols-4', pad: LOOSE },
+  9: { columns: 'md:grid-cols-3', pad: LOOSE },
+  10: { columns: 'md:grid-cols-5', pad: DENSE },
+  11: { columns: 'md:grid-cols-3 lg:grid-cols-6', pad: DENSE },
+  12: { columns: 'md:grid-cols-3 lg:grid-cols-6', pad: DENSE },
+};
+const LOGO_WIDTHS = [240, 480]; // tiles run about 9rem (six across) to 20rem wide
+const SIZES = '(min-width: 64rem) 22vw, (min-width: 48rem) 30vw, 45vw';
+const TILE = 'relative flex aspect-3/2 items-center justify-center';
+const MUTED = 'size-full object-contain opacity-60 grayscale';
+const HOVER = 'group-hover:opacity-100 group-hover:grayscale-0';
+const FOCUS = 'group-focus-within:opacity-100 group-focus-within:grayscale-0';
+const LIVE = `${MUTED} ${HOVER} ${FOCUS}`;
+const INSET_FOCUS = 'focus-visible:outline-offset-[calc(var(--border-focus)*-1)]';
+const MARK = 'absolute end-3 top-3 text-ink-muted group-hover:text-ink group-focus-within:text-ink';
+
+const { section, index, headingLevel, localize } = Astro.props;
+const wall = WALL[section.items.length];
+if (wall === undefined) throw new Error(`Logos takes 4–12 logos, got ${section.items.length}`);
+---
+<div class="flex flex-col gap-12 md:gap-16">
+  <LowerThird level={headingLevel} text={section.heading} label={section.label} index={index} />
+  <ul class:list={['grid grid-cols-2 gap-2', wall.columns]}>
+    {section.items.map(({ image, alt, href }) => (
+      <li class="group bg-surface">
+        {href === undefined ? (
+          <div class:list={[TILE, wall.pad]}>
+            <Image src={image} alt={alt} widths={LOGO_WIDTHS} sizes={SIZES} class={MUTED} />
+          </div>
+        ) : (
+          <a href={localize(href)} class:list={[TILE, wall.pad, INSET_FOCUS]}>
+            <Image src={image} alt={alt} widths={LOGO_WIDTHS} sizes={SIZES} class={LIVE} />
+            <Glyph name="↗" class={MARK} />
+          </a>
+        )}
+      </li>
+    ))}
+  </ul>
+</div>
