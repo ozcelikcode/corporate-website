@@ -7,7 +7,7 @@ import { keystaticDev } from './src/integrations/keystatic-dev.ts';
 import { resolveBuildMode } from './src/lib/build-mode.ts';
 
 // Pages that never belong in the sitemap; the TR quote page only once it is translated.
-const SITEMAP_EXCLUDED_PATHS = ['/404/', '/tr/404/', '/admin/'];
+const SITEMAP_EXCLUDED_PATHS = ['/404/', '/tr/404/', '/keystatic/'];
 const TR_QUOTE_PATH = '/tr/quote/';
 const TR_QUOTE_ENTRY = 'src/content/pages/tr/quote.yaml';
 

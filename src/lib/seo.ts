@@ -60,7 +60,7 @@ export function organizationJsonLd(org: OrganizationInput): string {
   return JSON.stringify(data).replace(LESS_THAN, LESS_THAN_ESCAPED);
 }
 
-const ROBOTS_ALLOW = 'User-agent: *\nDisallow: /admin/\n';
+const ROBOTS_ALLOW = 'User-agent: *\nDisallow: /keystatic/\n';
 const ROBOTS_BLOCK_ALL = 'User-agent: *\nDisallow: /\n';
 const SITEMAP_INDEX_PATH = '/sitemap-index.xml';
 

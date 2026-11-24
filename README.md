@@ -19,7 +19,7 @@ A static, brand-agnostic corporate website for broadcast and media technology co
 - **Two languages.** English at `/`, optional Turkish at `/tr/`. Untranslated entries fall back to English.
 - **Block-based pages.** Pages and applications compose seven typed blocks: `hero`, `statement`, `app-grid`, `feature-list`, `rich-text`, `cta`, `faq`.
 - **ASCII hero.** The hero image is converted to an animated ASCII broadcast signal at build time. A HOLD key pauses it, and it stays static under reduced motion.
-- **Git-based CMS.** Sveltia CMS at `/admin/`. Editors save to a branch and pull request; an admin reviews the YAML diff and merges.
+- **Git-based CMS.** Keystatic at `/keystatic/`. Editors save to a branch and open a pull request; an admin reviews the YAML diff and merges.
 - **Quote form.** Posts to a Cloudflare Worker that verifies Turnstile and sends the request by Email Routing.
 - **Security headers.** Strict CSP and related headers served from `public/_headers`.
 - **Near-zero JavaScript.** Native forms, `<dialog>`, Popover API and `<details>` come before scripts.
@@ -45,7 +45,7 @@ A static, brand-agnostic corporate website for broadcast and media technology co
 | [Astro](https://astro.build) 7 | Static site generation, file-based routing |
 | TypeScript 6 (strict) + Zod | Typed content schemas validated at build time |
 | Tailwind CSS 4 | Styling with design tokens |
-| [Sveltia CMS](https://github.com/sveltia/sveltia-cms) | Editing UI at `/admin/`, GitHub backend, editorial workflow |
+| [Keystatic](https://keystatic.com) | Editing UI at `/keystatic/`, GitHub backend, served by the same Worker |
 | Cloudflare Workers Static Assets | Hosting of the built site |
 | Cloudflare Worker | `POST /api/quote` endpoint |
 | Cloudflare Turnstile | Bot protection for the quote form |
@@ -97,18 +97,18 @@ pnpm format     # Biome check with fixes
 
 ## Content editing
 
-Open `/admin/` and sign in with GitHub (any modern browser; only the optional "Work with Local Repository" mode needs Chromium). Edit pages, applications, navigation, UI strings or site settings in English and Turkish.
+Open `/keystatic/` and sign in with GitHub. Edit pages, applications, navigation, UI strings or site settings in English and Turkish. Locally, `pnpm dev` serves the same admin in local mode at `/keystatic/`: it needs no GitHub and writes the files directly. `/admin/` redirects to `/keystatic/`.
 
 | Role | Can do |
 |---|---|
-| Editor (GitHub Write access) | Edit content. Each save becomes a branch and pull request. |
+| Editor (GitHub Write access) | Edit content. A save to the protected `main` is offered as a new branch; open the pull request from it. |
 | Admin (Maintain/Admin, code owner) | Review the YAML diff and a local build, then merge to `main`. |
 
 The site rebuilds after the merge. See section 4 of the [runbook](docs/runbook.md#4-editing-flow).
 
 ## Deployment
 
-The site is deployed by Cloudflare Workers Builds from the `main` branch: it runs the build and serves `dist/` as static assets, with one Worker handling `/api/*`. The CMS login runs through a separate `sveltia-cms-auth` Worker and a GitHub App. Secrets (`TURNSTILE_SECRET_KEY`, `QUOTE_TO`, `QUOTE_FROM`) are set in Cloudflare and never committed.
+The site is deployed by Cloudflare Workers Builds from the `main` branch: it runs the build and serves `dist/` as static assets, with one Worker handling `/api/quote` and the Keystatic sign-in and API (`/api/keystatic/*`), through a GitHub App you create. Secrets (`TURNSTILE_SECRET_KEY`, `QUOTE_TO`, `QUOTE_FROM`, `KEYSTATIC_GITHUB_CLIENT_ID`, `KEYSTATIC_GITHUB_CLIENT_SECRET`, `KEYSTATIC_SECRET`) are set in Cloudflare and never committed.
 
 Follow the [runbook](docs/runbook.md) for one-time setup and complete its [security checklist](docs/runbook.md#security-checklist-before-the-first-editor) before inviting the first editor.
 
