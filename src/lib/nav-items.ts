@@ -2,7 +2,7 @@
  * Header navigation as the layout renders it: the auto applications list expanded, every href
  * localized, and the current-page state resolved (no Astro runtime, so it can be tested).
  */
-import { applicationPath, type Locale } from './i18n.ts';
+import { applicationPath, fallbackLang, type Locale } from './i18n.ts';
 import { isCurrentPage, isSectionActive } from './nav-state.ts';
 import type { NavChildEntry, NavEntry, NavFeature } from './navigation-schema.ts';
 
@@ -35,12 +35,15 @@ export function applicationLinks(apps: readonly NavApplication[], locale: Locale
   return [...apps]
     .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name, locale))
     .slice(0, NAV_APPLICATIONS_MAX)
-    .map((app) => ({
-      label: app.name,
-      description: app.tagline,
-      href: applicationPath(app.slug),
-      ...(app.locale === locale ? {} : { lang: app.locale }),
-    }));
+    .map((app) => {
+      const lang = fallbackLang(app.locale, locale);
+      return {
+        label: app.name,
+        description: app.tagline,
+        href: applicationPath(app.slug),
+        ...(lang === undefined ? {} : { lang }),
+      };
+    });
 }
 
 export function resolveNavItems(input: {
