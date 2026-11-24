@@ -47,7 +47,7 @@ const entries = items.map((item, index) => {
 });
 ---
 <nav aria-label={navLabel} class="hidden self-stretch lg:flex">
-  <ul class="nav-list flex gap-8">
+  <ul class="nav-list flex gap-6 xl:gap-8">
     {
       entries.map(({ label, href, current, active, children, feature, panelId, buttonLabel }) => (
         <li class="nav-item pointer-events-none flex">
@@ -115,11 +115,17 @@ const entries = items.map((item, index) => {
     --menu-delay: 0s;
   }
 
-  /* The bridge: the trigger column, hit-tested only once a control has started the hover. */
+  /*
+   * The bridge: the trigger column, hit-tested only once a control has started the hover. It
+   * reaches a little past the column on both sides (inside the `gap-6` between items, so never
+   * over a neighbour), so a diagonal move from label to panel keeps the hover even with no close
+   * delay (reduced motion).
+   */
   .nav-trigger::before {
     content: "";
     position: absolute;
-    inset: 0;
+    inset-block: 0;
+    inset-inline: calc(var(--spacing) * -2);
   }
 
   @media (hover: hover) and (pointer: fine) {

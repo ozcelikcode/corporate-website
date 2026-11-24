@@ -12,10 +12,12 @@ import { LOCALE_NAMES } from './locale-names.ts';
 import { SECTION_LIMITS } from './sections.ts';
 
 /**
- * Mirrors `NAV_CHILDREN_MAX` (`lib/navigation-schema.ts`), which is not imported because that
- * module would pull Zod into the admin bundle; `parity.test.ts` checks the two agree.
+ * Mirror `NAV_CHILDREN_MAX` and `NAV_HEADER_MAX` (`lib/navigation-schema.ts`), which are not
+ * imported because that module would pull Zod into the admin bundle; `parity.test.ts` checks
+ * they agree.
  */
 export const NAV_CHILDREN_LIMIT = 6;
+export const NAV_HEADER_LIMIT = 4;
 /** Upload folder as seen from `src/content/settings/site.yaml` (what Astro `image()` resolves). */
 const SETTINGS_UPLOADS_PUBLIC_PATH = '../../assets/uploads/';
 
@@ -163,8 +165,9 @@ const navigationSingleton = (locale: Locale) =>
         }),
         {
           label: 'Header',
+          description: `At most ${NAV_HEADER_LIMIT} items (more do not fit the desktop header).`,
           itemLabel: (props) => props.fields.label.value,
-          validation: { length: { min: 1 } },
+          validation: { length: { min: 1, max: NAV_HEADER_LIMIT } },
         },
       ),
       footer: fields.array(linkFields(LINK_HINT, 'nav'), {

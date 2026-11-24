@@ -9,6 +9,8 @@ import { LINK_HREF_PATTERN } from './link-patterns.ts';
 import { actionSchema } from './sections-schema.ts';
 
 export const NAV_CHILDREN_MAX = 6;
+/** Top-level items: more than four overflow the desktop header bar at `lg` (1024). */
+export const NAV_HEADER_MAX = 4;
 const NAV_SOURCES = ['applications'] as const;
 
 const href = z.string().regex(LINK_HREF_PATTERN);
@@ -57,7 +59,19 @@ export type NavEntry = z.output<typeof navEntry>;
 export type NavChildEntry = z.output<typeof navChild>;
 export type NavFeature = z.output<typeof navFeature>;
 
+const header = z
+  .array(navEntry)
+  .min(1)
+  .superRefine((entries, ctx) => {
+    for (const entry of entries.slice(NAV_HEADER_MAX)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: `Navigation item "${entry.label}" is past the header limit of ${NAV_HEADER_MAX} items`,
+      });
+    }
+  });
+
 export const navigationSchema = z.strictObject({
-  header: z.array(navEntry).min(1),
+  header,
   footer: listField(z.array(link)),
 });
