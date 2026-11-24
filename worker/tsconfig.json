@@ -10,8 +10,9 @@
     "allowImportingTsExtensions": true,
     "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["./**/*.ts", "../src/lib/quote-schema.ts"],
+  "include": ["./**/*.ts", "../src/lib/quote-schema.ts", "../src/keystatic/repo.ts"],
   "exclude": ["**/*.test.ts"]
 }
