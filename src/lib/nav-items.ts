@@ -1,6 +1,7 @@
 /**
- * Header navigation as the layout renders it: the auto applications list expanded, every href
- * localized, and the current-page state resolved (no Astro runtime, so it can be tested).
+ * Header navigation as the layout renders it: the auto applications list expanded, an item with
+ * nothing to show dropped, every href localized, and the current-page state resolved (no Astro
+ * runtime, so it can be tested).
  */
 import { applicationPath, fallbackLang, type Locale } from './i18n.ts';
 import { isCurrentPage, isSectionActive } from './nav-state.ts';
@@ -54,9 +55,11 @@ export function resolveNavItems(input: {
   currentPath: string;
 }): NavItem[] {
   const { entries, applications, locale, localize, currentPath } = input;
-  return entries.map((entry) => {
+  return entries.flatMap((entry) => {
     const rawChildren =
       entry.source === 'applications' ? applicationLinks(applications, locale) : entry.children;
+    // An auto list with no applications and no page of its own has nothing to show in either nav.
+    if (rawChildren.length === 0 && entry.href === undefined) return [];
     const children = rawChildren.map((child) => {
       const href = localize(child.href);
       return { ...child, href, current: isCurrentPage(currentPath, href) };
@@ -71,6 +74,6 @@ export function resolveNavItems(input: {
       ...entry.feature,
       action: { ...entry.feature.action, href: localize(entry.feature.action.href) },
     };
-    return { label: entry.label, href, current, active, children, feature };
+    return [{ label: entry.label, href, current, active, children, feature }];
   });
 }
