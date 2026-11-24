@@ -1,0 +1,60 @@
+---
+/**
+ * Logo wall, like a monitor wall: a lower-third heading over spaced `surface` tiles (2 → 3, then 4
+ * or, past eight logos, 6 columns from `lg`). Logos are contained, muted greyscale, full colour on
+ * hover and focus, swapped instantly (filters never animate). A tile with `href` is one outbound
+ * link named by the logo's `alt`, marked ↗, with an inset focus ring that never hits a neighbour.
+ */
+import { Image } from 'astro:assets';
+import Glyph from '../ui/Glyph.astro';
+import LowerThird from '../ui/LowerThird.astro';
+import type { BlockPreviewProps, LogosContent } from './block-content.ts';
+
+type Props = BlockPreviewProps<LogosContent>;
+
+/** Up to this many logos keep four columns from `lg`; more go six across. */
+const LOOSE_MAX = 8;
+const SIZES_BELOW_LG = '(min-width: 48rem) 30vw, 45vw';
+const LAYOUT = {
+  loose: { columns: 'lg:grid-cols-4', sizes: `(min-width: 64rem) 22vw, ${SIZES_BELOW_LG}` },
+  dense: { columns: 'lg:grid-cols-6', sizes: `(min-width: 64rem) 15vw, ${SIZES_BELOW_LG}` },
+} as const;
+/** Tiles run about 9rem (six across) to 20rem wide; logos sit inside the padding. */
+const LOGO_WIDTHS = [240, 480];
+const TILE = 'relative flex aspect-3/2 items-center justify-center p-6 md:p-8';
+/** Muted at rest; full colour while the tile is hovered or holds focus. No transition. */
+const LOGO = [
+  'size-full object-contain opacity-60 grayscale',
+  'group-hover:opacity-100 group-hover:grayscale-0',
+  'group-focus-within:opacity-100 group-focus-within:grayscale-0',
+].join(' ');
+const INSET_FOCUS = 'focus-visible:outline-offset-[calc(var(--border-focus)*-1)]';
+const MARK = 'absolute end-3 top-3 text-ink-muted group-hover:text-ink group-focus-within:text-ink';
+
+const { section, index, headingLevel, localize } = Astro.props;
+const layout = section.items.length > LOOSE_MAX ? LAYOUT.dense : LAYOUT.loose;
+---
+<div class="flex flex-col gap-12 md:gap-16">
+  <LowerThird level={headingLevel} text={section.heading} label={section.label} index={index} />
+  <ul class:list={['grid grid-cols-2 gap-2 md:grid-cols-3', layout.columns]}>
+    {
+      section.items.map(({ image, alt, href }) => {
+        const logo = (
+          <Image src={image} alt={alt} widths={LOGO_WIDTHS} sizes={layout.sizes} class={LOGO} />
+        );
+        return (
+          <li class="group bg-surface">
+            {href === undefined ? (
+              <div class={TILE}>{logo}</div>
+            ) : (
+              <a href={localize(href)} class:list={[TILE, INSET_FOCUS]}>
+                {logo}
+                <Glyph name="↗" class={MARK} />
+              </a>
+            )}
+          </li>
+        );
+      })
+    }
+  </ul>
+</div>
