@@ -12,12 +12,14 @@ Dependencies:
 - tailwindcss `4.3.5`, @tailwindcss/vite `4.3.5`
 - class-variance-authority `0.7.1`
 - sharp `0.35.5` (build-time ASCII; direct dep for pnpm strict)
+- @keystatic/core `0.6.10`, react `19.3.1`, react-dom `19.3.1` (admin UI)
 
 Dev dependencies:
 - @astrojs/check `0.9.12`
 - typescript `6.0.3`
 - @biomejs/biome `2.6.8`
 - wrangler `4.166.0`
+- @types/react `19.3.0`, @types/react-dom `19.3.0` (needed by `pnpm check`)
 - @cloudflare/workers-types `5.20261123.1`
 
 ### Why TypeScript 6.0.3, not 7.0.2
@@ -103,6 +105,19 @@ Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fie
 ## CMS folder collections (fix 2026-11-24)
 - Sveltia 0.271.2 defaults to Markdown front matter (`.md`) for folder collections, so ui/navigation/pages/applications listed 0 entries. They now set `format: yaml` and `extension: yaml` (`format: yaml` alone derives `.yml`). Structure `multiple_folders`: `<folder>/<locale>/<slug>.yaml`. `admin-config.test.ts` derives the layout from config and checks it against `src/content` (every subfolder covered once, all files `.yaml` under a locale folder). Live check needs the native folder picker (owner).
 - Markdown: bare `www.`/`http://` text stays plain text (only https autolinks link); footnote ids are scoped to the section prefix.
+
+## Keystatic admin (A1)
+- Admin at `/keystatic/` (static page plus `src/keystatic/mount.ts`, `noindex`). Config: `keystatic.config.ts` calls `keystaticConfig(storage)` in `src/keystatic/keystatic-config.ts` (local storage under `import.meta.env.DEV`, GitHub storage otherwise). Singletons: `src/keystatic/singletons.ts`.
+- `PUBLIC_KEYSTATIC_GITHUB_APP_SLUG` is required for a production build (`build-mode.ts`). Non-main builds bake GitHub storage without it, so `/keystatic/` cannot sign in on preview builds. Local editing is `pnpm dev`.
+- Admin bundle about 913 KB gzip. Never import Zod-bearing modules (`navigation-schema.ts`, `sections-schema.ts`, `content-schemas.ts`) into `src/keystatic/*` (+23 KB gzip): mirror constants and pin them in `parity.test.ts`.
+- Keystatic writer behaviour: folds strings longer than ~80 columns into `>-` blocks, single-quotes `#hex`, adds `children: []`, `source: ''` and `feature: { action: {} }` on nav saves, and renames a non-editor image to `<fieldKey>.<ext>` on every save, deleting the old file. Any import of the old name then breaks the build.
+- `/keystatic/` is in the sitemap until A4 adds the robots `Disallow`.
+- Upgrade checks:
+  - `src/integrations/keystatic-dev.ts` unshifts its middleware onto `server.middlewares.stack` from a post `configureServer` hook (ahead of Astro's trailing-slash and route guards; `astro:server:setup` is too late). It imports `@keystatic/core/api/generic` statically (a request-time `import()` fails). Re-verify `/api/keystatic/tree` and a deep link in `pnpm dev` after any Astro or Vite upgrade.
+  - The middleware runs ahead of Vite's host validation, so `isLocalDevHost` (`keystatic-dev-route.ts`) guards `/api/keystatic/*`: loopback, `*.localhost` and Vite's `allowedHosts` (array) only, else 403. Keep that guard if the middleware position changes.
+  - Consequence by design: LAN access via `astro dev --host` gets 403. HTTP/2 dev (`server.https`) would send no Host header and be refused.
+  - `parity.test.ts` reads Zod 4 internals (`_zod.def`): re-check it on an `astro/zod` upgrade.
+  - `astro dev` daemonizes (Astro 7): `astro dev stop|status|logs`, and it picks the next free port.
 
 ## Tooling notes
 - pnpm 12 blocks install scripts: `pnpm-workspace.yaml` has `allowBuilds` for esbuild and workerd, and `minimumReleaseAgeExclude` for `@cloudflare/workers-types@5.20261123.1`.

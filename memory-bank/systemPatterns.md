@@ -14,6 +14,8 @@
 │  ├─ assets/   fonts/ uploads/
 │  ├─ styles/   tokens.css (@theme) global.css
 │  ├─ lib/      i18n localize-href content content-schemas sections-schema blank page-slugs markdown seo ascii color quote-schema
+│  ├─ keystatic/   singletons, keystatic-config, mount, repo, storage (admin, A1)
+│  ├─ integrations/ keystatic-dev, keystatic-dev-route (local write API, dev only)
 │  ├─ layouts/  BaseLayout.astro
 │  ├─ components/ ui/ sections/ layout/ pages/
 │  └─ pages/    [...slug] applications/[slug] quote 404 robots.txt.ts tr/ (thin wrappers)
@@ -50,6 +52,7 @@
 - Markdown rendered by `@astrojs/markdown-remark` via `lib/markdown.ts`: `renderMarkdown(source, idPrefix, rewriteHref)` (every anchor href in the output, Markdown and raw `<a>`, goes through `rewriteHref`, the block's `localize`; done on the serialized HTML because raw HTML is parsed after user rehype plugins, and the serializer double-quotes every value), one memoized processor, `syntaxHighlight: false`, one inline rehype plugin: h1 → h2 (ATX, setext and raw `<h1>`; raw tags are rewritten in the raw node text because user rehype plugins run before `rehype-raw`), heading ids `<idPrefix>-<n>` (Astro's slug ids cannot be turned off but keep a preset id). The prefix travels in the render `frontmatter` slot. Blocks pass `sectionIdPrefix(index)` (`section-N`, FAQ `section-N-<item>`).
 - `sectionsSchema` refines the list: a hero only at position 1 and at most one (messages name the position).
 - `app-grid` with empty `apps` lists all applications by `order`.
+- Keystatic singletons (`src/keystatic/singletons.ts`) mirror the Zod schemas key for key. `src/keystatic/parity.test.ts` checks paths on disk, ui keys against `UI_KEYS`, settings/navigation keys against Zod (recursive) and that `createReader` reads every seed (Keystatic rejects unknown keys). `keystatic-config.ts` is the single config source (`keystaticConfig(storage)`, `LOCAL_CONFIG`): add new singletons and collections there only. The Sveltia `admin-config.test.ts` stays until A4.
 
 ## Design tokens (Task 2, `src/styles/tokens.css` + `global.css`)
 - Single dark theme (`color-scheme: dark`), like a monitor wall. `global.css` does `@import "tailwindcss" source("../")` (scans `src/` only) then `tokens.css`.
