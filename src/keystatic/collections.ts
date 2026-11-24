@@ -9,22 +9,20 @@
  */
 import { collection, fields } from '@keystatic/core';
 import type { Locale } from '../lib/i18n.ts';
+import { ENTRY_UPLOADS_PUBLIC_PATH, UPLOADS_DIRECTORY } from '../lib/upload-paths.ts';
 import { LOCALE_NAMES } from './locale-names.ts';
 import {
   action,
   applicationSections,
   type ImageLocation,
   pageSections,
+  RASTER_HINT,
   SECTION_LIMITS,
 } from './sections.ts';
 
 /** Mirror `DESCRIPTION_MAX` and `TAGLINE_MAX` of `lib/content-schemas.ts` (pinned by parity). */
 export const DESCRIPTION_LIMIT = 160;
 export const TAGLINE_LIMIT = 120;
-const UPLOADS_DIRECTORY = 'src/assets/uploads';
-/** The uploads folder as seen from `src/content/<collection>/<locale>/<slug>.yaml`. */
-const ENTRY_UPLOADS_PUBLIC_PATH = '../../../assets/uploads';
-const RASTER_HINT = 'PNG, JPEG or WebP.';
 
 type CollectionName = 'pages' | 'applications';
 
@@ -122,7 +120,7 @@ const applications = (locale: Locale) =>
           pattern: { regex: OPTIONAL_HTTPS_REGEX, message: 'Use an https:// address' },
         },
       }),
-      sections: applicationSections(),
+      sections: applicationSections(imageLocation('applications', locale)),
     },
   });
 

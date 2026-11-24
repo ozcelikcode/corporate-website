@@ -23,8 +23,12 @@ import Cta from './Cta.astro';
 import Faq from './Faq.astro';
 import FeatureList from './FeatureList.astro';
 import Hero from './Hero.astro';
+import Logos from './Logos.astro';
+import MediaSplit from './MediaSplit.astro';
 import RichText from './RichText.astro';
 import Statement from './Statement.astro';
+import Stats from './Stats.astro';
+import Testimonial from './Testimonial.astro';
 
 interface Props {
   sections: readonly Section[];
@@ -79,6 +83,14 @@ const localize = await hrefLocalizer(locale);
                 return <Cta section={section} {...common} headingLevel={2} />;
               case 'faq':
                 return <Faq section={section} {...common} headingLevel={2} />;
+              case 'stats':
+                return <Stats section={section} {...common} headingLevel={2} />;
+              case 'logos':
+                return <Logos section={section} {...common} headingLevel={2} />;
+              case 'testimonial':
+                return <Testimonial section={section} {...common} headingLevel={2} />;
+              case 'media-split':
+                return <MediaSplit section={section} {...common} headingLevel={2} />;
               default:
                 return assertNever(section);
             }

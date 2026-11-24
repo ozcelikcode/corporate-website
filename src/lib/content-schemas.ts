@@ -12,6 +12,7 @@ import {
   actionSchema,
   applicationSectionsSchema,
   LABEL_MAX,
+  rasterImage,
   sectionsSchema,
 } from './sections-schema.ts';
 
@@ -20,12 +21,6 @@ const TAGLINE_MAX = 120;
 const CONTRAST_DECIMALS = 2;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const CONTACT_HREF_PATTERN = /^(mailto:|tel:|https:\/\/)/;
-
-/** Social and cover images are rasters only (the CMS field refuses SVG; the build does too). */
-const rasterImage = (image: SchemaContext['image'], field: string) =>
-  image().refine((metadata) => metadata.format !== 'svg', {
-    message: `${field} must be a PNG, JPEG or WebP image, not an SVG`,
-  });
 
 const accent = z
   .string()

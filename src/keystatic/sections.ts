@@ -8,10 +8,25 @@
 import { fields } from '@keystatic/core';
 import { LINK_HINT } from './link-hints.ts';
 
-/** Mirrors `LABEL_MAX`, `MAX_ACTIONS` and `MAX_ITEMS` of `lib/sections-schema.ts`. */
-export const SECTION_LIMITS = { label: 32, actions: 2, items: 8 } as const;
+/**
+ * Mirrors `LABEL_MAX`, `MAX_ACTIONS`, `MAX_ITEMS`, `STATS_MIN/MAX` and `LOGOS_MIN/MAX` of
+ * `lib/sections-schema.ts`.
+ */
+export const SECTION_LIMITS = {
+  label: 32,
+  actions: 2,
+  items: 8,
+  stats: { min: 3, max: 4 },
+  logos: { min: 4, max: 12 },
+} as const;
 /** Mirrors `ACTION_HREF_PATTERN`. */
 export const HREF_REGEX = /^(\/(?![/\\])|https:\/\/)/;
+/** Keystatic checks a pattern on empty text too: an optional link also takes `''`. */
+export const OPTIONAL_HREF_REGEX = new RegExp(`^$|${HREF_REGEX.source}`);
+/** Mirrors `HTTPS_HREF_PATTERN` (outbound logo links). */
+export const HTTPS_HREF_REGEX = /^https:\/\/\S+$/;
+const OPTIONAL_HTTPS_HREF_REGEX = new RegExp(`^$|${HTTPS_HREF_REGEX.source}`);
+export const RASTER_HINT = 'PNG, JPEG or WebP.';
 /** Mirrors `DURATION_PATTERN`. */
 export const DURATION_REGEX = /^\d{2}:[0-5]\d:[0-5]\d$/;
 /** Keystatic checks a pattern on empty text too, so the optional duration also takes `''`. */
@@ -83,8 +98,119 @@ const hero = (images: ImageLocation) => ({
   }),
 });
 
-/** Every block but the hero; none of them stores an image. */
-const contentBlocks = () => ({
+/** An image field stored in the entry's own uploads folder; rasters only (the build checks). */
+const rasterImage = (images: ImageLocation, fieldLabel: string, isRequired: boolean) =>
+  fields.image({
+    label: fieldLabel,
+    description: RASTER_HINT,
+    ...images,
+    validation: { isRequired },
+  });
+
+/** An optional button: leave both fields empty for none (stored as `{}`, read as absent). */
+const optionalAction = () =>
+  fields.object(
+    {
+      label: fields.text({
+        label: 'Button label',
+        validation: { length: { max: SECTION_LIMITS.label } },
+      }),
+      href: fields.text({
+        label: 'Button link',
+        description: LINK_HINT,
+        validation: {
+          pattern: {
+            regex: OPTIONAL_HREF_REGEX,
+            message: 'Use a site path (/…) or an https:// address',
+          },
+        },
+      }),
+    },
+    { label: 'Button', description: 'Optional; leave both fields empty for none.' },
+  );
+
+/** The four richer blocks; each may store images in the entry's uploads folder. */
+const richBlocks = (images: ImageLocation) => ({
+  stats: {
+    label: 'Stats',
+    schema: fields.object({
+      label: label(),
+      items: fields.array(
+        fields.object({
+          value: requiredText('Value'),
+          label: fields.text({
+            label: 'Label',
+            validation: { isRequired: true, length: { max: SECTION_LIMITS.label } },
+          }),
+          note: fields.text({ label: 'Note', description: 'Optional, one short line.' }),
+        }),
+        {
+          label: 'Figures',
+          itemLabel: (props) => props.fields.value.value,
+          validation: { length: SECTION_LIMITS.stats },
+        },
+      ),
+    }),
+  },
+  logos: {
+    label: 'Logos',
+    schema: fields.object({
+      label: label(),
+      heading: requiredText('Heading'),
+      items: fields.array(
+        fields.object({
+          image: rasterImage(images, 'Logo', true),
+          alt: fields.text({
+            label: 'Name (alt text)',
+            description:
+              'Names the organization; screen readers read it. Spaces alone are refused at build.',
+            validation: { isRequired: true, length: { min: 1 } },
+          }),
+          href: fields.text({
+            label: 'Link',
+            description: 'Optional https:// address of their site.',
+            validation: {
+              pattern: { regex: OPTIONAL_HTTPS_HREF_REGEX, message: 'Use an https:// address' },
+            },
+          }),
+        }),
+        {
+          label: 'Logos',
+          itemLabel: (props) => props.fields.alt.value,
+          validation: { length: SECTION_LIMITS.logos },
+        },
+      ),
+    }),
+  },
+  testimonial: {
+    label: 'Testimonial',
+    schema: fields.object({
+      quote: requiredText('Quote', true),
+      name: requiredText('Name'),
+      role: requiredText('Role'),
+      organization: requiredText('Organization'),
+      portrait: rasterImage(images, 'Portrait (optional)', false),
+    }),
+  },
+  'media-split': {
+    label: 'Media and text',
+    schema: fields.object({
+      label: label(),
+      heading: requiredText('Heading'),
+      text: markdown('Text'),
+      image: rasterImage(images, 'Image', true),
+      imageAlt: requiredText('Image alt text'),
+      action: optionalAction(),
+      reverse: fields.checkbox({
+        label: 'Image first',
+        description: 'Puts the image before the text; alternate it on consecutive splits.',
+      }),
+    }),
+  },
+});
+
+/** Every block but the hero. */
+const contentBlocks = (images: ImageLocation) => ({
   statement: {
     label: 'Statement',
     schema: fields.object({ label: label(), text: requiredText('Text', true) }),
@@ -156,14 +282,16 @@ const contentBlocks = () => ({
       }),
     }),
   },
+  ...richBlocks(images),
 });
 
 /** Page sections: every block type; a hero must come first (the build checks it). */
 export const pageSections = (images: ImageLocation) =>
   fields.blocks(
-    { hero: hero(images), ...contentBlocks() },
+    { hero: hero(images), ...contentBlocks(images) },
     { label: SECTIONS_LABEL, description: 'At most one hero, and only as the first section.' },
   );
 
 /** Application sections: no hero, since the application header holds the h1 (the build checks it). */
-export const applicationSections = () => fields.blocks(contentBlocks(), { label: SECTIONS_LABEL });
+export const applicationSections = (images: ImageLocation) =>
+  fields.blocks(contentBlocks(images), { label: SECTIONS_LABEL });

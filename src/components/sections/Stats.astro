@@ -3,15 +3,16 @@
  * Key figures set like an on-air stat bar: the indexed label as the section heading in a
  * three-column gutter, then one `surface` strip across the other nine holding 3–4 figures. Each
  * figure opens with a short accent key (a graphic, like the lower-third key), then the value
- * (large, semibold, tabular numerals so digits line up from figure to figure), its label beneath
+ * (`figure` size, semibold, proportional numerals: each figure stands alone, and tabular ones
+ * would give a decimal point or comma a full digit's width), its label beneath
  * and an optional muted note. Figures are set apart by spacing, never by rules. Four figures sit
  * two by two below `lg`; three stay in one column on phones and share a row from `md`.
  */
 import GridFrame from '../ui/GridFrame.astro';
 import Label from '../ui/Label.astro';
-import type { BlockPreviewProps, StatsContent } from './block-content.ts';
+import type { BlockProps } from './block-props.ts';
 
-type Props = BlockPreviewProps<StatsContent>;
+type Props = BlockProps<'stats'>;
 
 /** A four-figure bar pairs up below `lg`; three figures share a row from `md`. */
 const FOUR_UP = 4;
@@ -38,7 +39,7 @@ const columns = section.items.length === FOUR_UP ? COLUMNS.four : COLUMNS.three;
       section.items.map((item) => (
         <li class="flex min-w-0 flex-col items-start gap-3">
           <span class="h-1 w-6 bg-accent" aria-hidden="true" />
-          <p class="text-quote font-semibold tracking-display tabular-nums wrap-break-word">
+          <p class="text-figure font-semibold tracking-display wrap-break-word">
             {item.value}
           </p>
           <Label text={item.label} />

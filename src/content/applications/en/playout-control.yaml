@@ -15,6 +15,16 @@ links:
     href: /quote/
 brochure: https://example.com/brochures/playout-control.pdf
 sections:
+  - discriminant: stats
+    value:
+      label: At a glance
+      items:
+        - value: 24/7
+          label: Unattended playout
+        - value: '4'
+          label: Channels per server
+        - value: 1 frame
+          label: Switch to backup
   - discriminant: feature-list
     value:
       label: Capabilities
@@ -33,6 +43,18 @@ sections:
             Trigger lower thirds, tickers and live sources from the same
             timeline.
           duration: '00:01:25'
+  - discriminant: media-split
+    value:
+      label: Redundancy
+      heading: A backup that is already rolling
+      text: >
+        Main and backup chains play in lockstep. If the main path drops, the
+        switch happens on the next frame and the viewer never sees it.
+      image: >-
+        ../../../assets/uploads/applications/en/playout-control/sections/2/value/image.webp
+      imageAlt: Main and backup timelines of clips, one playhead crossing both
+      action: {}
+      reverse: true
   - discriminant: faq
     value:
       label: Questions

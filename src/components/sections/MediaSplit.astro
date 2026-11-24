@@ -14,10 +14,9 @@ import GridFrame from '../ui/GridFrame.astro';
 import Heading from '../ui/Heading.astro';
 import Label from '../ui/Label.astro';
 import Prose from '../ui/Prose.astro';
-import type { BlockPreviewProps, MediaSplitContent } from './block-content.ts';
-import { sectionIdPrefix } from './block-props.ts';
+import { type BlockProps, sectionIdPrefix } from './block-props.ts';
 
-type Props = BlockPreviewProps<MediaSplitContent>;
+type Props = BlockProps<'media-split'>;
 
 /** Half the page container (41.5rem at 90rem) and its double; full width when stacked. */
 const IMAGE_WIDTHS = [640, 1280];

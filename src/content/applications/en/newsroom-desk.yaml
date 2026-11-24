@@ -14,6 +14,16 @@ links:
     href: /quote/
 brochure: https://example.com/brochures/newsroom-desk.pdf
 sections:
+  - discriminant: stats
+    value:
+      label: At a glance
+      items:
+        - value: '12'
+          label: Desks on one rundown
+        - value: < 1 s
+          label: From edit to every screen
+        - value: 100%
+          label: Changes logged
   - discriminant: feature-list
     value:
       label: Capabilities
@@ -34,6 +44,21 @@ sections:
             Pull agency copy and social feeds into one inbox, filtered by desk
             and topic.
           duration: '00:01:25'
+  - discriminant: media-split
+    value:
+      label: Workflow
+      heading: Write against the clock
+      text: >
+        Read times update as you type, so the producer sees the running order
+        fill up before the show, not during it.
+
+
+        Lock a story for air and it stays put, whoever else is editing.
+      image: >-
+        ../../../assets/uploads/applications/en/newsroom-desk/sections/2/value/image.webp
+      imageAlt: Rows of a running order, one story locked for air on the clock line
+      action: {}
+      reverse: true
   - discriminant: cta
     value:
       heading: See Newsroom Desk with your own workflow
