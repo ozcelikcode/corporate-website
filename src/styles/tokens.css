@@ -74,7 +74,8 @@
   --text-quote--line-height: 1.3;
   --text-display: clamp(2.25rem, min(1.6rem + 2.8vw, 2rem + 3.5svh), 4rem);
   --text-display--line-height: 1.02;
-  --tracking-label: 0.12em;
+  --tracking-label: 0.12em; /* signal cues: mono uppercase (label-signal) */
+  --tracking-label-sans: 0.02em; /* labels: sans sentence case, a slight opening at the small size */
   --tracking-display: -0.02em; /* optical tightening for display-size headlines */
 
   /* Default motion for bare transition utilities: the motion tokens below */

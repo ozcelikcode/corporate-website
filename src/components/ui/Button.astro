@@ -37,7 +37,7 @@ const SEGMENT_INTENT = {
 } as const satisfies Record<NonNullable<Props['intent']>, string>;
 
 const button = cva(
-  'group/button inline-flex min-h-11 max-w-full items-stretch border label-mono text-ink select-none',
+  'group/button inline-flex min-h-11 max-w-full items-stretch border label text-ink select-none',
   { variants: { intent: INTENT } },
 );
 
