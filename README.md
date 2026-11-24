@@ -17,7 +17,7 @@ A static, brand-agnostic corporate website for broadcast and media technology co
 ## Features
 
 - **Two languages.** English at `/`, optional Turkish at `/tr/`. Untranslated entries fall back to English.
-- **Block-based pages.** Pages and applications compose seven typed blocks: `hero`, `statement`, `app-grid`, `feature-list`, `rich-text`, `cta`, `faq`.
+- **Block-based pages.** Pages and applications compose eleven typed blocks: `hero`, `statement`, `app-grid`, `feature-list`, `rich-text`, `cta`, `faq`, `stats`, `logos`, `testimonial`, `media-split`.
 - **ASCII hero.** The hero image is converted to an animated ASCII broadcast signal at build time. A HOLD key pauses it, and it stays static under reduced motion.
 - **Git-based CMS.** Keystatic at `/keystatic/`. Editors save to a branch and open a pull request; an admin reviews the YAML diff and merges.
 - **Quote form.** Posts to a Cloudflare Worker that verifies Turnstile and sends the request by Email Routing.
@@ -61,11 +61,11 @@ src/
   content/       Typed YAML: pages, applications, navigation, ui strings, settings (EN/TR)
   components/
     ui/          Small primitives (Button, Field, Tally, AsciiImage, ...)
-    sections/    The seven blocks and the section renderer
+    sections/    The eleven blocks and the section renderer
     layout/      Header, footer, mobile nav, language toggle, SEO head
     pages/       Page templates (generic, application, quote, 404)
   lib/           Content loading, i18n, ASCII pipeline, schemas, helpers (with unit tests)
-  pages/         Routes: EN at the root, Turkish under tr/, admin, 404, robots
+  pages/         Routes: EN at the root, Turkish under tr/, keystatic, 404, robots
   styles/        Global styles and tokens
 worker/          Cloudflare Worker for the quote endpoint
 public/          Static files: _headers, favicon, CMS assets
