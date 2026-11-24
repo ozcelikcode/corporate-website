@@ -99,11 +99,12 @@ const localizeLinks = (links: readonly { label: string; href: string }[]) =>
  */
 const navItems = resolveNavItems({
   entries: navigation.data.header,
-  applications: applications.map(({ data }) => ({
+  applications: applications.map(({ data, locale: entryLocale }) => ({
     slug: data.slug,
     name: data.name,
     tagline: data.tagline,
     order: data.order,
+    locale: entryLocale,
   })),
   locale,
   localize,
@@ -150,6 +151,7 @@ const navItems = resolveNavItems({
       labels={{
         nav: ui('navPrimaryLabel'),
         submenu: ui('navSubmenu'),
+        overview: ui('navOverview'),
         language: ui('languageLabel'),
         menuOpen: ui('menuOpen'),
         menuClose: ui('menuClose'),

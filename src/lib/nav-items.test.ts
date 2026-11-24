@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import type { Locale } from './i18n.ts';
 import {
   applicationLinks,
   NAV_APPLICATIONS_MAX,
@@ -8,11 +9,12 @@ import {
 } from './nav-items.ts';
 import type { NavEntry } from './navigation-schema.ts';
 
-const app = (slug: string, order: number, name = slug): NavApplication => ({
+const app = (slug: string, order: number, name = slug, locale: Locale = 'en'): NavApplication => ({
   slug,
   name,
   tagline: `${name} tagline`,
   order,
+  locale,
 });
 const action = { label: 'Quote', href: '/quote/' };
 const entry = (extra: Partial<NavEntry> & { label: string }): NavEntry => ({
@@ -90,4 +92,25 @@ test('an href-less parent is active only through its children', () => {
   assert.equal(company?.active, true);
   assert.equal(contact?.active, false);
   assert.equal(resolve(entries, '/other/')[0]?.active, false);
+});
+
+test('an application that fell back to another locale is marked with that language', () => {
+  const links = applicationLinks(
+    [app('own', 0, 'Own', 'tr'), app('spare', 1, 'Spare', 'en')],
+    'tr',
+  );
+  assert.equal(links[0]?.lang, undefined);
+  assert.equal(links[1]?.lang, 'en');
+  assert.equal('lang' in (links[0] ?? {}), false);
+});
+
+test('resolved children keep the language mark of a fallback entry', () => {
+  const items = resolveNavItems({
+    entries: [entry({ label: 'Apps', source: 'applications' })],
+    applications: [app('spare', 0, 'Spare', 'en')],
+    locale: 'tr',
+    localize: (href) => href,
+    currentPath: '/tr/',
+  });
+  assert.equal(items[0]?.children[0]?.lang, 'en');
 });

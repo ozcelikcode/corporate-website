@@ -15,28 +15,34 @@ import Label from '../ui/Label.astro';
 interface Props {
   /**
    * Resolved header items (`current`: exact page, `aria-current`; `active`: current page or its
-   * section, visual). Until the submenu accordions land, the sheet lists the items that have a
-   * page of their own, as top-level rows.
+   * section, visual). An item with children is an exclusive accordion (open when active, plus an
+   * overview row for its own page); any other item is a plain row.
    */
   items: readonly NavItem[];
   quote: { label: string; href: string };
   navLabel: string;
   openLabel: string;
   closeLabel: string;
+  /** Row in each submenu that links the parent page itself. */
+  overviewLabel: string;
 }
 
 const MENU_ID = 'site-menu';
+/** One shared name makes the accordions exclusive: opening one closes the others. */
+const GROUP_NAME = 'site-menu-groups';
 /** `[NN]` indexes count from 1. */
 const FIRST_INDEX = 1;
 
 const TOGGLE =
   'flex min-h-11 items-center border border-line-strong px-4 label text-ink hover:border-ink';
 
-const { items, quote, navLabel, openLabel, closeLabel } = Astro.props;
+const { items, quote, navLabel, openLabel, closeLabel, overviewLabel } = Astro.props;
 
-const rows = items.flatMap(({ label, href, current, active }) =>
-  href === undefined ? [] : [{ label, href, current, active }],
-);
+/** Row classes shared by plain rows, summaries and submenu links (inset focus ring). */
+const ROW =
+  'group flex items-center justify-between gap-4 px-4 text-ink hover:bg-surface focus-visible:outline-offset-[calc(var(--border-focus)*-1)] data-active:bg-surface';
+const SUB_ROW =
+  'flex min-h-11 flex-col justify-center gap-1 py-3 ps-8 pe-4 text-ink hover:bg-surface focus-visible:outline-offset-[calc(var(--border-focus)*-1)] aria-[current=page]:bg-surface';
 ---
 <button type="button" class:list={[TOGGLE, 'lg:hidden']} popovertarget={MENU_ID}>
   {openLabel}
@@ -56,19 +62,62 @@ const rows = items.flatMap(({ label, href, current, active }) =>
     </div>
     <ul class="py-4">
       {
-        rows.map(({ label, href, current, active }, index) => (
-          <li>
-            <a
-              class="group flex min-h-16 items-center justify-between gap-4 px-4 text-ink hover:bg-surface focus-visible:outline-offset-[calc(var(--border-focus)*-1)] data-active:bg-surface"
-              href={href}
-              aria-current={current ? 'page' : undefined}
-              data-active={active ? '' : undefined}
-            >
-              <Label as="span" text={label} index={index + FIRST_INDEX} />
-              <Glyph name="→" class="transition-transform group-hover:translate-x-1" />
-            </a>
-          </li>
-        ))
+        items.map(({ label, href, current, active, children }, index) =>
+          children.length === 0 && href !== undefined ? (
+            <li>
+              <a
+                class:list={[ROW, 'min-h-16']}
+                href={href}
+                aria-current={current ? 'page' : undefined}
+                data-active={active ? '' : undefined}
+              >
+                <Label as="span" text={label} index={index + FIRST_INDEX} />
+                <Glyph name="→" class="transition-transform group-hover:translate-x-1" />
+              </a>
+            </li>
+          ) : (
+            <li>
+              <details name={GROUP_NAME} class="group/accordion" open={active || undefined}>
+                <summary
+                  class:list={[ROW, 'min-h-16 cursor-pointer list-none [&::-webkit-details-marker]:hidden']}
+                  data-active={active ? '' : undefined}
+                >
+                  <Label as="span" text={label} index={index + FIRST_INDEX} />
+                  <Glyph name="⌄" class="transition-transform group-open/accordion:rotate-180" />
+                </summary>
+                <ul class="pb-2">
+                  {href !== undefined && (
+                    <li>
+                      <a
+                        class={SUB_ROW}
+                        href={href}
+                        aria-current={current ? 'page' : undefined}
+                      >
+                        <span class="font-medium">{overviewLabel}</span>
+                      </a>
+                    </li>
+                  )}
+                  {children.map((child) => (
+                    <li>
+                      <a
+                        class={SUB_ROW}
+                        href={child.href}
+                        aria-current={child.current ? 'page' : undefined}
+                      >
+                        <span lang={child.lang} class="font-medium">{child.label}</span>
+                        {child.description !== undefined && (
+                          <span lang={child.lang} class="text-label text-ink-muted">
+                            {child.description}
+                          </span>
+                        )}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </li>
+          ),
+        )
       }
     </ul>
     <div class="px-4 py-8">

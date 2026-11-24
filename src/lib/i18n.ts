@@ -49,6 +49,7 @@ export const UI_KEYS = [
   'navPrimaryLabel',
   'navFooterLabel',
   'navSubmenu',
+  'navOverview',
   'languageLabel',
   'navQuote',
   'tallyLive',

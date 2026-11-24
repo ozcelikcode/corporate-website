@@ -34,19 +34,21 @@ const { id, links, feature } = Astro.props;
     <GridFrame columns={12}>
       <ul class="-mx-4 grid grid-cols-2 content-start gap-x-8 gap-y-2 lg:col-span-8">
         {
-          links.map(({ label, href, description, current }) => (
+          links.map(({ label, href, description, current, lang }) => (
             <li>
               <a
                 class="group relative flex min-h-11 flex-col justify-center gap-1 px-4 py-3 hover:bg-(--ink-band) focus-visible:outline-offset-[calc(var(--border-focus)*-1)] aria-[current=page]:bg-(--ink-band) aria-[current=page]:before:absolute aria-[current=page]:before:inset-y-0 aria-[current=page]:before:start-0 aria-[current=page]:before:w-1 aria-[current=page]:before:bg-accent"
                 href={href}
                 aria-current={current ? 'page' : undefined}
               >
-                <span class="flex items-center gap-2 font-medium">
+                <span lang={lang} class="flex items-center gap-2 font-medium">
                   {label}
                   <Glyph name="→" class="text-ink-muted transition-transform group-hover:translate-x-1 group-hover:text-ink" />
                 </span>
                 {description !== undefined && (
-                  <span class="text-label text-ink-muted">{description}</span>
+                  <span lang={lang} class="text-label text-ink-muted">
+                    {description}
+                  </span>
                 )}
               </a>
             </li>
