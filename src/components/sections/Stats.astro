@@ -16,7 +16,7 @@ type Props = BlockPreviewProps<StatsContent>;
 /** A four-figure bar pairs up below `lg`; three figures share a row from `md`. */
 const FOUR_UP = 4;
 const COLUMNS = {
-  three: 'md:grid-cols-3',
+  three: 'grid-cols-1 md:grid-cols-3',
   four: 'grid-cols-2 lg:grid-cols-4',
 } as const;
 
@@ -30,7 +30,7 @@ const columns = section.items.length === FOUR_UP ? COLUMNS.four : COLUMNS.three;
   </HeadingTag>
   <ul
     class:list={[
-      'grid grid-cols-1 gap-x-6 gap-y-10 bg-surface p-6 md:gap-x-8 md:p-8 lg:col-span-9',
+      'grid gap-x-6 gap-y-10 bg-surface p-6 md:gap-x-8 md:p-8 lg:col-span-9',
       columns,
     ]}
   >
