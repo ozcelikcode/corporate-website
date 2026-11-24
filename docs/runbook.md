@@ -260,6 +260,10 @@ These could not be automated in the build environment.
   2. Production: submit the real form once. Expected: `#sent` and a mail in your inbox.
 - [ ] **(c) HOLD key.** On `/`, with motion on, the ASCII hero animates. Press the `HOLD` key in the strip at the top (also reachable with the Tab key and Space): all motion stops and the static ASCII picture shows; press again to resume.
 
+### Known limitations
+
+- **Desktop menu on hover (WCAG 1.4.13, needs owner sign-off).** With a mouse or trackpad, hovering a menu item opens its panel. That hover-opened panel cannot be dismissed with Escape while the pointer rests on the item or the panel: Escape closes it only once the pointer moves away, because the menu is CSS only (no JavaScript). The keyboard and touch path is the chevron button, which opens the same panel as a popover that Escape and a click outside close. Related minors: hover does not reopen a panel the keyboard left open (one extra click), and a click outside with the pointer away closes the panel after a short delay (300 ms).
+
 ## 6. Builder verifications (spec section 14)
 
 Dates are the build dates, 2026-11-23.
