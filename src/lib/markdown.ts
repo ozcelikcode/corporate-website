@@ -46,7 +46,7 @@ type MdastNode = {
   type: string;
   url?: string;
   value?: string;
-  position?: { start: { offset?: number } };
+  position?: { start: { offset?: number | undefined } } | undefined;
   children?: MdastNode[];
 };
 
