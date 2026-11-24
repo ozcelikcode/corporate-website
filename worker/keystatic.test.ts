@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { type TestContext, test } from 'node:test';
 import { ADMIN_CSP } from './headers.ts';
-import { handleKeystatic, type KeystaticDeps, type KeystaticEnv } from './keystatic.ts';
+import {
+  handleKeystatic,
+  type KeystaticDeps,
+  type KeystaticEnv,
+  toApiResult,
+} from './keystatic.ts';
 
 const ORIGIN = 'https://site.example';
 const SECRET_LENGTH = 32;
@@ -100,4 +105,52 @@ test('a handler that throws answers 500 and logs { code: "keystatic", step: "api
   assert.equal(response.status, 500);
   assert.deepEqual(logged, [{ code: 'keystatic', step: 'api' }]);
   assert.equal((await response.text()).includes('user@example.com'), false);
+});
+
+test('a dotted branch name still gets the /keystatic/ page', async () => {
+  const { deps, assetUrls } = harness();
+  await handleKeystatic(new Request(`${ORIGIN}/keystatic/branch/release-1.2`), ENV, deps);
+  assert.deepEqual(assetUrls, [`${ORIGIN}/keystatic/`]);
+});
+
+test('a secret shorter than the minimum answers 503 config', async (t) => {
+  const logged = captureErrors(t);
+  const { deps, apiUrls } = harness();
+  const response = await handleKeystatic(
+    new Request(`${ORIGIN}/api/keystatic/github/login`),
+    { ...ENV, KEYSTATIC_SECRET: 'x'.repeat(SECRET_LENGTH - 1) },
+    deps,
+  );
+  assert.equal(response.status, 503);
+  assert.deepEqual(apiUrls, []);
+  assert.deepEqual(logged, [{ code: 'config', step: 'keystatic' }]);
+});
+
+test('an asset fetch that throws answers 500 and logs { code: "keystatic", step: "shell" }', async (t) => {
+  const logged = captureErrors(t);
+  const deps: KeystaticDeps = {
+    assets: {
+      fetch: async () => {
+        throw new Error('down');
+      },
+    } as unknown as Fetcher,
+    api: async () => ({ body: null, status: 200, headers: [] }),
+  };
+  const response = await handleKeystatic(new Request(`${ORIGIN}/keystatic/`), ENV, deps);
+  assert.equal(response.status, 500);
+  assert.deepEqual(logged, [{ code: 'keystatic', step: 'shell' }]);
+});
+
+test('toApiResult keeps two Set-Cookie entries from an array and from a Headers object', () => {
+  const fromArray = toApiResult({ body: 'b', status: 302, headers: COOKIES });
+  assert.equal(fromArray.status, 302);
+  const wrapped = new Response(null, { headers: fromArray.headers });
+  assert.deepEqual(wrapped.headers.getSetCookie(), ['a=1; Path=/', 'b=2; Path=/']);
+
+  const headers = new Headers();
+  for (const [name, value] of COOKIES) headers.append(name, value);
+  const fromObject = toApiResult({ body: null, headers });
+  assert.equal(fromObject.status, 200);
+  const rewrapped = new Response(null, { headers: fromObject.headers });
+  assert.deepEqual(rewrapped.headers.getSetCookie(), ['a=1; Path=/', 'b=2; Path=/']);
 });

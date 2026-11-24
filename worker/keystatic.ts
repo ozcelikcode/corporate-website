@@ -1,3 +1,4 @@
+import { KEYSTATIC_API_PREFIX, KEYSTATIC_SHELL_PATH } from '../src/keystatic/paths.ts';
 import { withAdminHeaders, withWorkerHeaders } from './headers.ts';
 
 export type KeystaticEnv = {
@@ -17,15 +18,22 @@ export type KeystaticDeps = {
   api: (request: Request) => Promise<KeystaticApiResult>;
 };
 
-export const KEYSTATIC_API_PREFIX = '/api/keystatic/';
-export const KEYSTATIC_ADMIN_PREFIX = '/keystatic/';
+/** What the generic handler returns: status and headers are optional, headers may be any init. */
+export type KeystaticHandlerResult = {
+  body: BodyInit | null;
+  status?: number;
+  headers?: HeadersInit;
+};
 
+const STATUS_OK = 200;
 const STATUS_UNAVAILABLE = 503;
 const STATUS_SERVER_ERROR = 500;
+/** Cookie-signing secret floor, as Keystatic documents it. */
+const MIN_SECRET_LENGTH = 32;
 const FAILURE_TEXT = 'Keystatic is unavailable.';
 
 /** The only server-side log: a code and a step, never request data. */
-function fail(code: 'config' | 'keystatic', step: 'keystatic' | 'api'): void {
+function fail(code: 'config' | 'keystatic', step: 'keystatic' | 'api' | 'shell'): void {
   console.error({ code, step });
 }
 
@@ -35,8 +43,20 @@ function failure(status: number): Response {
 
 function isConfigured(env: KeystaticEnv): boolean {
   return Boolean(
-    env.KEYSTATIC_GITHUB_CLIENT_ID && env.KEYSTATIC_GITHUB_CLIENT_SECRET && env.KEYSTATIC_SECRET,
+    env.KEYSTATIC_GITHUB_CLIENT_ID &&
+      env.KEYSTATIC_GITHUB_CLIENT_SECRET &&
+      env.KEYSTATIC_SECRET &&
+      env.KEYSTATIC_SECRET.length >= MIN_SECRET_LENGTH,
   );
+}
+
+/** Pair arrays pass through; a Headers object is expanded (iteration yields each Set-Cookie). */
+export function toApiResult({
+  body,
+  status = STATUS_OK,
+  headers = [],
+}: KeystaticHandlerResult): KeystaticApiResult {
+  return { body, status, headers: Array.isArray(headers) ? headers : [...new Headers(headers)] };
 }
 
 async function handleApi(
@@ -59,13 +79,14 @@ async function handleApi(
 }
 
 async function handleAdmin(request: Request, deps: KeystaticDeps): Promise<Response> {
-  const url = new URL(request.url);
-  const lastSegment = url.pathname.split('/').pop() ?? '';
-  // Files (the admin module, its assets) pass through; every other path is the SPA route.
-  const target = lastSegment.includes('.')
-    ? request
-    : new Request(new URL(KEYSTATIC_ADMIN_PREFIX, url), request);
-  return withAdminHeaders(await deps.assets.fetch(target));
+  // Every admin path is a client-side route (branch names may contain dots): always the shell.
+  const shell = new Request(new URL(KEYSTATIC_SHELL_PATH, request.url), request);
+  try {
+    return withAdminHeaders(await deps.assets.fetch(shell));
+  } catch {
+    fail('keystatic', 'shell');
+    return failure(STATUS_SERVER_ERROR);
+  }
 }
 
 export function handleKeystatic(

@@ -4,10 +4,12 @@
  * request to Vite and Astro. `isLocalDevHost` gates the API, which reads and writes the working
  * tree and runs ahead of Vite's own host check.
  */
+import { KEYSTATIC_API_PREFIX, KEYSTATIC_SHELL_PATH } from '../keystatic/paths.ts';
+
 export type KeystaticDevRoute = 'api' | 'shell' | 'pass';
 
-export const KEYSTATIC_API_PREFIX = '/api/keystatic/';
-export const KEYSTATIC_SHELL_PATH = '/keystatic/';
+export { KEYSTATIC_SHELL_PATH };
+
 const FILE_EXTENSION_MARK = '.';
 
 /** A Host header: a name or IPv4, or a bracketed IPv6, then an optional port. Nothing else. */

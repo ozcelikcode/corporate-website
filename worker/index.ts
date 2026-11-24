@@ -4,18 +4,16 @@ import { KEYSTATIC_REPO } from '../src/keystatic/repo.ts';
 import solutions from './generated/solutions.json' with { type: 'json' };
 import {
   handleKeystatic,
-  KEYSTATIC_ADMIN_PREFIX,
-  KEYSTATIC_API_PREFIX,
   type KeystaticDeps,
   type KeystaticEnv,
+  toApiResult,
 } from './keystatic.ts';
 import { handleQuote, type QuoteDeps, type QuoteEnv } from './quote.ts';
+import { routeFor } from './route.ts';
 
 type Env = QuoteEnv & KeystaticEnv & { ASSETS: Fetcher; QUOTE_MAILER: SendEmail };
 type HandlerConfig = Parameters<typeof makeGenericAPIRouteHandler>[0]['config'];
 
-const QUOTE_PATH = '/api/quote';
-const STATUS_OK = 200;
 const SLUG_ENV_NAME = 'PUBLIC_KEYSTATIC_GITHUB_APP_SLUG';
 /** GitHub storage only (all the handler reads): no schema or field UI enters the Worker bundle. */
 const KEYSTATIC_HANDLER_CONFIG: HandlerConfig = {
@@ -48,21 +46,20 @@ function keystaticDepsFor(env: Env): KeystaticDeps {
         },
         { slugEnvName: SLUG_ENV_NAME },
       );
-      const { body, status = STATUS_OK, headers } = await handler(request);
-      return { body, status, headers: [...new Headers(headers)] };
+      return toApiResult(await handler(request));
     },
   };
 }
 
 export default {
   fetch(request, env) {
-    const { pathname } = new URL(request.url);
-    if (pathname === QUOTE_PATH) {
-      return handleQuote(request, env, depsFor(env));
+    switch (routeFor(new URL(request.url).pathname)) {
+      case 'quote':
+        return handleQuote(request, env, depsFor(env));
+      case 'keystatic':
+        return handleKeystatic(request, env, keystaticDepsFor(env));
+      case 'assets':
+        return env.ASSETS.fetch(request);
     }
-    if (pathname.startsWith(KEYSTATIC_API_PREFIX) || pathname.startsWith(KEYSTATIC_ADMIN_PREFIX)) {
-      return handleKeystatic(request, env, keystaticDepsFor(env));
-    }
-    return env.ASSETS.fetch(request);
   },
 } satisfies ExportedHandler<Env>;

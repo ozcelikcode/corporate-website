@@ -13,6 +13,11 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["./**/*.ts", "../src/lib/quote-schema.ts", "../src/keystatic/repo.ts"],
+  "include": [
+    "./**/*.ts",
+    "../src/lib/quote-schema.ts",
+    "../src/keystatic/repo.ts",
+    "../src/keystatic/paths.ts"
+  ],
   "exclude": ["**/*.test.ts"]
 }

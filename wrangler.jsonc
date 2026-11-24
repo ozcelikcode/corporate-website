@@ -24,6 +24,7 @@
   //   KEYSTATIC_GITHUB_CLIENT_ID     – GitHub App client id (Keystatic admin sign-in)
   //   KEYSTATIC_GITHUB_CLIENT_SECRET – GitHub App client secret
   //   KEYSTATIC_SECRET               – cookie-signing secret, at least 32 random characters
+  // Secure cookies rely on NODE_ENV being unset or `production` in the deploy shell (bundle-time define).
   // The GitHub App callback URL is https://<host>/api/keystatic/github/oauth/callback.
   // Optional, later, when the owner attaches the apex/hostname:
   //   "routes": [{ "pattern": "<domain>", "custom_domain": true }]
