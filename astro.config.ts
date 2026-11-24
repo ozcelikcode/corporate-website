@@ -3,6 +3,7 @@ import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, envField, fontProviders } from 'astro/config';
 import { buildOutputs } from './src/integrations/build-outputs.ts';
+import { keystaticDev } from './src/integrations/keystatic-dev.ts';
 import { resolveBuildMode } from './src/lib/build-mode.ts';
 
 // Pages that never belong in the sitemap; the TR quote page only once it is translated.
@@ -145,9 +146,15 @@ export default defineConfig({
         access: 'public',
         optional: true,
       }),
+      PUBLIC_KEYSTATIC_GITHUB_APP_SLUG: envField.string({
+        context: 'client',
+        access: 'public',
+        optional: true,
+      }),
     },
   },
   integrations: [
+    keystaticDev(),
     buildOutputs({ isProduction: buildMode.isProduction }),
     sitemap({
       filter: inSitemap,

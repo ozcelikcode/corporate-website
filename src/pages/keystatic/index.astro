@@ -1,0 +1,20 @@
+---
+// Standalone Keystatic admin shell: deliberately no BaseLayout (no site chrome, CSS or content).
+// Prerendered like every page; the one module below mounts the client-only admin. Deep links
+// (`/keystatic/*`) get this page from the dev integration locally and from the Worker in production.
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Content Manager</title>
+  </head>
+  <body>
+    <div id="keystatic-root"></div>
+    <script>
+      import '../../keystatic/mount.ts';
+    </script>
+  </body>
+</html>
