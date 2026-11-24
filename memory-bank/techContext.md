@@ -112,3 +112,7 @@ Astro i18n fallback on dynamic static routes; Sveltia: R2 support, `sortable_fie
 ## Routing and i18n fallback (Task 8)
 - Spec section 14 i18n fallback is resolved by manual routing (no Astro i18n config): TR routes exist only for translated entries; EN fallbacks are `noindex` with no canonical.
 - Sitemap uses the `@astrojs/sitemap` i18n option; `robotsTxt` lives in `lib/seo.ts`.
+
+## Mobile menu accordions (B4)
+- Exclusive `<details name>` accordions need Safari 17.2+.
+- `NavChild.lang` marks EN fallback nav entries with `lang="en"` (WCAG 3.1.2). Ui key `navOverview` added.
