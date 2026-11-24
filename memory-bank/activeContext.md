@@ -55,4 +55,5 @@ i18n fallback in static dynamic routes, `astro/zod` bundling in the Worker, Work
 
 ## Keystatic and menu branch (2026-11-24)
 - Branch `feat/keystatic-menu` implements `docs/superpowers/plans/2026-11-24-keystatic-menu-richness.md`. Sveltia to Keystatic decided by the owner 2026-11-24 (Payload rejected: needs a database and a paid Workers plan).
-- Done on the branch: B1 (sans labels), B2 (nav schema), B3 (desktop mega panel), C1 (`Stats`, `Logos`), C2 (`Testimonial`, `MediaSplit`), B4 (mobile accordions, merge `e00a8c0`); 239 tests. Next: the plan task after B4; blocks use temporary preview props until I1 wires the schema and removes `/blocks-preview/`. Touch at lg and up and Firefox/WebKit checks of the mega panel are left to F1.
+- Done on the branch: B1 (sans labels), B2 (nav schema), B3 (desktop mega panel), C1 (`Stats`, `Logos`), C2 (`Testimonial`, `MediaSplit`), B4 (mobile accordions, merge `e00a8c0`), B5 (fuller footer, merge `069086b`); 239 tests. Streams B and C are complete.
+- Next: Stream A (A1 Keystatic core + local mode). S2 (GitHub-mode spike) waits for the owner's GitHub App. Blocks use temporary preview props until I1 wires the schema and removes `/blocks-preview/`. Touch at lg and up and Firefox/WebKit checks of the mega panel are left to F1.
