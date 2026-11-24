@@ -134,8 +134,14 @@ const entries = items.flatMap((item, index) => {
       --menu-delay: var(--menu-intent-open);
     }
 
-    /* Another panel opened as a popover: the one it replaced leaves at once. */
-    .nav-list:has(> .nav-item > [data-mega-panel]:popover-open)
+    /*
+     * Another panel opened as a popover: the one it replaced leaves at once. Not while the pointer
+     * rests on an item whose panel is still arriving (its intent delay), or the hand-over above
+     * would leave a beat with no panel at all.
+     */
+    .nav-list:has(> .nav-item > [data-mega-panel]:popover-open):not(
+        :has(> .nav-item:hover > [data-mega-panel]:not(:popover-open))
+      )
       > .nav-item:not(:hover, :has(> [data-mega-panel]:popover-open)) {
       --menu-delay: 0s;
     }
@@ -143,11 +149,12 @@ const entries = items.flatMap((item, index) => {
 
   /*
    * Focus inside the panel is tested on the panel itself: Chromium does not match `:focus-within`
-   * on the item while focus sits in its open (top-layer) popover.
+   * on the item while focus sits in its open (top-layer) popover. A pointer resting on the item
+   * still shows it.
    */
   :global(:root:has(:focus-visible))
     .nav-list
-    > .nav-item:not(:focus-within, :has(> [data-mega-panel]:focus-within)):has(
+    > .nav-item:not(:hover, :focus-within, :has(> [data-mega-panel]:focus-within)):has(
       > [data-mega-panel]:popover-open
     ) {
     --menu-shown: hidden;
