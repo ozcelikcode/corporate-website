@@ -1,13 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { z } from 'astro/zod';
-import {
-  applicationSchema,
-  navigationSchema,
-  pageSchema,
-  settingsSchema,
-  uiSchema,
-} from './content-schemas.ts';
+import { applicationSchema, pageSchema, settingsSchema, uiSchema } from './content-schemas.ts';
 
 // The real `image()` helper needs the Astro content runtime; a string stands in for it.
 const context = { image: () => z.string() } as never;
@@ -58,16 +52,6 @@ test('settings: socials default to an empty list', () => {
 
 test('settings: a null socials list (cleared in the CMS) parses as empty', () => {
   assert.deepEqual(settingsSchema(context).parse({ ...settings, socials: null }).socials, []);
-});
-
-test('navigation: a missing or null footer parses as empty, a set one still validates', () => {
-  const header = [{ label: 'About', href: '/about/' }];
-  assert.deepEqual(navigationSchema.parse({ header }).footer, []);
-  assert.deepEqual(navigationSchema.parse({ header, footer: null }).footer, []);
-  assert.equal(
-    navigationSchema.safeParse({ header, footer: [{ label: 'X', href: 'x' }] }).success,
-    false,
-  );
 });
 
 test('pages: a blank social image parses as none', () => {

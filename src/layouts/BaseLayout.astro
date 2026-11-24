@@ -85,6 +85,12 @@ const quote = { label: ui('navQuote'), href: localize(pagePath(QUOTE_SLUG)) };
 const localizeLinks = (links: readonly { label: string; href: string }[]) =>
   links.map((link) => ({ ...link, href: localize(link.href) }));
 const currentPath = Astro.url.pathname;
+/** Top-level links only; B3 replaces this with the submenu-aware `resolveNavItems`. */
+const headerLinks = localizeLinks(
+  navigation.data.header.flatMap(({ label, href }) =>
+    href === undefined ? [] : [{ label, href }],
+  ),
+);
 ---
 <!doctype html>
 <html lang={locale} style={{ '--accent-seed': settings.accent }}>
@@ -122,7 +128,7 @@ const currentPath = Astro.url.pathname;
       homeHref={homeHref}
       logo={settings.logo}
       logoAlt={settings.logoAlt}
-      links={localizeLinks(navigation.data.header)}
+      links={headerLinks}
       quote={quote}
       labels={{
         nav: ui('navPrimaryLabel'),
