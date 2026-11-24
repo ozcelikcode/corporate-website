@@ -2,13 +2,17 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { z } from 'astro/zod';
 import {
+  APP_GRID_COLUMNS,
   applicationSectionsSchema,
   DURATION_PATTERN,
   LABEL_MAX,
   LOGOS_MAX,
   LOGOS_MIN,
+  SECTION_BACKGROUNDS,
+  SECTION_SPACINGS,
   SECTION_TYPES,
   type SectionType,
+  STATS_ALIGNS,
   STATS_MAX,
   STATS_MIN,
   sectionSchemas,
@@ -68,6 +72,9 @@ const blockWithout = (type: SectionType, omitted: string) => ({
   value: Object.fromEntries(Object.entries(values[type]).filter(([key]) => key !== omitted)),
 });
 const parse = (section: unknown) => schema.safeParse([section]);
+/** Today's band: what a block without `layout` renders with. */
+const DEFAULT_LAYOUT = { background: 'default', spacing: 'regular' };
+const LAYOUT_TYPES = SECTION_TYPES.filter((type) => type !== 'hero');
 
 test('accepts every section type and returns them flat', () => {
   const parsed = schema.parse(SECTION_TYPES.map((type) => block(type)));
@@ -75,7 +82,12 @@ test('accepts every section type and returns them flat', () => {
     parsed.map((s) => s.type),
     [...SECTION_TYPES],
   );
-  assert.deepEqual(parsed[SECTION_TYPES.indexOf('cta')], { type: 'cta', heading: 'Talk', action });
+  assert.deepEqual(parsed[SECTION_TYPES.indexOf('cta')], {
+    type: 'cta',
+    heading: 'Talk',
+    action,
+    layout: DEFAULT_LAYOUT,
+  });
 });
 
 test('the old flat shape is rejected', () => {
@@ -381,4 +393,80 @@ test('the hero keeps its stored image path for the ASCII renderer', () => {
   // Derived from `image`, never stored: the YAML may not set it.
   assert.equal(parse(block('hero', { imagePath: stored })).success, false);
   assert.deepEqual(issuePaths([blockWithout('hero', 'image')]), [[0, 'value', 'image']]);
+});
+
+test('a block without layout gets the default band, a partial layout the rest of it', () => {
+  for (const type of LAYOUT_TYPES) {
+    const [section] = schema.parse([block(type)]);
+    const layout = section !== undefined && 'layout' in section ? section.layout : undefined;
+    assert.deepEqual(layout, DEFAULT_LAYOUT, type);
+  }
+  assert.deepEqual(only('statement', { layout: {} }).layout, DEFAULT_LAYOUT);
+  assert.deepEqual(only('statement', { layout: { background: 'contrast' } }).layout, {
+    background: 'contrast',
+    spacing: 'regular',
+  });
+  for (const background of SECTION_BACKGROUNDS) {
+    for (const spacing of SECTION_SPACINGS) {
+      const layout = { background, spacing };
+      assert.deepEqual(only('cta', { layout }).layout, layout);
+    }
+  }
+});
+
+test('the hero has no layout: its band is the first screen', () => {
+  assert.equal('layout' in only('hero'), false);
+  const layout = { background: 'subtle', spacing: 'regular' };
+  assert.deepEqual(issuePaths([block('hero', { layout })]), [[0, 'value']]);
+});
+
+test('layout refuses unknown values and keys, naming the stored path', () => {
+  const bad: [Record<string, unknown>, string][] = [
+    [{ background: 'dark' }, 'background'],
+    [{ background: 'Contrast' }, 'background'],
+    [{ background: '' }, 'background'],
+    [{ spacing: 'huge' }, 'spacing'],
+    [{ spacing: 2 }, 'spacing'],
+  ];
+  for (const [layout, key] of bad) {
+    assert.deepEqual(
+      issuePaths([block('statement'), block('faq', { layout })]),
+      [[1, 'value', 'layout', key]],
+      JSON.stringify(layout),
+    );
+  }
+  assert.deepEqual(issuePaths([block('faq', { layout: { width: 'wide' } })]), [
+    [0, 'value', 'layout'],
+  ]);
+  for (const layout of [null, 'subtle', []]) {
+    assert.deepEqual(issuePaths([block('faq', { layout })]), [[0, 'value', 'layout']]);
+  }
+});
+
+test('app-grid columns default to three and take only two or three', () => {
+  assert.equal(only('app-grid').columns, '3');
+  for (const columns of APP_GRID_COLUMNS) {
+    assert.equal(only('app-grid', { columns }).columns, columns);
+  }
+  for (const columns of ['1', '4', 3, '']) {
+    assert.deepEqual(
+      issuePaths([block('app-grid', { columns })]),
+      [[0, 'value', 'columns']],
+      JSON.stringify(columns),
+    );
+  }
+});
+
+test('stats align defaults to start and takes only start or center', () => {
+  assert.equal(only('stats').align, 'start');
+  for (const align of STATS_ALIGNS) assert.equal(only('stats', { align }).align, align);
+  for (const align of ['end', 'centre', '']) {
+    assert.deepEqual(issuePaths([block('stats', { align })]), [[0, 'value', 'align']], align);
+  }
+});
+
+test('columns and align exist only on their own blocks', () => {
+  assert.equal(parse(block('feature-list', { columns: '2' })).success, false);
+  assert.equal(parse(block('logos', { align: 'center' })).success, false);
+  assert.equal(parse(block('media-split', { imagePosition: 'start' })).success, false);
 });

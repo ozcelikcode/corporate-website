@@ -47,6 +47,25 @@ export const DURATION_PATTERN = /^\d{2}:[0-5]\d:[0-5]\d$/;
 
 export type Action = z.infer<typeof actionSchema>;
 
+/**
+ * Section layout (every block but the hero): the band's background and vertical spacing. Both
+ * default to the page's usual band, so a block without `layout` renders as before. The hero has
+ * none: its band is the first-screen composition, and its ASCII duotone is mixed on the canvas.
+ */
+export const SECTION_BACKGROUNDS = ['default', 'subtle', 'contrast'] as const;
+export const SECTION_SPACINGS = ['compact', 'regular', 'spacious'] as const;
+export const layoutSchema = z
+  .strictObject({
+    background: z.enum(SECTION_BACKGROUNDS).default('default'),
+    spacing: z.enum(SECTION_SPACINGS).default('regular'),
+  })
+  .prefault({});
+export type SectionLayout = z.output<typeof layoutSchema>;
+/** Application grid tiles per row from `lg` (one on phones, two from `md`). */
+export const APP_GRID_COLUMNS = ['2', '3'] as const;
+/** Stat figure alignment inside the strip. */
+export const STATS_ALIGNS = ['start', 'center'] as const;
+
 /** Rasters only (the CMS field hints it; the build refuses an SVG), named in the message. */
 export const rasterImage = (image: SchemaContext['image'], field: string) =>
   image().refine((metadata) => metadata.format !== 'svg', {
@@ -68,11 +87,13 @@ export const sectionSchemas = ({ image }: SchemaContext) =>
       image: image(),
       imageAlt: z.string(),
     }),
-    statement: z.strictObject({ label, text: z.string() }),
+    statement: z.strictObject({ label, text: z.string(), layout: layoutSchema }),
     'app-grid': z.strictObject({
       label,
       heading: z.string(),
       apps: listField(z.array(z.string())), // slugs; empty = all, by `order`
+      columns: z.enum(APP_GRID_COLUMNS).default('3'),
+      layout: layoutSchema,
     }),
     'feature-list': z.strictObject({
       label,
@@ -87,16 +108,19 @@ export const sectionSchemas = ({ image }: SchemaContext) =>
         )
         .min(1)
         .max(MAX_ITEMS),
+      layout: layoutSchema,
     }),
-    'rich-text': z.strictObject({ body: md }),
+    'rich-text': z.strictObject({ body: md, layout: layoutSchema }),
     cta: z.strictObject({
       heading: z.string(),
       text: optionalField(z.string()),
       action: actionSchema,
+      layout: layoutSchema,
     }),
     faq: z.strictObject({
       label,
       items: z.array(z.strictObject({ q: z.string(), a: md })).min(1),
+      layout: layoutSchema,
     }),
     stats: z.strictObject({
       label,
@@ -110,6 +134,8 @@ export const sectionSchemas = ({ image }: SchemaContext) =>
         )
         .min(STATS_MIN)
         .max(STATS_MAX),
+      align: z.enum(STATS_ALIGNS).default('start'),
+      layout: layoutSchema,
     }),
     logos: z.strictObject({
       label,
@@ -124,6 +150,7 @@ export const sectionSchemas = ({ image }: SchemaContext) =>
         )
         .min(LOGOS_MIN)
         .max(LOGOS_MAX),
+      layout: layoutSchema,
     }),
     testimonial: z.strictObject({
       quote: z.string(),
@@ -131,6 +158,7 @@ export const sectionSchemas = ({ image }: SchemaContext) =>
       role: z.string(),
       organization: z.string(),
       portrait: optionalField(rasterImage(image, 'testimonial portrait')),
+      layout: layoutSchema,
     }),
     'media-split': z.strictObject({
       label,
@@ -140,6 +168,7 @@ export const sectionSchemas = ({ image }: SchemaContext) =>
       imageAlt: filled,
       action: optionalObjectField(actionSchema),
       reverse: z.boolean().default(false),
+      layout: layoutSchema,
     }),
   }) satisfies Record<SectionType, z.ZodObject>;
 

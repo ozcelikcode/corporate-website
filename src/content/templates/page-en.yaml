@@ -1,0 +1,30 @@
+title: New page
+description: One sentence that sums up the page, for search results and link previews.
+sections:
+  - discriminant: hero
+    value:
+      label: Page label
+      headline: Say what this page is about,
+      headlineAccent: in one clear line.
+      lede: >-
+        A short paragraph that tells visitors what they will find here and why
+        it matters to them.
+      actions:
+        - label: Get in touch
+          href: /quote/
+      image: ../../assets/uploads/ogImage.png
+      imageAlt: Describe the picture in a few words.
+  - discriminant: statement
+    value:
+      label: Our approach
+      text: >-
+        One or two sentences that state what you stand for. Replace this text
+        with your own.
+  - discriminant: cta
+    value:
+      heading: Ready to talk?
+      text: >-
+        Tell us what you need and we will reply within two working days.
+      action:
+        label: Request a quote
+        href: /quote/

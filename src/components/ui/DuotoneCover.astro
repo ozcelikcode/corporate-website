@@ -3,6 +3,8 @@
  * An application cover as a duotone: greyscale with extra contrast (its dark ground drops to
  * black), multiplied by an accent layer, so black stays black and light lines turn accent, like
  * a dark monitor in a wall. Shared by the app-grid tiles and the application page header.
+ * The layer takes the brand seed itself, not `accent`: a contrast band darkens its `accent` for
+ * text on a light ground, and a picture is no text, so it keeps one look on every band.
  */
 import { Picture } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
@@ -20,7 +22,7 @@ const FORMATS = ['avif', 'webp'];
 
 const { src, alt, widths, sizes, loading = 'lazy' } = Astro.props;
 ---
-<div class="relative isolate bg-canvas">
+<div class="relative isolate bg-(--cover-ground)">
   <Picture
     src={src}
     alt={alt}
@@ -30,5 +32,5 @@ const { src, alt, widths, sizes, loading = 'lazy' } = Astro.props;
     loading={loading}
     class="block h-auto w-full grayscale contrast-150"
   />
-  <span class="absolute inset-0 bg-accent mix-blend-multiply" aria-hidden="true" />
+  <span class="absolute inset-0 bg-(--accent-seed) mix-blend-multiply" aria-hidden="true" />
 </div>

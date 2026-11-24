@@ -7,6 +7,7 @@
  * would give a decimal point or comma a full digit's width), its label beneath
  * and an optional muted note. Figures are set apart by spacing, never by rules. Four figures sit
  * two by two below `lg`; three stay in one column on phones and share a row from `md`.
+ * `align` sets each figure at the start of its column (default) or centres it.
  */
 import GridFrame from '../ui/GridFrame.astro';
 import Label from '../ui/Label.astro';
@@ -20,6 +21,12 @@ const COLUMNS = {
   three: 'grid-cols-1 md:grid-cols-3',
   four: 'grid-cols-2 lg:grid-cols-4',
 } as const;
+
+/** A figure's alignment in its column (`align`). */
+const ALIGN = {
+  start: 'items-start',
+  center: 'items-center text-center',
+} as const satisfies Record<Props['section']['align'], string>;
 
 const { section, index, headingLevel } = Astro.props;
 const HeadingTag = `h${headingLevel}` as const;
@@ -37,7 +44,7 @@ const columns = section.items.length === FOUR_UP ? COLUMNS.four : COLUMNS.three;
   >
     {
       section.items.map((item) => (
-        <li class="flex min-w-0 flex-col items-start gap-3">
+        <li class:list={['flex min-w-0 flex-col gap-3', ALIGN[section.align]]}>
           <span class="h-1 w-6 bg-accent" aria-hidden="true" />
           <p class="text-figure font-semibold tracking-display wrap-break-word">
             {item.value}

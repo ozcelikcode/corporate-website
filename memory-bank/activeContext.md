@@ -7,9 +7,13 @@
 - Menu owner fixes (2026-11-24) on `fix/menu-hover-size`, cut from `feat/keystatic-menu` for PR #3: pointer cursor on buttons, no phantom hover zone (only visible controls are hit-tested), larger and stronger desktop menu. Details in `systemPatterns.md` (mega menu hit areas, menu type).
 - Gate on the branch: build 14 pages, check 0/0/0, lint clean, 276 tests; guards clean.
 - Content motion (2026-11-24) on `feat/motion-reveals`, cut from `feat/keystatic-menu` (132177f): CSS-only hero entrance and scroll-driven reveals (`systemPatterns.md`, "Content motion"). Not pushed; owner to review the feel in a browser.
+- Layout controls (2026-11-24) on `feat/cms-editing`, cut from `main` (b90b6ac), pushed, no PR yet: shared optional `layout` (background default/subtle/contrast, spacing compact/regular/spacious) on every block but the hero, app-grid `columns` 2/3, stats `align` start/center; admin selects with descriptions, parity-tested; seeds use them on home (EN/TR) and about. Rulings (hero no layout, no feature-list columns, media-split keeps `reverse`) in spec §10 of `2026-11-24-keystatic-menu-richness-design.md`. Gate: 298 tests, lint, build 14 pages, check 0/0/0.
 - Dev `/admin` (2026-11-24): `astro dev` ignores `public/_redirects`, so the dev-only middleware (`keystatic-dev.ts`, route `redirect` in `keystatic-dev-route.ts`) answers `/admin` and `/admin/*` with a 301 to `/keystatic/`. Production keeps `_redirects`.
 
+- Editing polish (2026-11-24) on `feat/cms-editing`: admin rows read "Type · first text" (`item-label.ts`, `ITEM_LABEL_MAX` 60), Pages and Applications lists show title/description and name/category/status (`columns`), related fields sit side by side (`field-layout.ts` `SPAN`; `parity.test.ts` checks every layout adds up to whole 12-column rows), most fields carry a short description, sidebar brand is the generic "Content" with a small SVG mark (`brand-mark.ts`). New pages (EN and TR) start from `src/content/templates/page-{en,tr}.yaml` (Hero, Statement, CTA) through the collection `template` option; outside the page globs, so the build and every list ignore them, and `parity.test.ts` parses them with the page schema. Runbook gains "Editing pages" and no longer says `/admin/` is a 404 in dev.
+
 ## Next step
+- Owner: review the band rhythm on `feat/cms-editing` (home, about) and decide on a PR.
 - Open the PR from `feat/keystatic-menu` to `main`. The PR must state the hard precondition: no editor gets access before the owner's first real GitHub login (S2), the `main` ruleset (runbook 3.4) and runbook check 5(a).
 - Owner checks still open: see `progress.md` ("Owner checks open").
 

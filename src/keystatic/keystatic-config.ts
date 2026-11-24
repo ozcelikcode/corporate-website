@@ -4,6 +4,7 @@
  * reaches all three.
  */
 import { type Config, config } from '@keystatic/core';
+import { brandMark } from './brand-mark.ts';
 import { collections } from './collections.ts';
 import { LOCALE_NAMES } from './locale-names.ts';
 import { singletons } from './singletons.ts';
@@ -14,6 +15,9 @@ import { LOCAL_STORAGE } from './storage.ts';
 type AnyCollections = NonNullable<Config['collections']>;
 type AnySingletons = NonNullable<Config['singletons']>;
 type EntryName = keyof typeof collections | keyof typeof singletons;
+
+/** The sidebar name; generic, since the admin serves any tenant. */
+const ADMIN_BRAND_NAME = 'Content';
 
 /** Sidebar groups (Keystatic `ui.navigation`). */
 const ADMIN_NAVIGATION: Record<string, EntryName[]> = {
@@ -27,7 +31,7 @@ export function keystaticConfig(storage: Config['storage']): Config {
     storage,
     collections,
     singletons,
-    ui: { navigation: ADMIN_NAVIGATION },
+    ui: { brand: { name: ADMIN_BRAND_NAME, mark: brandMark }, navigation: ADMIN_NAVIGATION },
   });
 }
 

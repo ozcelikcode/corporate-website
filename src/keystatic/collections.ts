@@ -25,6 +25,16 @@ import {
 export const DESCRIPTION_LIMIT = 160;
 export const TAGLINE_LIMIT = 120;
 
+/**
+ * Where "Add" on Pages starts from (Keystatic reads `<path>.yaml`). Outside `src/content/pages`, so
+ * the build never loads it as a page and no list shows it; `parity.test.ts` parses it with the
+ * page schema.
+ */
+export const PAGE_TEMPLATES = {
+  en: 'src/content/templates/page-en',
+  tr: 'src/content/templates/page-tr',
+} as const satisfies Record<Locale, string>;
+
 type CollectionName = 'pages' | 'applications';
 
 const required = { isRequired: true } as const;
@@ -49,6 +59,8 @@ const pages = (locale: Locale) => {
     label: `Pages (${LOCALE_NAMES[locale]})`,
     path: `src/content/pages/${locale}/*`,
     slugField: 'title',
+    columns: ['title', 'description'],
+    template: PAGE_TEMPLATES[locale],
     format: { data: 'yaml' },
     schema: {
       title: fields.slug({
@@ -75,6 +87,7 @@ const applications = (locale: Locale) =>
     label: `Applications (${LOCALE_NAMES[locale]})`,
     path: `src/content/applications/${locale}/*`,
     slugField: 'name',
+    columns: ['name', 'category', 'status'],
     format: { data: 'yaml' },
     schema: {
       name: fields.slug({

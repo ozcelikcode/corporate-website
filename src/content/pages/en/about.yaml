@@ -33,7 +33,7 @@ sections:
       image: ../../../assets/uploads/pages/en/about/sections/2/value/image.webp
       imageAlt: A row of preview monitors above a bank of faders, one fader raised
       action: {}
-      reverse: false
+      reverse: true
   - discriminant: feature-list
     value:
       label: How we work
@@ -70,6 +70,9 @@ sections:
           a: >
             Most integrations use open standards such as MOS, GPI and REST. Our
             engineers will review your setup before quoting.
+      layout:
+        background: subtle
+        spacing: regular
   - discriminant: cta
     value:
       heading: Want to know more?
@@ -79,3 +82,6 @@ sections:
       action:
         label: Contact us
         href: /contact/
+      layout:
+        background: contrast
+        spacing: regular

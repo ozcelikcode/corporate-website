@@ -183,3 +183,32 @@ Owner tasks: create the GitHub App, set the three secrets and the slug build var
 - Exact intent-delay values, panel max width, the chevron glyph (via `Glyph`), sans tracking value, and stat figure size, all within existing tokens.
 - Whether `@astrojs/react` is needed or a plain Vite-bundled script can mount the React admin.
 - Placeholder logo and portrait generation method (build-time `sharp` or committed small WebP files under 30 KB each).
+
+## 10. Layout controls (2026-11-24)
+
+Owner request: editors fix pages comprehensively (blocks, their layout, their order), neither too much nor too little. Add, remove and reorder already existed; this adds proportionate layout control. Branch `feat/cms-editing`.
+
+### Options per block
+
+- **Shared `layout`** on every block except the hero: `background` (`default | subtle | contrast`) and `spacing` (`compact | regular | spacious`). Zod `layoutSchema` (strict, each key defaulted, the object prefaulted to `{}`); Keystatic `fields.object` with two `fields.select`. Defaults (`default`, `regular`) render exactly today's band, so existing YAML needs no migration.
+- **`app-grid`**: `columns` `'2' | '3'` (default `'3'`). Phones one tile per row, tablets two, from `lg` the chosen count; cover `widths`/`sizes` follow it.
+- **`stats`**: `align` `start | center` (default `start`). Cheap: one class map on the figure.
+- Nothing else.
+
+### Rulings
+
+- **Hero gets no `layout`.** Its band is the first-screen composition (`HERO_BAND`: from `lg` the height and padding are fixed for optical centring), so `spacing` would only touch phones. Its ASCII duotone ramp and scanlines are mixed against the canvas, and a tinted or inverted ground would break the picture. A `layout` key on a hero fails the build.
+- **`media-split` `imagePosition` skipped:** the existing `reverse` checkbox ("Image first") already does it, in DOM order.
+- **`feature-list` `columns` skipped:** the block is a rundown (one row per item, columns shared through `subgrid`), not a card grid. Today's look is one rundown column, which `2 | 3` cannot express, and a multi-column rundown would break the shared number/title/body/duration columns.
+- **Columns stored as strings** (`'2'`, `'3'`): Keystatic select values are strings. A hand-written number fails the build with the stored path.
+- **Background palette.** `band-subtle` and `band-contrast` (`global.css`) remap the colour tokens inside the band (`tokens.css`, "Section band backgrounds"), so blocks need no variants.
+  - Subtle: the band takes the surface tint; tiles inside drop to the canvas, so every pair is one the page already uses.
+  - Contrast: the page inverted (ground = ink, ink = canvas, tiles `oklch(0.9 …)`, muted `oklch(0.42 …)`). The accent becomes `color-mix(in oklab, seed 45%, band ink)`, measured >= 3:1 on ground and tiles for any seed (white, the worst case: 4.3 and 3.7; default amber 6.3). Focus rings, keys, button borders and the button glyph use it. Muted ink 7.4:1 (6.3 on tiles), line-strong 4.8 and 4.1. `color-scheme: light` inside the band.
+  - Duotone covers use the brand seed (`bg-(--accent-seed)`), not the remapped accent, so a picture looks the same on every band.
+- **Dividers.** A tinted band is its own edge: it draws no top rule, and the band right after it skips its rule too. A tinted last band keeps its bottom padding (the plain last band stays flush, as before).
+- **One theme.** The site has one dark theme; "light and dark" here means the dark page and the light contrast band. Emulated `prefers-color-scheme: light` renders the same page.
+- **Motion untouched.** Band classes are static padding and colour; reveals still run on the content inside. No layout shift.
+
+### Not covered
+
+- A logo wall in a contrast band: logos are shown greyscale at 60 % opacity and seed logos are drawn for the dark page, so light-band legibility depends on the uploaded art. No seed uses it.

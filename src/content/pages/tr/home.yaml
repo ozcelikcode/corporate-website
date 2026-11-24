@@ -37,6 +37,9 @@ sections:
         - value: 140+
           label: Yayındaki kanal
           note: Bölgesel haberden ulusal ağlara.
+      layout:
+        background: subtle
+        spacing: regular
   - discriminant: app-grid
     value:
       label: Uygulamalar
@@ -136,6 +139,9 @@ sections:
       role: Sunum yöneticisi
       organization: Bölgesel haber ağı
       portrait: ../../../assets/uploads/pages/tr/home/sections/8/value/portrait.webp
+      layout:
+        background: default
+        spacing: spacious
   - discriminant: cta
     value:
       heading: Yeni bir kontrol odası mı kuruyorsunuz, yenilemeyi mi düşünüyorsunuz?
@@ -143,3 +149,6 @@ sections:
       action:
         label: Teklif iste
         href: /quote/
+      layout:
+        background: contrast
+        spacing: regular

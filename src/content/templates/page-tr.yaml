@@ -1,0 +1,30 @@
+title: Yeni sayfa
+description: Sayfayı tek cümleyle özetleyin; arama sonuçlarında ve bağlantı önizlemelerinde görünür.
+sections:
+  - discriminant: hero
+    value:
+      label: Sayfa etiketi
+      headline: Bu sayfanın ne hakkında olduğunu söyleyin,
+      headlineAccent: tek ve net bir satırda.
+      lede: >-
+        Ziyaretçilere burada ne bulacaklarını ve bunun neden önemli olduğunu
+        anlatan kısa bir paragraf.
+      actions:
+        - label: İletişime geçin
+          href: /quote/
+      image: ../../assets/uploads/ogImage.png
+      imageAlt: Görseli birkaç kelimeyle tarif edin.
+  - discriminant: statement
+    value:
+      label: Yaklaşımımız
+      text: >-
+        Neyi savunduğunuzu anlatan bir veya iki cümle. Bu metni kendi
+        sözlerinizle değiştirin.
+  - discriminant: cta
+    value:
+      heading: Konuşmaya hazır mısınız?
+      text: >-
+        İhtiyacınızı bize anlatın, iki iş günü içinde yanıt verelim.
+      action:
+        label: Teklif isteyin
+        href: /quote/

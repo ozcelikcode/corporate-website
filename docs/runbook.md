@@ -53,7 +53,7 @@ The secret above is Turnstile's published always-pass test secret. To test the K
 
 | Command | What it does |
 |---|---|
-| `pnpm dev` | Astro dev server (pages only; no Worker). Also serves Keystatic in **local mode** at `/keystatic/` (below). Does not read `public/_redirects`, so `/admin/` is a 404 here. |
+| `pnpm dev` | Astro dev server (pages only; no Worker). Also serves Keystatic in **local mode** at `/keystatic/` (below). Does not read `public/_redirects`; a dev-only middleware redirects `/admin` to `/keystatic/` instead. |
 | `pnpm build` | Static build into `dist/` and the Worker allow-list `worker/generated/solutions.json`. |
 | `pnpm check` | `astro check` plus `tsc -p worker`. **Run after a build**: the Worker needs the generated JSON. |
 | `pnpm lint` | Biome. |
@@ -195,7 +195,7 @@ Cloudflare requires a payment method on file to create any R2 bucket, even insid
 
 ## 4. Editing flow
 
-**Where the admin lives.** `https://<host>/keystatic/`. The old `/admin/` and anything under it answer a 301 to `/keystatic/` (`public/_redirects`, served by Workers Static Assets; `pnpm dev` does not read it).
+**Where the admin lives.** `https://<host>/keystatic/`. The old `/admin/` and anything under it answer a 301 to `/keystatic/` (`public/_redirects`, served by Workers Static Assets). `pnpm dev` does not read that file; its dev middleware redirects `/admin` to `/keystatic/` instead.
 
 **Editor flow (GitHub mode).** An editor needs the Write role on the repository (3.4). The behaviour below is what Keystatic is expected to do; the exact UI wording is **to confirm on first real login** (the OAuth login has not been exercised yet).
 
@@ -206,6 +206,12 @@ Cloudflare requires a payment method on file to create any R2 bucket, even insid
 5. A code owner approves and merges the PR on GitHub. The merge to `main` triggers the production build and deploy.
 
 Editors write Markdown only: raw HTML in rich text is dropped, and links must be site paths, `https:`, `mailto:`, `tel:` or `#fragments`.
+
+**Editing pages.** Open Pages, then a page; the **Sections** list is the page from top to bottom, each row named "Type · first words" so two blocks of one type can be told apart.
+
+- **Add** a block with the Add button above the list and pick its type. A page has at most one Hero, and only first. **Reorder** by dragging a row's handle. **Remove** with the row's delete button. Click a row to edit it in a panel.
+- **Layout options** sit at the bottom of every block except the Hero. **Background**: Default, Subtle (tinted) or Contrast (inverted). **Spacing**: Compact, Regular or Spacious, the space above and below. The Application grid also has **Columns** (Two or Three on wide screens) and Stats has **Alignment** (Start or Centre). Leave them alone and the section looks like every other band.
+- **New pages start from a template** (Hero, Statement, Call to action) in `src/content/templates/page-en.yaml` and `page-tr.yaml`. Press Add on Pages, change the text, upload your own Hero image, set the title and address, then save. The templates are not pages: the build never reads them and they appear in no list.
 
 **Content rules every editor must know:**
 
@@ -301,6 +307,5 @@ Final local acceptance numbers (build, tests, bundle and page weight) are record
 - **GitHub says the client is unknown:** `KEYSTATIC_GITHUB_CLIENT_ID` holds the numeric App ID instead of the Client ID (starts with `Iv`), or the client secret was not generated or was copied wrong.
 - **Production build fails naming `PUBLIC_KEYSTATIC_GITHUB_APP_SLUG`:** set the build variable (3.2), the slug only, not the full URL.
 - **An entry will not open in the admin, or the build fails on a Markdoc tag:** the rich text contains `{% ... %}`; remove it from the YAML file.
-- **`/admin/` is a 404 in `pnpm dev`:** by design; the redirect is `public/_redirects`, which only the deployed Worker (or `pnpm preview`) reads. Use `/keystatic/`.
 - **No hosted preview for a PR:** by design (3.5). Run `pnpm build` and `pnpm preview` on the PR branch locally.
 - **Build fails with "Unsafe URL in Markdown":** a rich-text or FAQ link or image uses a scheme or form that is not allowed (`javascript:`, `data:`, `http:`, a relative path, `//host`). Use a site path starting with `/`, `https:`, `mailto:`, `tel:` or `#fragment`. The message names the section and the URL.

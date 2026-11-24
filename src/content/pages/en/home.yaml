@@ -37,6 +37,9 @@ sections:
         - value: 140+
           label: Channels on air
           note: From regional news to national networks.
+      layout:
+        background: subtle
+        spacing: regular
   - discriminant: app-grid
     value:
       label: Applications
@@ -136,6 +139,9 @@ sections:
       role: Head of presentation
       organization: Regional news network
       portrait: ../../../assets/uploads/pages/en/home/sections/8/value/portrait.webp
+      layout:
+        background: default
+        spacing: spacious
   - discriminant: cta
     value:
       heading: Planning a new control room or a refresh?
@@ -145,3 +151,6 @@ sections:
       action:
         label: Request a quote
         href: /quote/
+      layout:
+        background: contrast
+        spacing: regular
