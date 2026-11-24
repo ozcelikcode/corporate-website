@@ -26,9 +26,9 @@ const ROW_COLUMNS =
 
 const { section, index, headingLevel } = Astro.props;
 ---
-<div class="flex flex-col gap-12 md:gap-16">
+<div class="reveal-group flex flex-col gap-12 md:gap-16">
   <LowerThird level={headingLevel} text={section.heading} label={section.label} index={index} />
-  <ol class:list={['grid grid-cols-1 gap-x-8 gap-y-10 md:gap-y-12 lg:gap-x-12', ROW_COLUMNS]}>
+  <ol class:list={['reveal-stagger grid grid-cols-1 gap-x-8 gap-y-10 md:gap-y-12 lg:gap-x-12', ROW_COLUMNS]}>
     {
       section.items.map((item, i) => (
         <li class="grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-y-3 max-md:gap-x-6 md:col-span-3 md:grid-cols-subgrid lg:col-span-4">

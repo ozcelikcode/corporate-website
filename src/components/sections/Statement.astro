@@ -14,7 +14,7 @@ type Props = BlockProps<'statement'>;
 
 const { section, index } = Astro.props;
 ---
-<GridFrame columns={12}>
+<GridFrame columns={12} motion="reveal-group">
   <div class="lg:col-span-3">
     <Label text={section.label} index={index} />
   </div>

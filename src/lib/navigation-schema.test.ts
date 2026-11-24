@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { NAV_CHILDREN_MAX, navigationSchema } from './navigation-schema.ts';
+import { labelWidthPerMille } from './nav-label-width.ts';
+import {
+  NAV_CHILDREN_MAX,
+  NAV_HEADER_LABEL_MAX,
+  NAV_HEADER_LABELS_BUDGET,
+  NAV_HEADER_MAX,
+  navigationSchema,
+} from './navigation-schema.ts';
 
 const child = { label: 'About', href: '/about/', description: 'Who we are' };
 const action = { label: 'Quote', href: '/quote/' };
@@ -32,6 +39,31 @@ test(`more than ${NAV_CHILDREN_MAX} children fail`, () => {
   const children = Array.from({ length: NAV_CHILDREN_MAX + 1 }, () => child);
   assert.match(issues(item({ children })), /^Navigation item "Company"/);
   assert.equal(safe(item({ children: children.slice(1) })).success, true);
+});
+
+test(`more than ${NAV_HEADER_MAX} header items fail, naming the extra item`, () => {
+  const header = Array.from({ length: NAV_HEADER_MAX + 1 }, (_, index) => ({
+    label: `Item ${index + 1}`,
+    href: `/item-${index + 1}/`,
+  }));
+  assert.match(issues({ header }), new RegExp(`^Navigation item "Item ${NAV_HEADER_MAX + 1}"`));
+  assert.equal(safe({ header: header.slice(1) }).success, true);
+});
+
+test(`a label over ${NAV_HEADER_LABEL_MAX} characters fails, naming the item`, () => {
+  const label = 'x'.repeat(NAV_HEADER_LABEL_MAX + 1);
+  assert.match(issues({ header: [{ label, href: '/a/' }] }), /^Navigation item "x+" has a label/);
+  assert.equal(safe({ header: [{ label: label.slice(1), href: '/a/' }] }).success, true);
+});
+
+test('a label of the widest glyph at the character limit fits the budget on its own', () =>
+  assert.ok(labelWidthPerMille('W'.repeat(NAV_HEADER_LABEL_MAX)) <= NAV_HEADER_LABELS_BUDGET));
+
+test('labels past the width budget fail with a header-full message', () => {
+  const wide = (label: string) => ({ label, href: '/w/' });
+  const header = ['WWWWW', 'WWWWW', 'WWWWW', 'WWWW'].map(wide);
+  assert.match(issues({ header }), /^The header bar is full: .*shorten the labels$/);
+  assert.equal(safe({ header: header.slice(1) }).success, true);
 });
 
 test('an item without href needs a submenu', () => {

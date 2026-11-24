@@ -1,6 +1,6 @@
 # Corporate Site
 
-A static, brand-agnostic corporate showcase built with Astro 7 (static output), Tailwind 4 and a single Cloudflare Worker for the quote form (`/api/quote`). Content is typed YAML edited through Sveltia CMS; EN at `/`, optional TR at `/tr/`. Brand, logo, accent and contacts come from CMS settings. Never name any company or tenant in code, docs or plans: say "the tenant" or "the brand".
+A static, brand-agnostic corporate showcase built with Astro 7 (static output), Tailwind 4 and a single Cloudflare Worker for the quote form (`/api/quote`). Content is typed YAML edited through Keystatic (admin at `/keystatic/`, `/admin` redirects there); EN at `/`, optional TR at `/tr/`. Brand, logo, accent and contacts come from CMS settings. Never name any company or tenant in code, docs or plans: say "the tenant" or "the brand".
 
 ## Memory bank (mandatory)
 Before any task, read all 5 files in `memory-bank/` (projectbrief, techContext, systemPatterns, activeContext, progress). After each meaningful change, update the relevant ones.

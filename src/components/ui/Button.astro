@@ -1,10 +1,12 @@
 ---
 /**
  * Action as a hardware key. `md` carries the arrow in its own square indicator segment
- * (accent-filled on primary); `sm` sets the arrow inline. Label text stays ink in every state,
- * so it keeps 4.5:1 for any valid accent; only borders, the fill wash and the segment use accent.
- * Renders `<a>` when `href` is set; `type` then is ignored (it applies to `<button>` only).
- * The hover group is named (`group/button`) so an ancestor `.group` card never nudges the arrow.
+ * (accent-filled on primary); `sm` sets the arrow inline. The caption is label-size by default;
+ * `caption="body"` sets it at body size (the header key, `sm`, beside the body-size nav). Label
+ * text stays ink in every state, so it keeps 4.5:1 for any valid accent; only borders, the fill
+ * wash and the segment use accent. Renders `<a>` when `href` is set; `type` then is ignored (it
+ * applies to `<button>` only). The hover group is named (`group/button`) so an ancestor `.group`
+ * card never nudges the arrow.
  */
 import { cva } from 'class-variance-authority';
 import { EXTERNAL_PREFIX } from '../../lib/link-schemes.ts';
@@ -18,6 +20,7 @@ interface Props {
   type?: 'button' | 'submit';
   intent?: 'primary' | 'secondary';
   size?: 'md' | 'sm';
+  caption?: 'label' | 'body';
   glyph?: GlyphName | null;
 }
 
@@ -31,6 +34,11 @@ const CAPTION_SIZE = {
   sm: 'gap-3 px-3 py-2',
 } as const satisfies Record<NonNullable<Props['size']>, string>;
 
+const CAPTION_TEXT = {
+  label: '',
+  body: 'text-body',
+} as const satisfies Record<NonNullable<Props['caption']>, string>;
+
 const SEGMENT_INTENT = {
   primary: 'border-accent bg-accent text-canvas',
   secondary: 'border-line-strong group-hover/button:border-ink',
@@ -41,7 +49,9 @@ const button = cva(
   { variants: { intent: INTENT } },
 );
 
-const caption = cva('flex items-center', { variants: { size: CAPTION_SIZE } });
+const captionBox = cva('flex items-center', {
+  variants: { size: CAPTION_SIZE, caption: CAPTION_TEXT },
+});
 
 const segment = cva('flex w-11 shrink-0 items-center justify-center overflow-hidden border-s', {
   variants: { intent: SEGMENT_INTENT },
@@ -53,7 +63,14 @@ const NUDGE = {
   '↗': 'transition-transform group-hover/button:translate-x-0.5 group-hover/button:-translate-y-0.5 group-focus-visible/button:translate-x-0.5 group-focus-visible/button:-translate-y-0.5',
 } as const satisfies Record<GlyphName, string>;
 
-const { href, type = 'button', intent = 'primary', size = 'md', glyph } = Astro.props;
+const {
+  href,
+  type = 'button',
+  intent = 'primary',
+  size = 'md',
+  caption = 'label',
+  glyph,
+} = Astro.props;
 
 const resolvedGlyph: GlyphName | null =
   glyph === undefined ? (href?.startsWith(EXTERNAL_PREFIX) ? '↗' : '→') : glyph;
@@ -61,9 +78,11 @@ const Tag = href === undefined ? 'button' : 'a';
 const tagAttributes = href === undefined ? { type } : { href };
 ---
 <Tag class={button({ intent })} {...tagAttributes}>
-  <span class={caption({ size })}>
+  <span class={captionBox({ size, caption })}>
     <slot />
-    {size === 'sm' && resolvedGlyph !== null && <Glyph name={resolvedGlyph} class={NUDGE[resolvedGlyph]} />}
+    {size === 'sm' && resolvedGlyph !== null && (
+      <Glyph name={resolvedGlyph} size={caption} class={NUDGE[resolvedGlyph]} />
+    )}
   </span>
   {
     size === 'md' && resolvedGlyph !== null && (

@@ -1,6 +1,7 @@
 /**
  * Dev-only Keystatic local mode: serves the local-storage API at `/api/keystatic/*` (it reads and
- * writes the working tree) and the admin shell for every `/keystatic/*` deep link. Only
+ * writes the working tree), the admin shell for every `/keystatic/*` deep link and the `/admin`
+ * redirect to it. Only
  * `astro dev` registers it; production uses GitHub mode through the Worker, and nothing from this
  * file reaches `dist/`.
  *
@@ -21,6 +22,7 @@ import { isLocalDevHost, KEYSTATIC_SHELL_PATH, keystaticDevRoute } from './keyst
 
 const HTTP_OK = 200;
 const HTTP_FORBIDDEN = 403;
+const HTTP_MOVED_PERMANENTLY = 301;
 const DEFAULT_METHOD = 'GET';
 const BODYLESS_METHODS = new Set(['GET', 'HEAD']);
 /** Routing and the handler only read the path, so a fixed origin keeps the Host header out. */
@@ -71,6 +73,12 @@ function keystaticMiddleware(handleApi: ApiHandler, allowedHosts: AllowedHosts) 
         return;
       }
       sendApi(handleApi, req, res).catch(next);
+      return;
+    }
+    if (route === 'redirect') {
+      res.statusCode = HTTP_MOVED_PERMANENTLY;
+      res.setHeader('Location', KEYSTATIC_SHELL_PATH);
+      res.end();
       return;
     }
     if (route === 'shell') req.url = KEYSTATIC_SHELL_PATH;
