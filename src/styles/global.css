@@ -28,6 +28,11 @@
     text-wrap: pretty;
   }
 
+  /* Tailwind's preflight gives buttons the default arrow; every enabled button here is an action. */
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
   :focus-visible {
     outline: var(--border-focus) solid var(--color-accent);
     outline-offset: var(--border-focus);
