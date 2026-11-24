@@ -1,0 +1,135 @@
+---
+/**
+ * Inline header nav from `lg`, no JS. A plain item is a link. A parent with a page stays a link
+ * plus a separate chevron button; a parent without one is a single button (label and chevron).
+ * Either button toggles the item's MegaPanel through the Popover API (`popovertarget`), so tap,
+ * click and Enter open it, Escape and a click outside close it, and opening another panel closes
+ * the first. The chevron turns while the panel shows.
+ *
+ * Each item is static and spans the full bar height, and its panel is its descendant: a pointer
+ * moving from the item down into the panel never leaves the item's `:hover`. An exact match carries
+ * `aria-current="page"`; the section state (`active`: this page, a page below it or one of its
+ * children) draws an accent bar on the header rule (a graphic, so 3:1 is enough).
+ */
+import type { NavItem } from '../../lib/nav-items.ts';
+import Glyph from '../ui/Glyph.astro';
+import MegaPanel from './MegaPanel.astro';
+
+interface Props {
+  /** Hrefs already localized, states resolved (`resolveNavItems`). */
+  items: readonly NavItem[];
+  navLabel: string;
+  /** Appended to the item label to name its submenu button ("Applications submenu"). */
+  submenuLabel: string;
+}
+
+/** Panel ids are `nav-panel-<n>`, `n` the item's position counted from 1. */
+const PANEL_ID_PREFIX = 'nav-panel-';
+const FIRST_POSITION = 1;
+
+const TRIGGER =
+  'relative flex items-center px-4 label text-ink-muted data-active:text-ink data-active:after:absolute data-active:after:inset-x-4 data-active:after:bottom-0 data-active:after:h-0.5 data-active:after:bg-accent';
+const CONTROL = 'flex min-h-11 items-center hover:text-ink';
+
+const { items, navLabel, submenuLabel } = Astro.props;
+
+const entries = items.flatMap((item, index) => {
+  const hasPanel = item.children.length > 0;
+  // An auto list with no applications and no page of its own has nothing to show.
+  if (!hasPanel && item.href === undefined) return [];
+  const panelId = hasPanel ? `${PANEL_ID_PREFIX}${index + FIRST_POSITION}` : undefined;
+  return [{ ...item, panelId, buttonLabel: `${item.label} ${submenuLabel}` }];
+});
+---
+<nav aria-label={navLabel} class="hidden self-stretch lg:flex">
+  <ul class="nav-list flex">
+    {
+      entries.map(({ label, href, current, active, children, feature, panelId, buttonLabel }) => (
+        <li class="nav-item flex">
+          <div class={TRIGGER} data-active={active ? '' : undefined}>
+            {href !== undefined && (
+              <a class={CONTROL} href={href} aria-current={current ? 'page' : undefined}>
+                {label}
+              </a>
+            )}
+            {panelId !== undefined && (
+              <button
+                type="button"
+                class:list={[CONTROL, 'gap-1', href !== undefined && 'min-w-6 ps-1']}
+                popovertarget={panelId}
+                aria-label={buttonLabel}
+              >
+                {href === undefined && label}
+                <span class="chevron flex">
+                  <Glyph name="⌄" />
+                </span>
+              </button>
+            )}
+          </div>
+          {panelId !== undefined && <MegaPanel id={panelId} links={children} feature={feature} />}
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  /*
+   * When a panel shows. Each item sets four state variables; its panel (visibility and a short
+   * fade) and its chevron (a half turn) read them, so every state is one rule. Closed by default,
+   * leaving after `--menu-intent-close`. Open at once while open as a popover (tap, click, Enter)
+   * or while focus is inside the panel. With a fine pointer, open after `--menu-intent-open` while
+   * the pointer rests on the item or its panel; hovering another item hands over on that same beat
+   * (the old panel leaves as the new one arrives), so two panels never stack. The global
+   * reduced-motion rule zeroes the delays, which is safe: the path from item to panel has no gap.
+   */
+  .nav-item {
+    --menu-shown: hidden;
+    --menu-fade: 0;
+    --menu-turn: 0turn;
+    --menu-delay: var(--menu-intent-close);
+  }
+
+  .nav-item:has(> [data-mega-panel]:popover-open) {
+    --menu-shown: visible;
+    --menu-fade: 1;
+    --menu-turn: 0.5turn;
+    --menu-delay: 0s;
+  }
+
+  .nav-item:has(> [data-mega-panel]:focus-within) {
+    --menu-shown: visible;
+    --menu-fade: 1;
+    --menu-turn: 0.5turn;
+    --menu-delay: 0s;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nav-item:hover {
+      --menu-shown: visible;
+      --menu-fade: 1;
+      --menu-turn: 0.5turn;
+      --menu-delay: var(--menu-intent-open);
+    }
+
+    .nav-list:has(> .nav-item:hover) > .nav-item:not(:hover, :has(> [data-mega-panel]:focus-within)) {
+      --menu-shown: hidden;
+      --menu-fade: 0;
+      --menu-turn: 0turn;
+      --menu-delay: var(--menu-intent-open);
+    }
+  }
+
+  .nav-item > :global([data-mega-panel]) {
+    visibility: var(--menu-shown);
+    opacity: var(--menu-fade);
+    transition:
+      opacity var(--duration-fast) var(--ease-signal) var(--menu-delay),
+      visibility var(--duration-fast) linear var(--menu-delay);
+  }
+
+  .chevron {
+    transform: rotate(var(--menu-turn));
+    transition: transform var(--duration-fast) var(--ease-signal) var(--menu-delay);
+  }
+</style>

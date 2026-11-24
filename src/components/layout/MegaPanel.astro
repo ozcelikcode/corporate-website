@@ -1,0 +1,86 @@
+---
+/**
+ * One header item's submenu from `lg`: a full-width `surface` sheet directly under the header rule
+ * (it draws no border of its own: the rule above is its edge). Inside the page container, a link
+ * column (label, optional description; the current page carries `aria-current` and the accent key)
+ * and, when the navigation entry sets one, a `canvas` feature tile with a heading, text and a small
+ * action, 8/4. The panel is a `popover` (`id` is what the item's button targets); DesktopNav owns
+ * when it shows, this file owns where it sits and what it holds.
+ *
+ * The rules below replace the UA popover box (centred, bordered, padded, `display: none` while
+ * closed). The panel stays rendered while closed and is hidden by DesktopNav through `visibility`,
+ * which transitions from a rendered state, so no `@starting-style` is needed (Safari 17.0–17.4 has
+ * the Popover API without it). It only ever sits inside DesktopNav's `lg`-only nav, so it never
+ * renders on small screens.
+ */
+import type { NavChild } from '../../lib/nav-items.ts';
+import type { NavFeature } from '../../lib/navigation-schema.ts';
+import { CONTAINER } from '../sections/band-class.ts';
+import Button from '../ui/Button.astro';
+import Glyph from '../ui/Glyph.astro';
+import GridFrame from '../ui/GridFrame.astro';
+
+interface Props {
+  id: string;
+  /** Hrefs already localized; `current` marks this page. */
+  links: readonly NavChild[];
+  feature?: NavFeature | undefined;
+}
+
+const { id, links, feature } = Astro.props;
+---
+<div id={id} popover data-mega-panel class="mega-panel bg-surface text-ink">
+  <div class:list={[CONTAINER, 'py-10']}>
+    <GridFrame columns={12}>
+      <ul class="-mx-4 grid grid-cols-2 content-start gap-x-8 gap-y-2 lg:col-span-8">
+        {
+          links.map(({ label, href, description, current }) => (
+            <li>
+              <a
+                class="group relative flex min-h-11 flex-col justify-center gap-1 px-4 py-3 hover:bg-(--ink-band) focus-visible:outline-offset-[calc(var(--border-focus)*-1)] aria-[current=page]:bg-(--ink-band) aria-[current=page]:before:absolute aria-[current=page]:before:inset-y-0 aria-[current=page]:before:start-0 aria-[current=page]:before:w-1 aria-[current=page]:before:bg-accent"
+                href={href}
+                aria-current={current ? 'page' : undefined}
+              >
+                <span class="flex items-center gap-2 font-medium">
+                  {label}
+                  <Glyph name="→" class="text-ink-muted transition-transform group-hover:translate-x-1 group-hover:text-ink" />
+                </span>
+                {description !== undefined && (
+                  <span class="text-label text-ink-muted">{description}</span>
+                )}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      {
+        feature !== undefined && (
+          <div class="flex flex-col items-start gap-4 self-start bg-canvas p-6 lg:col-span-4">
+            <p class="text-h3 font-semibold">{feature.heading}</p>
+            <p class="text-ink-muted">{feature.text}</p>
+            <Button href={feature.action.href} size="sm">
+              {feature.action.label}
+            </Button>
+          </div>
+        )
+      }
+    </GridFrame>
+  </div>
+</div>
+
+<style>
+  .mega-panel {
+    position: fixed;
+    inset: calc(var(--header-bar) + var(--border-hairline)) 0 auto;
+    display: block;
+    width: auto;
+    max-width: none;
+    height: auto;
+    max-height: calc(100svh - var(--header-bar) - var(--border-hairline));
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+</style>

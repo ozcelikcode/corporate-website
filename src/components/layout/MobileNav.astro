@@ -7,13 +7,18 @@
  * Row focus rings are inset (negative offset), so the scrolling sheet never clips them. The sheet's
  * top bar repeats the header's bottom rule; rows are set apart by height and tone, not lines.
  */
+import type { NavItem } from '../../lib/nav-items.ts';
 import Button from '../ui/Button.astro';
 import Glyph from '../ui/Glyph.astro';
 import Label from '../ui/Label.astro';
 
 interface Props {
-  /** `current`: exact page (`aria-current`); `active`: current page or its section (visual). */
-  links: readonly { label: string; href: string; current: boolean; active: boolean }[];
+  /**
+   * Resolved header items (`current`: exact page, `aria-current`; `active`: current page or its
+   * section, visual). Until the submenu accordions land, the sheet lists the items that have a
+   * page of their own, as top-level rows.
+   */
+  items: readonly NavItem[];
   quote: { label: string; href: string };
   navLabel: string;
   openLabel: string;
@@ -27,7 +32,11 @@ const FIRST_INDEX = 1;
 const TOGGLE =
   'flex min-h-11 items-center border border-line-strong px-4 label text-ink hover:border-ink';
 
-const { links, quote, navLabel, openLabel, closeLabel } = Astro.props;
+const { items, quote, navLabel, openLabel, closeLabel } = Astro.props;
+
+const rows = items.flatMap(({ label, href, current, active }) =>
+  href === undefined ? [] : [{ label, href, current, active }],
+);
 ---
 <button type="button" class:list={[TOGGLE, 'lg:hidden']} popovertarget={MENU_ID}>
   {openLabel}
@@ -47,7 +56,7 @@ const { links, quote, navLabel, openLabel, closeLabel } = Astro.props;
     </div>
     <ul class="py-4">
       {
-        links.map(({ label, href, current, active }, index) => (
+        rows.map(({ label, href, current, active }, index) => (
           <li>
             <a
               class="group flex min-h-16 items-center justify-between gap-4 px-4 text-ink hover:bg-surface focus-visible:outline-offset-[calc(var(--border-focus)*-1)] data-active:bg-surface"

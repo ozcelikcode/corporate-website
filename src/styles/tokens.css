@@ -112,7 +112,7 @@
      * hero fills the first screen below it (`--first-screen`, small viewport height: no shift
      * when a mobile toolbar shows or hides).
      */
-    --header-bar: calc(var(--spacing) * 16);
+    --header-bar: calc(var(--spacing) * 18);
     --tally-bar: calc(var(--spacing) * 11);
     --masthead: calc(var(--header-bar) + var(--border-hairline) + var(--tally-bar));
     --first-screen: calc(100svh - var(--masthead));
@@ -132,6 +132,13 @@
 
     --duration-fast: 120ms;
     --duration-base: 240ms;
+    /*
+     * Mega menu intent: a hovered item opens its panel only after a short rest (a pointer passing
+     * over the bar opens nothing) and the panel lingers a little longer when the pointer leaves,
+     * so crossing from the item into the panel never flickers. Taps and keys open at once.
+     */
+    --menu-intent-open: 120ms;
+    --menu-intent-close: 300ms;
     --ease-signal: cubic-bezier(0.2, 0, 0, 1);
   }
 }
