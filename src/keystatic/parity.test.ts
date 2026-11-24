@@ -1,18 +1,20 @@
+import type { SchemaContext } from 'astro:content';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { test } from 'node:test';
-import { type ComponentSchema, config, fields } from '@keystatic/core';
+import { type ComponentSchema, fields } from '@keystatic/core';
 import { createReader } from '@keystatic/core/reader';
 import { z } from 'astro/zod';
 import { settingsSchema } from '../lib/content-schemas.ts';
 import { UI_KEYS } from '../lib/i18n.ts';
 import { NAV_CHILDREN_MAX, navigationSchema } from '../lib/navigation-schema.ts';
+import { LOCAL_CONFIG } from './keystatic-config.ts';
 import { NAV_CHILDREN_LIMIT, singletons } from './singletons.ts';
-import { LOCAL_STORAGE } from './storage.ts';
 
 // The real `image()` helper needs the Astro content runtime; a string stands in for it.
-const context = { image: () => z.string() } as never;
-const localConfig = config({ storage: LOCAL_STORAGE, singletons });
+const context: SchemaContext = {
+  image: (() => z.string()) as unknown as SchemaContext['image'],
+};
 
 /** Object keys at every depth; lists are transparent, leaves are `null`. */
 type KeyTree = { [key: string]: KeyTree } | null;
@@ -25,6 +27,8 @@ type ZodDef = {
 };
 
 function zodKeys(schema: z.ZodType): KeyTree {
+  // Reads Zod 4 internals (`_zod.def`: type, shape, out, innerType, element); re-check on a Zod
+  // (astro/zod) upgrade.
   const def = (schema as unknown as { _zod: { def: ZodDef } })._zod.def;
   if (def.shape) {
     return Object.fromEntries(Object.entries(def.shape).map(([key, v]) => [key, zodKeys(v)]));
@@ -73,7 +77,7 @@ test('the admin children limit matches the navigation schema', () =>
   assert.equal(NAV_CHILDREN_LIMIT, NAV_CHILDREN_MAX));
 
 test('Keystatic reads every singleton seed', async () => {
-  const reader = createReader(process.cwd(), localConfig);
+  const reader = createReader(process.cwd(), LOCAL_CONFIG);
   for (const name of Object.keys(singletons) as (keyof typeof singletons)[]) {
     assert.notEqual(await reader.singletons[name].read(), null, name);
   }
