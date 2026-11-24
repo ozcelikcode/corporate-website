@@ -10,6 +10,7 @@
  * moving from the item down into the panel never leaves the item's `:hover`. An exact match carries
  * `aria-current="page"`; the section state (`active`: this page, a page below it or one of its
  * children) draws an accent bar on the header rule (a graphic, so 3:1 is enough).
+ * Known limitation: hover does not reopen a popover the keyboard left open.
  */
 import type { NavItem } from '../../lib/nav-items.ts';
 import Glyph from '../ui/Glyph.astro';
@@ -149,12 +150,12 @@ const entries = items.flatMap((item, index) => {
 
   /*
    * Focus inside the panel is tested on the panel itself: Chromium does not match `:focus-within`
-   * on the item while focus sits in its open (top-layer) popover. A pointer resting on the item
-   * still shows it.
+   * on the item while focus sits in its open (top-layer) popover. No `:hover` exemption: a pointer
+   * parked over the panel band must not keep it over the focused control.
    */
   :global(:root:has(:focus-visible))
     .nav-list
-    > .nav-item:not(:hover, :focus-within, :has(> [data-mega-panel]:focus-within)):has(
+    > .nav-item:not(:focus-within, :has(> [data-mega-panel]:focus-within)):has(
       > [data-mega-panel]:popover-open
     ) {
     --menu-shown: hidden;
